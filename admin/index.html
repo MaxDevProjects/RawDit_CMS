@@ -2,173 +2,737 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Clower Edit · Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/admin.css" />
-  <style>
-    [x-cloak] { display: none !important; }
-  </style>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script type="module" src="./main.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="font-body">
-  <div
-    class="min-h-screen grid grid-cols-1 md:grid-cols-[260px_1fr]"
-    x-data="adminApp()"
-    x-init="init()"
-    @view-change.window="view = $event.detail"
-  >
-    <aside class="bg-slate-900 text-white p-6 space-y-6" x-cloak x-show="view !== 'login'">
-      <h1 class="text-2xl font-display">Clower Edit</h1>
-      <nav class="flex flex-col space-y-2" x-data>
-        <button class="text-left px-3 py-2 rounded hover:bg-slate-700" @click="$dispatch('view-change', 'pages')">📄 Pages</button>
-        <button class="text-left px-3 py-2 rounded hover:bg-slate-700" @click="$dispatch('view-change', 'theme')">🎨 Thème</button>
-        <button class="text-left px-3 py-2 rounded hover:bg-slate-700" @click="$dispatch('view-change', 'settings')">⚙️ Paramètres</button>
-        <button class="text-left px-3 py-2 rounded hover:bg-slate-700" @click="$dispatch('view-change', 'deploy')">🚀 Déploiement</button>
-        <button class="text-left px-3 py-2 rounded hover:bg-slate-700" @click="localStorage.removeItem('clowerToken'); window.location.reload();">🔒 Déconnexion</button>
-      </nav>
-    </aside>
-    <main class="bg-white p-6" x-cloak>
-      <header class="flex justify-between items-center" x-show="view !== 'login'">
-        <h2 class="text-2xl font-display capitalize" x-text="view"></h2>
-        <button class="px-4 py-2 bg-slate-900 text-white rounded" @click="refreshData">Actualiser</button>
-      </header>
-      <section class="mt-6" x-show="view === 'pages'">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold">Pages</h3>
-          <button class="px-4 py-2 bg-emerald-500 text-white rounded" @click="createBlankPage">Nouvelle page</button>
-        </div>
-        <div class="grid md:grid-cols-[280px_1fr] gap-6">
-          <div class="space-y-2">
-            <template x-for="page in pages" :key="page.slug">
-              <button class="w-full text-left px-3 py-2 rounded border border-slate-200 hover:bg-slate-100" :class="{ 'bg-slate-900 text-white': currentPage?.slug === page.slug }" @click="loadPage(page.slug)">
-                <div class="font-semibold" x-text="page.title"></div>
-                <div class="text-xs text-slate-500" x-text="page.slug"></div>
+<body x-data="adminApp" x-init="init()" :class="{'overflow-hidden': preview.modalOpen}" class="transition-colors duration-200">
+  <div class="sr-only" aria-live="polite" x-text="announcement"></div>
+  <div x-show="!ready" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur" role="status">
+    <div class="flex flex-col items-center gap-3 text-sm font-medium text-slate-200">
+      <svg class="h-6 w-6 animate-spin text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 3v3m0 12v3m9-9h-3M6 12H3m15.364-6.364-2.121 2.121M9.757 14.243 7.636 16.364m8.485 0-2.121-2.121M9.757 9.757 7.636 7.636" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span>Initialisation de l’interface…</span>
+    </div>
+  </div>
+
+  <template x-if="view === 'login' && ready">
+    <div class="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.24),_transparent_55%)]"></div>
+      <div class="relative z-10 flex min-h-screen items-center justify-center px-4 py-16">
+        <form class="w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-10 text-slate-100 shadow-2xl backdrop-blur" @submit.prevent="submitLogin" aria-labelledby="login-title">
+          <div class="mb-8 space-y-3">
+            <span class="inline-flex items-center gap-2 rounded-full bg-indigo-500/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-indigo-400">Clower Edit</span>
+            <h1 id="login-title" class="font-display text-3xl font-semibold text-white">Connexion</h1>
+            <p class="text-sm text-slate-300">Choisissez un site et identifiez-vous pour accéder au studio d’édition.</p>
+          </div>
+          <div class="grid gap-6">
+            <label class="space-y-2 text-sm">
+              <span class="font-semibold uppercase tracking-wider text-slate-300">Site</span>
+              <div class="relative">
+                <select class="w-full appearance-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="siteId" @change="switchSite($event.target.value)">
+                  <template x-for="site in sites" :key="site">
+                    <option class="bg-slate-950 text-slate-200" :value="site" x-text="site"></option>
+                  </template>
+                </select>
+                <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+            </label>
+            <label class="space-y-2 text-sm">
+              <span class="font-semibold uppercase tracking-wider text-slate-300">Identifiant</span>
+              <input type="text" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="login.username" autocomplete="username" />
+            </label>
+            <label class="space-y-2 text-sm">
+              <span class="font-semibold uppercase tracking-wider text-slate-300">Mot de passe</span>
+              <input type="password" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="login.password" autocomplete="current-password" />
+            </label>
+            <p class="text-sm text-rose-400" x-text="login.error"></p>
+            <button type="submit" class="flex items-center justify-center gap-2 rounded-2xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition duration-150 ease-out hover:scale-[1.02] hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Se connecter
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="view !== 'login' && ready">
+    <div class="flex min-h-screen">
+      <aside class="hidden w-72 flex-col justify-between border-r border-slate-200/60 bg-white/90 dark:bg-slate-950  px-6 py-8 text-slate-700 backdrop-blur md:flex" data-surface="sidebar">
+        <div class="space-y-8">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="grid h-12 w-12 place-items-center rounded-2xl bg-indigo-500/20 text-indigo-400">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
+                </svg>
+              </span>
+              <div>
+                <p class="text-xs uppercase tracking-[0.28em] text-slate-500">Clower Edit</p>
+                <p class="font-display text-lg font-semibold text-white">Studio</p>
+              </div>
+            </div>
+            <button type="button" class="rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:-translate-y-0.5 hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="logout">
+              Quitter
+            </button>
+          </div>
+
+          <div class="space-y-3">
+            <label class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500" for="site-select">Site</label>
+            <div class="relative">
+              <select id="site-select" class="w-full appearance-none rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none focus-visible:outline-2 focus-visible:outline-indigo-500" x-model="siteId" @change="switchSite($event.target.value)">
+                <template x-for="site in sites" :key="site">
+                  <option class="bg-slate-950 text-slate-200" :value="site" x-text="site"></option>
+                </template>
+              </select>
+              <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <button type="button" class="flex items-center gap-2 text-sm text-indigo-400 transition hover:text-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="createSite">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 5v14m-7-7h14" stroke-linecap="round" />
+              </svg>
+              Nouveau site
+            </button>
+          </div>
+
+          <nav class="space-y-1" aria-label="Sections de l’interface">
+            <template x-for="item in navigation" :key="item.id">
+              <button type="button" class="group flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" :class="view === item.id ? 'bg-white/10 text-white shadow-lg' : 'text-slate-300 hover:bg-white/5 hover:text-white'" @click="setView(item.id)">
+                <span class="flex items-center gap-3">
+                  <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/5 text-indigo-400 transition duration-150 group-hover:bg-indigo-500/15" :class="view === item.id ? 'bg-indigo-500/20 text-indigo-400' : ''" x-html="item.icon"></span>
+                  <span class="font-medium" x-text="item.label"></span>
+                </span>
+                <span class="text-xs uppercase tracking-[0.18em] text-slate-500" x-text="item.badge || ''"></span>
               </button>
             </template>
+          </nav>
+        </div>
+
+        <footer class="space-y-4 text-xs text-slate-500">
+          <button type="button" class="flex items-center gap-2 text-slate-400 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="refreshData">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4 4v6h6M20 20v-6h-6M20 9A8 8 0 0 0 5.64 5.64L4 10M4 15a8 8 0 0 0 14.36 3.36L20 14" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Actualiser
+          </button>
+          <p>Version <span class="font-medium text-slate-300">1.0</span></p>
+        </footer>
+      </aside>
+
+      <div class="flex min-h-screen flex-1 flex-col">
+        <header class="sticky top-0 z-20 border-b border-slate-200/70 bg-white/75 backdrop-blur-lg" data-surface="header">
+          <div class="flex flex-col gap-4 px-6 py-6 lg:flex-row lg:items-center lg:justify-between lg:px-10">
+            <div class="space-y-1">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500" x-text="`Site · ${siteId}`"></p>
+              <h1 class="font-display text-2xl font-semibold text-slate-900 dark:text-white contrast:text-contrastAccent" x-text="viewCopy[view]?.title"></h1>
+              <p class="text-sm text-slate-500 dark:text-slate-400 contrast:text-contrastAccent/80" x-text="viewCopy[view]?.description"></p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false" @click.away="open = false">
+                <button type="button" class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="open = !open">
+                  <span class="text-base" x-text="themeModes.find(mode => mode.id === $store.theme.mode)?.icon || '☀️'"></span>
+                  <span x-text="themeModes.find(mode => mode.id === $store.theme.mode)?.label || 'Clair'"></span>
+                  <svg class="h-4 w-4 text-slate-300 transition-transform duration-150" :class="open ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+                <div x-cloak x-show="open" x-transition class="absolute right-0 z-10 mt-2 w-48 rounded-2xl border border-white/10 bg-slate-900/90 p-2 shadow-2xl backdrop-blur">
+                  <template x-for="mode in themeModes" :key="mode.id">
+                    <button type="button" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-200 transition hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" :class="$store.theme.mode === mode.id ? 'bg-indigo-500/20 text-white' : ''" @click="$store.theme.set(mode.id); open = false">
+                      <span class="text-base" x-text="mode.icon"></span>
+                      <span class="flex-1 text-left" x-text="mode.label"></span>
+                      <svg x-show="$store.theme.mode === mode.id" class="h-4 w-4 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="m5 12 4 4 10-10" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </button>
+                  </template>
+                </div>
+              </div>
+              <button type="button" class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="refreshData">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M4 4v6h6M20 20v-6h-6M20 9A8 8 0 0 0 5.64 5.64L4 10M4 15a8 8 0 0 0 14.36 3.36L20 14" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Actualiser
+              </button>
+              <button type="button" class="flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="openPreview">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12Z" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="12" cy="12" r="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Prévisualiser
+              </button>
+            </div>
           </div>
-          <div class="space-y-4" x-show="currentPage">
-            <div class="grid gap-2">
-              <label class="text-sm font-semibold">Titre</label>
-              <input type="text" class="border rounded px-3 py-2" x-model="currentPage.title" />
-            </div>
-            <div class="grid gap-2">
-              <label class="text-sm font-semibold">Slug</label>
-              <input type="text" class="border rounded px-3 py-2" x-model="currentPage.slug" />
-            </div>
-            <div>
-              <label class="text-sm font-semibold">Sections</label>
-              <template x-for="(section, index) in currentPage.sections" :key="index">
-                <div class="border rounded p-4 space-y-2 mt-3">
-                  <div class="flex justify-between items-center">
-                    <span class="font-semibold" x-text="section.type"></span>
-                    <button class="text-sm text-red-500" @click="removeSection(index)">Supprimer</button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto px-6 py-8 lg:px-10">
+          <div class="space-y-10">
+            <section x-show="view === 'pages'" x-transition.opacity class="space-y-8" role="region" aria-live="polite">
+              <div class="flex flex-col gap-6 lg:grid lg:grid-cols-[320px_1fr] lg:gap-8">
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Pages</h2>
+                    <button type="button" class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="createPage">
+                      Nouvelle page
+                    </button>
                   </div>
-                  <textarea class="w-full border rounded px-3 py-2 text-sm" rows="4" x-model="section.props.content" x-show="section.type === 'text'"></textarea>
-                  <div class="grid gap-2" x-show="section.type === 'hero'">
-                    <input class="border rounded px-3 py-2" placeholder="Titre" x-model="section.props.title" />
-                    <input class="border rounded px-3 py-2" placeholder="Sous-titre" x-model="section.props.subtitle" />
-                    <input class="border rounded px-3 py-2" placeholder="Texte bouton" x-model="section.props.cta" />
-                    <input class="border rounded px-3 py-2" placeholder="Lien" x-model="section.props.ctaLink" />
-                  </div>
-                  <div class="grid gap-2" x-show="section.type === 'image'">
-                    <input class="border rounded px-3 py-2" placeholder="URL" x-model="section.props.src" />
-                    <input class="border rounded px-3 py-2" placeholder="Texte alternatif" x-model="section.props.alt" />
-                    <input class="border rounded px-3 py-2" placeholder="Légende" x-model="section.props.caption" />
+                  <template x-if="!pages.length">
+                    <p class="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-6 text-sm text-slate-400">Aucune page pour le moment. Créez votre première page pour commencer.</p>
+                  </template>
+                  <div class="space-y-3">
+                    <template x-for="page in pages" :key="page.slug">
+                      <button type="button" class="group w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-left transition duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" :class="currentPage?.slug === page.slug ? 'border-indigo-500 bg-indigo-500/10 text-white shadow-lg' : 'hover:-translate-y-0.5 hover:border-indigo-500/40 hover:bg-white/10'" @click="selectPage(page.slug)">
+                        <p class="flex items-center gap-2 text-sm font-medium text-white" x-text="page.title"></p>
+                        <p class="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400" x-text="page.slug"></p>
+                      </button>
+                    </template>
                   </div>
                 </div>
-              </template>
-              <div class="flex gap-2 mt-3">
-                <button class="px-3 py-2 bg-slate-200 rounded" @click="addSection('text')">+ Texte</button>
-                <button class="px-3 py-2 bg-slate-200 rounded" @click="addSection('hero')">+ Hero</button>
-                <button class="px-3 py-2 bg-slate-200 rounded" @click="addSection('image')">+ Image</button>
+
+                <template x-if="currentPage">
+                  <div class="space-y-6">
+                    <div class="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
+                    <button type="button" class="rounded-xl bg-indigo-500/90 px-4 py-2 text-xs font-semibold text-white shadow shadow-lg transition hover:-translate-y-0.5 hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="savePage">
+                      Sauvegarder
+                    </button>
+                    <button type="button" class="rounded-xl border border-white/10 bg-white/0 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="refreshData">
+                      Recharger
+                    </button>
+                    <button type="button" class="rounded-xl border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-xs font-semibold text-rose-300 transition hover:-translate-y-0.5 hover:bg-rose-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400" @click="deletePage" :disabled="currentPage && currentPage.slug === 'index'">
+                      Supprimer
+                    </button>
+                  </div>
+
+                  <div class="rounded-3xl border border-white/10 bg-white/5 shadow-lg">
+                    <nav class="flex gap-6 border-b border-white/10 px-6 pt-4">
+                      <button type="button" class="pb-3 text-sm font-semibold transition focus-visible:outline-none" :class="pageTab === 'content' ? 'border-b-2 border-indigo-500 text-white' : 'text-slate-400 hover:text-slate-200'" @click="setPageTab('content')">Contenu</button>
+                      <button type="button" class="pb-3 text-sm font-semibold transition focus-visible:outline-none" :class="pageTab === 'seo' ? 'border-b-2 border-indigo-500 text-white' : 'text-slate-400 hover:text-slate-200'" @click="setPageTab('seo')">SEO</button>
+                    </nav>
+
+                    <div class="space-y-6 px-6 py-6" x-show="pageTab === 'content'">
+                      <label class="space-y-2 text-sm">
+                        <span class="font-semibold text-slate-300">Titre</span>
+                        <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="currentPage.title" />
+                      </label>
+                      <label class="space-y-2 text-sm">
+                        <span class="font-semibold text-slate-300">Slug</span>
+                        <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="currentPage.slug" />
+                      </label>
+
+                      <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                          <h3 class="text-sm font-semibold text-slate-300">Sections</h3>
+                          <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                            <button type="button" class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-semibold text-xs text-slate-200 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="addSection('hero')">Hero</button>
+                            <button type="button" class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-semibold text-xs text-slate-200 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="addSection('text')">Texte</button>
+                            <button type="button" class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-semibold text-xs text-slate-200 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="addSection('image')">Image</button>
+                          </div>
+                        </div>
+
+                        <template x-for="(section, index) in currentPage.sections" :key="section.id">
+                          <article class="space-y-4 rounded-2xl border border-white/10 bg-white/4 p-5 shadow-sm shadow-black/10">
+                            <div class="flex items-center justify-between">
+                              <div class="flex items-center gap-3">
+                                <span class="rounded-xl bg-indigo-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-400" x-text="section.type"></span>
+                                <select class="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="section.preset" @change="updateSectionPreset(section, section.preset)">
+                                  <template x-for="preset in sectionPresets[section.type]" :key="preset.id">
+                                    <option class="bg-slate-950 text-slate-200" :value="preset.id" x-text="preset.label"></option>
+                                  </template>
+                                </select>
+                              </div>
+                              <button type="button" class="rounded-lg border border-white/10 bg-white/0 px-3 py-1 text-xs font-semibold text-slate-300 transition hover:bg-rose-500/10 hover:text-rose-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400" @click="removeSection(index)">
+                                Retirer
+                              </button>
+                            </div>
+
+                            <div class="space-y-3" x-show="section.type === 'hero'">
+                              <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                Eyebrow
+                                <input type="text" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="section.props.eyebrow">
+                              </label>
+                              <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                Titre
+                                <input type="text" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="section.props.title">
+                              </label>
+                              <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                Sous-titre
+                                <textarea class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" rows="3" x-model="section.props.subtitle"></textarea>
+                              </label>
+                              <div class="grid gap-3 sm:grid-cols-2">
+                                <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                  Bouton
+                                  <input type="text" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="section.props.cta">
+                                </label>
+                                <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                  Lien
+                                  <input type="text" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="section.props.ctaLink">
+                                </label>
+                              </div>
+                            </div>
+
+                            <div class="space-y-3" x-show="section.type === 'text'">
+                              <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                Contenu HTML
+                                <textarea class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" rows="5" x-model="section.props.content"></textarea>
+                              </label>
+                            </div>
+
+                            <div class="space-y-3" x-show="section.type === 'image'">
+                              <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                Source
+                                <input type="text" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="section.props.src">
+                              </label>
+                              <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                Texte alternatif
+                                <input type="text" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="section.props.alt">
+                              </label>
+                              <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                Légende
+                                <input type="text" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="section.props.caption">
+                              </label>
+                            </div>
+                          </article>
+                        </template>
+                      </div>
+                    </div>
+
+                    <div class="space-y-5 px-6 py-6" x-show="pageTab === 'seo'">
+                      <div class="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-5">
+                        <p class="text-xs uppercase tracking-[0.18em] text-slate-500">Aperçu Google</p>
+                        <div class="space-y-1 rounded-xl border border-white/10 bg-white/10 p-4 shadow-inner">
+                          <p class="text-[15px] font-medium text-indigo-100" x-text="pageSeo.title || currentPage?.title || 'Titre de votre page'"></p>
+                          <p class="text-[13px] text-emerald-300" x-text="`https://${siteSeo.site?.domain || 'clower.site'}/${currentPage?.slug || ''}`"></p>
+                          <p class="text-sm text-slate-200" x-text="pageSeo.description || 'Ajoutez une description engageante pour améliorer votre référencement et le taux de clics.'"></p>
+                        </div>
+                      </div>
+                      <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Titre SEO
+                        <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="pageSeo.title">
+                      </label>
+                      <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Description
+                        <textarea rows="3" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="pageSeo.description"></textarea>
+                      </label>
+                      <div class="flex items-center gap-2">
+                        <input id="page-indexed" type="checkbox" class="h-4 w-4 rounded border-white/20 bg-white/10 text-indigo-400 focus:ring-indigo-500" x-model="pageSeo.indexed">
+                        <label for="page-indexed" class="text-sm text-slate-300">Indexer cette page</label>
+                      </div>
+                      <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-indigo-500/90 px-4 py-2 text-sm font-semibold text-white shadow shadow-lg transition hover:-translate-y-0.5 hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="savePageSeo">
+                        Enregistrer le SEO
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                </template>
               </div>
-            </div>
-            <div class="flex gap-2">
-              <button class="px-4 py-2 bg-emerald-500 text-white rounded" @click="savePage">Sauvegarder</button>
-              <button class="px-4 py-2 bg-red-500 text-white rounded" @click="deletePage" x-show="currentPage?.slug !== 'index'">Supprimer</button>
-            </div>
-          </div>
-          <div class="border rounded overflow-hidden" x-show="currentPage">
-            <iframe class="w-full h-[600px]" :src="previewUrl" loading="lazy"></iframe>
-          </div>
-        </div>
-      </section>
-      <section class="mt-6 space-y-4" x-show="view === 'theme'">
-        <h3 class="text-xl font-semibold">Thème</h3>
-        <template x-if="theme">
-          <div class="grid gap-4 md:grid-cols-2">
-            <template x-for="(value, key) in theme.colors" :key="key">
-              <div class="flex items-center gap-3">
-                <label class="w-32 capitalize" x-text="key"></label>
-                <input type="color" class="w-16 h-10 border rounded" x-model="theme.colors[key]" />
+            </section>
+
+            <section x-show="view === 'seo'" x-transition.opacity class="space-y-8" aria-labelledby="seo-global">
+              <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 id="seo-global" class="font-display text-xl font-semibold text-white">SEO global</h2>
+                    <p class="text-sm text-slate-400">Définissez les métadonnées et le menu principal pour tout le site.</p>
+                  </div>
+                  <button type="button" class="rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow shadow-lg transition hover:-translate-y-0.5 hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="saveSiteSeo">
+                    Enregistrer
+                  </button>
+                </div>
+
+                <div class="mt-6 grid gap-6 lg:grid-cols-[2fr_1fr]">
+                  <div class="space-y-5">
+                    <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Nom du site
+                      <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="siteSeo.site.name">
+                    </label>
+                    <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Description
+                      <textarea rows="3" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="siteSeo.site.description"></textarea>
+                    </label>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                      <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Auteur
+                        <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="siteSeo.site.author">
+                      </label>
+                      <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Domaine
+                        <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="siteSeo.site.domain">
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-xs uppercase tracking-[0.18em] text-slate-500">SERP preview</p>
+                    <div class="space-y-1 rounded-xl border border-white/10 bg-white/10 p-4 text-sm text-slate-200">
+                      <p class="text-[15px] font-medium text-indigo-100" x-text="siteSeo.site.name || 'Votre site'"></p>
+                      <p class="text-xs text-emerald-300" x-text="siteSeo.site.domain || 'www.monsite.fr'"></p>
+                      <p x-text="siteSeo.site.description || 'Ajoutez une description pour présenter votre site dans les résultats de recherche.'"></p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </template>
-            <template x-for="(value, key) in theme.fonts" :key="key">
-              <div class="flex items-center gap-3">
-                <label class="w-32 capitalize" x-text="key"></label>
-                <input type="text" class="flex-1 border rounded px-3 py-2" x-model="theme.fonts[key]" />
+
+              <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 class="font-display text-lg font-semibold text-white">Navigation principale</h3>
+                    <p class="text-sm text-slate-400">Réorganisez l’ordre, contrôlez la visibilité et prévisualisez le rendu.</p>
+                  </div>
+                  <button type="button" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="addMenuItem">
+                    Ajouter un lien
+                  </button>
+                </div>
+
+                <div class="mt-6 space-y-4">
+                  <template x-for="(item, index) in siteSeo.menu" :key="index">
+                    <div class="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/8 p-4 shadow-inner md:flex-row md:items-center md:justify-between">
+                      <div class="flex flex-1 flex-col gap-2 md:flex-row md:items-center md:gap-4">
+                        <div class="flex items-center gap-2">
+                          <button type="button" class="rounded-full border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="moveMenuItem(index, -1)">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                              <path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </button>
+                          <button type="button" class="rounded-full border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="moveMenuItem(index, 1)">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                              <path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </button>
+                        </div>
+                        <label class="flex-1 space-y-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                          Libellé
+                          <input type="text" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="item.label">
+                        </label>
+                        <label class="flex-1 space-y-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                          Slug
+                          <input type="text" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="item.slug">
+                        </label>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
+                          <input type="checkbox" class="h-4 w-4 rounded border-white/20 bg-white/10 text-indigo-400 focus:ring-indigo-500" x-model="item.hidden">
+                          Masquer
+                        </label>
+                        <button type="button" class="rounded-lg border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400" @click="removeMenuItem(index)">
+                          Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
               </div>
-            </template>
-            <template x-for="(value, key) in theme.radius" :key="key">
-              <div class="flex items-center gap-3">
-                <label class="w-32 capitalize" x-text="key"></label>
-                <input type="text" class="flex-1 border rounded px-3 py-2" x-model="theme.radius[key]" />
+            </section>
+
+            <section x-show="view === 'media'" x-transition.opacity class="space-y-6" aria-labelledby="media-title">
+              <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 id="media-title" class="font-display text-xl font-semibold text-white">Bibliothèque média</h2>
+                  <p class="text-sm text-slate-400">Téléchargez des visuels optimisés (compressés automatiquement en WebP).</p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <label for="media-upload" class="flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-indigo-500">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Importer
+                  </label>
+                  <input id="media-upload" type="file" class="hidden" accept="image/*" @change="uploadMedia">
+                </div>
               </div>
-            </template>
+
+              <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                <template x-for="item in media" :key="item.id">
+                  <figure class="flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-lg">
+                    <img :src="item.url" :alt="item.alt" class="h-48 w-full object-cover" loading="lazy" />
+                    <figcaption class="flex flex-1 flex-col gap-3 px-5 py-4 text-sm text-slate-300">
+                      <div>
+                        <p class="font-medium text-white" x-text="item.alt"></p>
+                        <p class="text-xs uppercase tracking-[0.18em] text-slate-500" x-text="item.filename"></p>
+                      </div>
+                      <div class="mt-auto flex items-center justify-between text-xs text-slate-500">
+                        <span x-text="`${Math.round((item.bytes || 0)/1024)} Ko`"></span>
+                        <button type="button" class="text-rose-300 transition hover:text-rose-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400" @click="deleteMedia(item.id)">Supprimer</button>
+                      </div>
+                    </figcaption>
+                  </figure>
+                </template>
+              </div>
+            </section>
+
+            <section x-show="view === 'theme'" x-transition.opacity class="space-y-8" aria-labelledby="theme-title">
+              <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 id="theme-title" class="font-display text-xl font-semibold text-white">Thème graphique</h2>
+                  <p class="text-sm text-slate-400">Définissez les couleurs et polices globales de votre site statique.</p>
+                </div>
+                <button type="button" class="rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow shadow-lg transition hover:-translate-y-0.5 hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="saveTheme">
+                  Enregistrer le thème
+                </button>
+              </div>
+              <div class="grid gap-6 lg:grid-cols-2">
+                <div class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+                  <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Couleurs</h3>
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <label class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <input type="color" class="h-12 w-12 cursor-pointer appearance-none rounded-full border-0 bg-transparent p-0" x-model="theme.colors.primary">
+                      <div>
+                        <p class="text-sm font-semibold text-white">Primaire</p>
+                        <p class="text-xs text-slate-400" x-text="theme.colors.primary"></p>
+                      </div>
+                    </label>
+                    <label class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <input type="color" class="h-12 w-12 cursor-pointer appearance-none rounded-full border-0 bg-transparent p-0" x-model="theme.colors.secondary">
+                      <div>
+                        <p class="text-sm font-semibold text-white">Secondaire</p>
+                        <p class="text-xs text-slate-400" x-text="theme.colors.secondary"></p>
+                      </div>
+                    </label>
+                    <label class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <input type="color" class="h-12 w-12 cursor-pointer appearance-none rounded-full border-0 bg-transparent p-0" x-model="theme.colors.background">
+                      <div>
+                        <p class="text-sm font-semibold text-white">Fond</p>
+                        <p class="text-xs text-slate-400" x-text="theme.colors.background"></p>
+                      </div>
+                    </label>
+                    <label class="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <input type="color" class="h-12 w-12 cursor-pointer appearance-none rounded-full border-0 bg-transparent p-0" x-model="theme.colors.text">
+                      <div>
+                        <p class="text-sm font-semibold text-white">Texte</p>
+                        <p class="text-xs text-slate-400" x-text="theme.colors.text"></p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+                  <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Typographie & radius</h3>
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Police titres
+                      <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="theme.fonts.display">
+                    </label>
+                    <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Police texte
+                      <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="theme.fonts.body">
+                    </label>
+                    <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Rayon (petit)
+                      <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="theme.radius.small">
+                    </label>
+                    <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Rayon (moyen)
+                      <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="theme.radius.medium">
+                    </label>
+                    <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Rayon (grand)
+                      <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="theme.radius.large">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section x-show="view === 'layout'" x-transition.opacity class="space-y-6" aria-labelledby="layout-title">
+              <div class="space-y-3">
+                <h2 id="layout-title" class="font-display text-xl font-semibold text-white">Mise en page & presets</h2>
+                <p class="text-sm text-slate-400">Ajustez l’atmosphère des sections : couleurs, marges, ombres et alignement. Les modifications s’appliquent immédiatement à la page sélectionnée.</p>
+              </div>
+              <div class="grid gap-6 xl:grid-cols-[320px_1fr]">
+                <aside class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Sections de la page</p>
+                  <template x-for="section in currentPage?.sections || []" :key="section.id">
+                    <button type="button" class="w-full rounded-2xl border border-white/10 bg-white/0 px-4 py-3 text-left text-sm text-slate-200 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" :class="layoutPanel.section === section.id ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-lg' : ''" @click="selectLayoutSection(section.id)">
+                      <span class="font-medium capitalize" x-text="section.type"></span>
+                      <p class="text-xs text-slate-400" x-text="section.preset"></p>
+                    </button>
+                  </template>
+                </aside>
+
+                <div class="space-y-4">
+                  <template x-for="group in layoutPanel.groups" :key="group.id">
+                    <div class="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+                      <button type="button" class="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="toggleLayoutGroup(group.id)">
+                        <span class="flex items-center gap-3">
+                          <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-indigo-400">
+                            <span x-html="group.icon"></span>
+                          </span>
+                          <span x-text="group.label"></span>
+                        </span>
+                        <svg class="h-4 w-4 text-slate-400 transition" :class="layoutPanel.open[group.id] ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </button>
+                      <div x-show="layoutPanel.open[group.id]" x-transition.opacity>
+                        <div class="space-y-4 border-t border-white/10 px-5 py-5">
+                          <template x-for="option in group.options" :key="option.id">
+                            <button type="button" class="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm transition hover:-translate-y-0.5 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" :class="layoutPanel.selection[group.id] === option.id ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-lg' : 'text-slate-300'" @click="applyLayoutOption(group.id, option.id)">
+                              <span class="flex items-center gap-3">
+                                <span class="grid h-9 w-9 place-items-center rounded-xl border border-white/10" :style="option.previewStyle" aria-hidden="true"></span>
+                                <span>
+                                  <span class="block font-semibold" x-text="option.label"></span>
+                                  <span class="block text-xs text-slate-400" x-text="option.description"></span>
+                                </span>
+                              </span>
+                              <svg x-show="layoutPanel.selection[group.id] === option.id" class="h-4 w-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                            </button>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </section>
+
+            <section x-show="view === 'settings'" x-transition.opacity class="space-y-8" aria-labelledby="settings-title">
+              <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 id="settings-title" class="font-display text-xl font-semibold text-white">Paramètres</h2>
+                  <p class="text-sm text-slate-400">Gestion de l’accès administrateur, mode de prévisualisation et automatisations.</p>
+                </div>
+                <button type="button" class="rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow shadow-lg transition hover:-translate-y-0.5 hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="saveSettings">
+                  Enregistrer
+                </button>
+              </div>
+
+              <div class="grid gap-6 lg:grid-cols-2">
+                <div class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+                  <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Compte administrateur</h3>
+                  <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Identifiant
+                    <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="settings.admin.username">
+                  </label>
+                  <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Nouveau mot de passe
+                    <input type="password" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="settings.admin.password" placeholder="Laisser vide pour conserver">
+                  </label>
+                </div>
+                <div class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+                  <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Prévisualisation & automation</h3>
+                  <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Mode de prévisualisation
+                    <select class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="settings.preview.mode">
+                      <option class="bg-slate-950 text-slate-200" value="modal">Modal</option>
+                      <option class="bg-slate-950 text-slate-200" value="tab">Nouvel onglet</option>
+                      <option class="bg-slate-950 text-slate-200" value="iframe">Zone intégrée</option>
+                    </select>
+                  </label>
+                  <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+                    <input type="checkbox" class="h-5 w-5 rounded border-white/20 bg-white/10 text-indigo-400 focus:ring-indigo-500" x-model="settings.autoDeploy">
+                    Déployer automatiquement après chaque génération
+                  </label>
+                  <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/0 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="createSite">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M12 5v14m7-7H5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Créer un nouveau site
+                  </button>
+                </div>
+                <div class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+                  <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Apparence par défaut</h3>
+                  <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+                    <input type="checkbox" class="h-5 w-5 rounded border-white/20 bg-white/10 text-indigo-400 focus:ring-indigo-500" :checked="settings.appearance.useSystem" @change="toggleAppearanceSystem($event.target.checked)">
+                    Utiliser automatiquement le mode du système
+                  </label>
+                  <fieldset class="space-y-2">
+                    <legend class="text-xs font-semibold uppercase tracking-wide text-slate-400">Modes disponibles</legend>
+                    <template x-for="mode in themeModes" :key="mode.id">
+                      <label class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 transition hover:bg-white/10" :class="settings.appearance.mode === mode.id && !settings.appearance.useSystem ? 'border-indigo-400/60 bg-indigo-500/10 text-white' : ''">
+                        <div class="flex items-center gap-3">
+                          <input type="radio" class="h-4 w-4 text-indigo-400 focus:ring-indigo-500" name="site-appearance" :value="mode.id" :checked="settings.appearance.mode === mode.id" :disabled="settings.appearance.useSystem" @change="setAppearanceMode(mode.id)">
+                          <span class="text-base" x-text="mode.icon"></span>
+                          <span x-text="mode.label"></span>
+                        </div>
+                        <span x-show="settings.appearance.mode === mode.id && !settings.appearance.useSystem" class="text-xs font-semibold uppercase tracking-wide text-indigo-200">Sélectionné</span>
+                      </label>
+                    </template>
+                  </fieldset>
+                  <p class="text-xs text-slate-400">Ce choix définit l’apparence par défaut appliquée aux nouveaux appareils. Chaque utilisateur peut toujours personnaliser sa vue via le sélecteur d’apparence.</p>
+                </div>
+              </div>
+            </section>
+
+            <section x-show="view === 'deploy'" x-transition.opacity class="space-y-6" aria-labelledby="deploy-title">
+              <div class="space-y-2">
+                <h2 id="deploy-title" class="font-display text-xl font-semibold text-white">Déploiement</h2>
+                <p class="text-sm text-slate-400">Configurez la connexion FTP/SFTP et lancez la génération ou le déploiement du site.</p>
+              </div>
+              <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-lg">
+                <div class="grid gap-5 md:grid-cols-2">
+                  <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Hôte
+                    <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="settings.deployment.host">
+                  </label>
+                  <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Port
+                    <input type="number" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model.number="settings.deployment.port">
+                  </label>
+                  <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Utilisateur
+                    <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="settings.deployment.username">
+                  </label>
+                  <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Mot de passe
+                    <input type="password" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="settings.deployment.password">
+                  </label>
+                  <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Chemin distant
+                    <input type="text" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="settings.deployment.remotePath">
+                  </label>
+                  <label class="space-y-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Protocole
+                    <select class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" x-model="settings.deployment.protocol">
+                      <option class="bg-slate-950 text-slate-200" value="sftp">SFTP</option>
+                      <option class="bg-slate-950 text-slate-200" value="ftp">FTP</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="mt-6 flex flex-wrap items-center gap-3">
+                  <button type="button" class="rounded-xl border border-white/10 bg-white/0 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="triggerBuild">
+                    Générer le site
+                  </button>
+                  <button type="button" class="rounded-xl bg-indigo-500 px-5 py-2 text-sm font-semibold text-white shadow shadow-lg transition hover:-translate-y-0.5 hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="triggerDeploy">
+                    Déployer
+                  </button>
+                </div>
+              </div>
+            </section>
           </div>
-        </template>
-        <button class="px-4 py-2 bg-emerald-500 text-white rounded" @click="saveTheme">Sauvegarder le thème</button>
-      </section>
-      <section class="mt-6 space-y-4" x-show="view === 'settings'">
-        <h3 class="text-xl font-semibold">Paramètres</h3>
-        <div class="grid gap-4 md:grid-cols-2">
-          <div class="space-y-2">
-            <label class="font-semibold">Identifiant</label>
-            <input type="text" class="border rounded px-3 py-2" x-model="settings.admin.username" />
-          </div>
-          <div class="space-y-2">
-            <label class="font-semibold">Nouveau mot de passe</label>
-            <input type="password" class="border rounded px-3 py-2" x-model="settings.admin.password" placeholder="Laisser vide pour conserver" />
-          </div>
-          <label class="flex items-center gap-2">
-            <input type="checkbox" x-model="settings.autoDeploy" />
-            Auto-déploiement après build
-          </label>
+        </main>
+      </div>
+    </div>
+  </template>
+
+  <div x-show="preview.modalOpen" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md px-4 py-10" role="dialog" aria-modal="true" aria-label="Prévisualisation du site">
+    <div class="relative w-full max-w-5xl rounded-3xl border border-white/10 bg-slate-900/80 p-4 shadow-2xl">
+      <div class="flex items-center justify-between px-4 py-2">
+        <p class="text-sm text-slate-300">Prévisualisation en direct</p>
+        <div class="flex items-center gap-2">
+          <button type="button" class="rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="openPreview('tab')">
+            Ouvrir dans un onglet
+          </button>
+          <button type="button" class="rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500" @click="closePreviewModal">
+            Fermer
+          </button>
         </div>
-        <button class="px-4 py-2 bg-emerald-500 text-white rounded" @click="saveSettings">Sauvegarder</button>
-      </section>
-      <section class="mt-6 space-y-4" x-show="view === 'deploy'">
-        <h3 class="text-xl font-semibold">Déploiement FTP/SFTP</h3>
-        <div class="grid gap-4 md:grid-cols-2">
-          <template x-for="field in ['host','port','username','password','remotePath']" :key="field">
-            <div class="space-y-2">
-              <label class="font-semibold capitalize" x-text="field"></label>
-              <input :type="field === 'password' ? 'password' : 'text'" class="border rounded px-3 py-2" x-model="settings.deployment[field]" />
-            </div>
-          </template>
-        </div>
-        <div class="flex gap-2">
-          <button class="px-4 py-2 bg-emerald-500 text-white rounded" @click="triggerBuild">Générer</button>
-          <button class="px-4 py-2 bg-slate-900 text-white rounded" @click="triggerDeploy">Déployer</button>
-        </div>
-        <p class="text-sm text-slate-500">Les identifiants sont stockés localement dans settings.json. Assurez-vous que votre serveur accepte la connexion SFTP.</p>
-      </section>
-      <section class="mt-6 flex items-center justify-center" x-show="view === 'login'">
-        <div class="max-w-sm w-full bg-white border rounded p-6 shadow" x-data="loginForm()">
-          <h2 class="text-xl font-semibold mb-4">Connexion</h2>
-          <p class="text-sm text-slate-600 mb-4">
-            Identifiants par défaut : <span class="font-semibold">admin</span> / <span class="font-semibold">admin</span>. Pensez à les modifier dans l’onglet « Paramètres » après connexion.
-          </p>
-          <div class="space-y-3">
-            <input type="text" class="w-full border rounded px-3 py-2" placeholder="Identifiant" x-model="username" />
-            <input type="password" class="w-full border rounded px-3 py-2" placeholder="Mot de passe" x-model="password" />
-            <button class="w-full bg-slate-900 text-white rounded px-3 py-2" @click="login">Se connecter</button>
-            <p class="text-sm text-red-500" x-text="error"></p>
-          </div>
-        </div>
-      </section>
-    </main>
+      </div>
+      <iframe class="h-[70vh] w-full rounded-2xl border border-white/10 bg-white" :src="preview.url" title="Prévisualisation du site"></iframe>
+    </div>
   </div>
 </body>
 </html>

@@ -1,8 +1,6 @@
-<section class="section-wrapper">
-  <figure style="text-align: center;">
-    <img src="{{ section.props.src }}" alt="{{ section.props.alt }}" style="max-width: 100%; border-radius: {{ theme.radius.medium }};">
-    {% if section.props.caption %}
-      <figcaption style="margin-top: 0.5rem; color: #666;">{{ section.props.caption }}</figcaption>
-    {% endif %}
-  </figure>
-</section>
+<figure class="media-figure">
+  <img src="{{ section.props.src }}" alt="{{ section.props.alt }}" />
+  {% if section.props.caption %}
+    <figcaption>{{ section.props.caption }}</figcaption>
+  {% endif %}
+</figure>

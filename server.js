@@ -1,279 +1,116 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
-import { generateSite } from './backend/generate.js';
-import { deploySite } from './backend/deploy.js';
+import { ensureSite, getSitesRoot } from './backend/lib/sites.js';
+import { securityHeaders } from './backend/middlewares/security.js';
+import { siteResolver, availableSites } from './backend/middlewares/site.js';
+import { requireAuth } from './backend/middlewares/auth.js';
+import { notFound, errorHandler } from './backend/middlewares/error.js';
+
+import authRouter from './backend/routes/auth.js';
+import pagesRouter from './backend/routes/pages.js';
+import seoRouter from './backend/routes/seo.js';
+import themeRouter from './backend/routes/theme.js';
+import mediaRouter from './backend/routes/media.js';
+import previewRouter from './backend/routes/preview.js';
+import settingsRouter from './backend/routes/settings.js';
+import deployRouter from './backend/routes/deploy.js';
+import sitesRouter from './backend/routes/sites.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'clower-edit-secret';
-const ADMIN_USER_FILE = path.join(__dirname, 'backend', 'config', 'settings.json');
 
-app.use(bodyParser.json({ limit: '2mb' }));
-app.use('/public', express.static(path.join(__dirname, 'public')));
-app.use('/admin', express.static(path.join(__dirname, 'admin')));
-app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
+const adminDir = path.join(__dirname, 'admin');
+const publicDir = path.join(__dirname, 'public');
+const assetsDir = path.join(publicDir, 'assets');
+const generatedDir = path.join(publicDir, 'generated');
 
-const pagesDir = path.join(__dirname, 'backend', 'pages');
-const configDir = path.join(__dirname, 'backend', 'config');
+await ensureSite('default');
 
-async function ensureAdminUser() {
+app.disable('x-powered-by');
+app.use(securityHeaders);
+app.use(express.json({ limit: '4mb' }));
+app.use(express.urlencoded({ extended: false, limit: '4mb' }));
+
+app.get('/healthz', (req, res) => {
+  res.json({ ok: true, uptime: process.uptime() });
+});
+
+app.use(
+  '/assets',
+  express.static(assetsDir, {
+    maxAge: '30d',
+    immutable: true
+  })
+);
+
+app.use(
+  '/public',
+  express.static(publicDir, {
+    maxAge: '1d'
+  })
+);
+
+app.use(
+  '/admin',
+  express.static(adminDir, {
+    maxAge: 0,
+    extensions: ['html']
+  })
+);
+
+app.get('/media/:siteId/:filename', async (req, res, next) => {
   try {
-    const raw = await fs.readFile(ADMIN_USER_FILE, 'utf-8');
-    const data = JSON.parse(raw);
-    if (!data.admin) {
-      throw new Error('missing admin');
-    }
-    if (!data.admin.passwordHash) {
-      const hash = await bcrypt.hash('admin', 10);
-      data.admin.passwordHash = hash;
-      await fs.writeFile(ADMIN_USER_FILE, JSON.stringify(data, null, 2));
-    }
+    const filePath = path.join(getSitesRoot(), req.params.siteId, 'media', req.params.filename);
+    await fs.access(filePath);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.sendFile(filePath);
   } catch (error) {
-    const defaultSettings = {
-      admin: {
-        username: 'admin',
-        passwordHash: await bcrypt.hash('admin', 10)
-      },
-      deployment: {
-        host: '',
-        username: '',
-        password: '',
-        remotePath: ''
-      },
-      autoDeploy: false
-    };
-    await fs.mkdir(configDir, { recursive: true });
-    await fs.writeFile(ADMIN_USER_FILE, JSON.stringify(defaultSettings, null, 2));
-  }
-}
-
-await ensureAdminUser();
-await generateSite();
-
-async function loadSettings() {
-  const raw = await fs.readFile(ADMIN_USER_FILE, 'utf-8');
-  return JSON.parse(raw);
-}
-
-async function maybeAutoDeploy() {
-  try {
-    const settings = await loadSettings();
-    if (settings.autoDeploy) {
-      await deploySite();
-    }
-  } catch (error) {
-    console.error('Auto deploy failed:', error.message);
-  }
-}
-
-function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.replace('Bearer ', '');
-  if (!token) {
-    return res.status(401).json({ message: 'Missing token' });
-  }
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    req.user = payload;
-    return next();
-  } catch (err) {
-    return res.status(401).json({ message: 'Invalid token' });
-  }
-}
-
-app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password are required' });
-  }
-  try {
-    const raw = await fs.readFile(ADMIN_USER_FILE, 'utf-8');
-    const data = JSON.parse(raw);
-    const { admin } = data;
-    const isMatch = await bcrypt.compare(password, admin.passwordHash);
-    if (admin.username !== username || !isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '12h' });
-    return res.json({ token });
-  } catch (error) {
-    return res.status(500).json({ message: 'Unable to authenticate', error: error.message });
+    next(error);
   }
 });
 
-app.get('/api/pages', authMiddleware, async (req, res) => {
+app.get('/preview/:siteId/:slug?', async (req, res, next) => {
   try {
-    const files = await fs.readdir(pagesDir);
-    const pages = [];
-    for (const file of files) {
-      if (!file.endsWith('.json')) continue;
-      const raw = await fs.readFile(path.join(pagesDir, file), 'utf-8');
-      const data = JSON.parse(raw);
-      pages.push(data);
-    }
-    return res.json(pages);
+    const slug = req.params.slug || 'index';
+    const filename = slug === 'index' ? 'index.html' : `${slug}.html`;
+    const filePath = path.join(generatedDir, req.params.siteId, filename);
+    await fs.access(filePath);
+    res.setHeader('Cache-Control', 'no-store');
+    res.sendFile(filePath);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to list pages', error: error.message });
+    next(error);
   }
 });
 
-app.get('/api/pages/:slug', authMiddleware, async (req, res) => {
-  const slug = req.params.slug;
-  try {
-    const file = path.join(pagesDir, `${slug}.json`);
-    const raw = await fs.readFile(file, 'utf-8');
-    return res.json(JSON.parse(raw));
-  } catch (error) {
-    return res.status(404).json({ message: 'Page not found', error: error.message });
-  }
-});
+const apiRouter = express.Router();
 
-app.post('/api/pages', authMiddleware, async (req, res) => {
-  const page = req.body;
-  if (!page.slug) {
-    return res.status(400).json({ message: 'Slug is required' });
-  }
-  try {
-    const file = path.join(pagesDir, `${page.slug}.json`);
-    if (!Array.isArray(page.sections)) {
-      page.sections = [];
-    }
-    await fs.writeFile(file, JSON.stringify(page, null, 2));
-    await generateSite();
-    await maybeAutoDeploy();
-    return res.status(201).json(page);
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to create page', error: error.message });
-  }
-});
+apiRouter.use(siteResolver);
+apiRouter.get('/sites', availableSites);
+apiRouter.use(authRouter); // exposes /login
 
-app.put('/api/pages/:slug', authMiddleware, async (req, res) => {
-  const slug = req.params.slug;
-  const page = req.body;
-  if (!page.slug) {
-    return res.status(400).json({ message: 'Slug is required' });
-  }
-  try {
-    const targetFile = path.join(pagesDir, `${page.slug}.json`);
-    if (!Array.isArray(page.sections)) {
-      page.sections = [];
-    }
-    await fs.writeFile(targetFile, JSON.stringify(page, null, 2));
-    if (slug !== page.slug) {
-      const oldFile = path.join(pagesDir, `${slug}.json`);
-      try {
-        await fs.unlink(oldFile);
-      } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
-      }
-    }
-    await generateSite();
-    await maybeAutoDeploy();
-    return res.json(page);
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to update page', error: error.message });
-  }
-});
+apiRouter.use(requireAuth);
+apiRouter.use('/sites', sitesRouter);
+apiRouter.use('/pages', pagesRouter);
+apiRouter.use('/seo', seoRouter);
+apiRouter.use('/theme', themeRouter);
+apiRouter.use('/media', mediaRouter);
+apiRouter.use('/preview', previewRouter);
+apiRouter.use('/settings', settingsRouter);
+apiRouter.use('/build', deployRouter);
 
-app.delete('/api/pages/:slug', authMiddleware, async (req, res) => {
-  const slug = req.params.slug;
-  if (slug === 'index') {
-    return res.status(400).json({ message: 'Home page cannot be deleted' });
-  }
-  try {
-    await fs.unlink(path.join(pagesDir, `${slug}.json`));
-    await generateSite();
-    await maybeAutoDeploy();
-    return res.json({ message: 'Deleted' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to delete page', error: error.message });
-  }
-});
-
-app.get('/api/theme', authMiddleware, async (req, res) => {
-  try {
-    const theme = await fs.readFile(path.join(configDir, 'theme.json'), 'utf-8');
-    return res.json(JSON.parse(theme));
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to read theme', error: error.message });
-  }
-});
-
-app.put('/api/theme', authMiddleware, async (req, res) => {
-  try {
-    await fs.writeFile(path.join(configDir, 'theme.json'), JSON.stringify(req.body, null, 2));
-    await generateSite();
-    await maybeAutoDeploy();
-    return res.json(req.body);
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to update theme', error: error.message });
-  }
-});
-
-app.get('/api/settings', authMiddleware, async (req, res) => {
-  try {
-    const data = await loadSettings();
-    delete data.admin.passwordHash;
-    return res.json(data);
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to read settings', error: error.message });
-  }
-});
-
-app.put('/api/settings', authMiddleware, async (req, res) => {
-  try {
-    const data = await loadSettings();
-    if (req.body.admin) {
-      if (req.body.admin.username) {
-        data.admin.username = req.body.admin.username;
-      }
-      if (req.body.admin.password) {
-        data.admin.passwordHash = await bcrypt.hash(req.body.admin.password, 10);
-      }
-    }
-    if (req.body.deployment) {
-      data.deployment = { ...data.deployment, ...req.body.deployment };
-    }
-    if (typeof req.body.autoDeploy === 'boolean') {
-      data.autoDeploy = req.body.autoDeploy;
-    }
-    await fs.writeFile(ADMIN_USER_FILE, JSON.stringify(data, null, 2));
-    return res.json({ message: 'Settings updated' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to update settings', error: error.message });
-  }
-});
-
-app.post('/api/generate', authMiddleware, async (req, res) => {
-  try {
-    await generateSite();
-    await maybeAutoDeploy();
-    return res.json({ message: 'Site generated' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to generate site', error: error.message });
-  }
-});
-
-app.post('/api/deploy', authMiddleware, async (req, res) => {
-  try {
-    await deploySite();
-    return res.json({ message: 'Deployment triggered' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to deploy site', error: error.message });
-  }
-});
+app.use('/api', apiRouter);
 
 app.get('/', (req, res) => {
   res.redirect('/admin/index.html');
 });
+
+app.use(notFound);
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Clower Edit server running on http://localhost:${PORT}`);

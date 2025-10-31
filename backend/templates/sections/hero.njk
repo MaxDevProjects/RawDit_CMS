@@ -1,7 +1,12 @@
-<section class="section-wrapper hero">
-  <h1>{{ section.props.title }}</h1>
-  <p>{{ section.props.subtitle }}</p>
-  {% if section.props.cta %}
-    <a class="btn-primary" href="{{ section.props.ctaLink or '#' }}">{{ section.props.cta }}</a>
+<div class="hero-content">
+  {% if section.props.eyebrow %}
+    <p class="hero-eyebrow">{{ section.props.eyebrow }}</p>
   {% endif %}
-</section>
+  <h1>{{ section.props.title }}</h1>
+  {% if section.props.subtitle %}
+    <p class="hero-subtitle">{{ section.props.subtitle }}</p>
+  {% endif %}
+  {% if section.props.cta %}
+    <a class="hero-cta" href="{{ section.props.ctaLink or '#' }}">{{ section.props.cta }}</a>
+  {% endif %}
+</div>

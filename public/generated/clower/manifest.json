@@ -1,0 +1,15 @@
+{
+  "site": {
+    "id": "clower",
+    "title": "Clower Site",
+    "generatedAt": "2025-10-31T08:22:04.131Z"
+  },
+  "pages": [
+    {
+      "slug": "index",
+      "title": "Accueil",
+      "output": "index.html"
+    }
+  ],
+  "assets": []
+}

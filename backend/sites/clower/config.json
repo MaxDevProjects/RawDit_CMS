@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "username": "admin",
+    "passwordHash": "$2b$10$Rk9yqf3ZQNLubVXXzH4z..iRazpHz.e01bgoTT6sqG4rFG8hBiEVi"
+  },
+  "deployment": {
+    "host": "",
+    "username": "",
+    "password": "",
+    "remotePath": "",
+    "port": 22,
+    "protocol": "sftp"
+  },
+  "autoDeploy": false,
+  "preview": {
+    "mode": "iframe"
+  }
+}

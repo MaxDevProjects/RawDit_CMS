@@ -1,0 +1,25 @@
+{
+  "site": {
+    "name": "Clower Site",
+    "description": "Un site statique sobre, propulsé par Clower Edit.",
+    "locale": "fr_FR",
+    "author": "Clower Studio"
+  },
+  "menu": [
+    {
+      "label": "Accueil",
+      "slug": "index",
+      "hidden": false
+    },
+    {
+      "label": "Mes services",
+      "slug": "services",
+      "hidden": false
+    }
+  ],
+  "social": {
+    "twitter": "",
+    "linkedin": "",
+    "mastodon": ""
+  }
+}

@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="{{ site.site.locale | default('fr_FR') | replace('_', '-') }}">
+<html lang="fr-FR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ pageSeo.title or page.title }} · {{ site.site.name }}</title>
-  {% if pageSeo.description or site.site.description %}
-    <meta name="description" content="{{ pageSeo.description or site.site.description }}" />
-  {% endif %}
+  <title>Accueil · Clower Site</title>
+  
+    <meta name="description" content="Un site statique sobre, propulsé par Clower Edit." />
+  
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family={{ theme.fonts.display | replace(' ', '+') }}:wght@500;700&family={{ theme.fonts.body | replace(' ', '+') }}:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --color-primary: {{ theme.colors.primary }};
-      --color-secondary: {{ theme.colors.secondary }};
-      --color-text: {{ theme.colors.text }};
-      --color-background: {{ theme.colors.background }};
-      --radius-sm: {{ theme.radius.small }};
-      --radius-md: {{ theme.radius.medium }};
-      --radius-lg: {{ theme.radius.large }};
+      --color-primary: #9C6BFF;
+      --color-secondary: #A3E3C2;
+      --color-text: #1E1E1E;
+      --color-background: #F8F8FF;
+      --radius-sm: 0.5rem;
+      --radius-md: 1rem;
+      --radius-lg: 2rem;
       color-scheme: light;
     }
 
@@ -28,7 +28,7 @@
 
     body {
       margin: 0;
-      font-family: '{{ theme.fonts.body }}', system-ui, sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
       color: var(--color-text);
       background: var(--color-background);
       line-height: 1.6;
@@ -126,7 +126,7 @@
     }
 
     .hero-content h1 {
-      font-family: '{{ theme.fonts.display }}', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: clamp(2.4rem, 4vw, 3.2rem);
       margin: 0;
     }
@@ -215,36 +215,58 @@
   <div class="wrapper">
     <header>
       <div>
-        <p class="hero-eyebrow">{{ site.site.name }}</p>
-        <h1 style="margin: 0; font-family: '{{ theme.fonts.display }}', sans-serif;">{{ page.title }}</h1>
-        {% if pageSeo.description %}
-          <p style="max-width: 60ch;">{{ pageSeo.description }}</p>
-        {% endif %}
+        <p class="hero-eyebrow">Clower Site</p>
+        <h1 style="margin: 0; font-family: 'Outfit', sans-serif;">Accueil</h1>
+        
       </div>
-      {% if site.menu %}
+      
         <nav aria-label="Navigation principale">
           <ul>
-            {% for item in site.menu %}
-              {% set href = '/' if item.slug == 'index' else '/' ~ item.slug ~ '.html' %}
-              <li><a href="{{ href }}">{{ item.label }}</a></li>
-            {% endfor %}
+            
+              
+              <li><a href="/">Accueil</a></li>
+            
+              
+              <li><a href="/pages.html">Pages</a></li>
+            
           </ul>
         </nav>
-      {% endif %}
+      
     </header>
 
     <main id="contenu">
-      {% for section in sections %}
-        {% set presetClass = section.preset or 'slice' %}
-        {% set extraTokens = section.tokens | default([]) | join(' ') %}
-        <section class="slice {{ presetClass }} {{ extraTokens }}" aria-label="Section {{ loop.index }}">
-          {% include 'sections/' + section.type + '.njk' %}
+      
+        
+        
+        <section class="slice hero-basic " aria-label="Section 1">
+          <div class="hero-content">
+  
+    <p class="hero-eyebrow">Bienvenue</p>
+  
+  <h1>Le web, autrement.</h1>
+  
+    <p class="hero-subtitle">Des sites vivants, clairs et accessibles.</p>
+  
+  
+    <a class="hero-cta" href="#services">Découvrir</a>
+  
+</div>
+
         </section>
-      {% endfor %}
+      
+        
+        
+        <section class="slice text-prose " aria-label="Section 2">
+          <div class="text-prose" aria-label="Bloc de texte">
+  <p>Clower Edit permet de créer des sites statiques sobres et rapides à partir de simples fichiers JSON. Modifiez votre contenu dans l’interface d’administration puis générez instantanément vos pages.</p>
+</div>
+
+        </section>
+      
     </main>
 
     <footer>
-      <p>&copy; {{ site.site.name }} — Propulsé par Clower Edit.</p>
+      <p>&copy; Clower Site — Propulsé par Clower Edit.</p>
     </footer>
   </div>
 </body>

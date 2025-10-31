@@ -1,0 +1,28 @@
+{
+  "title": "Services",
+  "slug": "services",
+  "layout": "layout",
+  "sections": [
+    {
+      "id": "hero-1761895927470",
+      "type": "hero",
+      "preset": "hero-basic",
+      "tokens": [
+        "bg-gradient-to-br",
+        "from-indigo-500/90",
+        "to-emerald-400/80",
+        "text-white",
+        "shadow-xl",
+        "rounded-3xl"
+      ],
+      "props": {
+        "eyebrow": "Nouveauté",
+        "title": "Titre remarquable",
+        "subtitle": "Sous-titre pour préciser votre proposition de valeur.",
+        "cta": "En savoir plus",
+        "ctaLink": "#contact",
+        "media": ""
+      }
+    }
+  ]
+}

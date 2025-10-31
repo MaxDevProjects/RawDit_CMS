@@ -1,0 +1,25 @@
+{
+  "title": "Accueil",
+  "slug": "index",
+  "sections": [
+    {
+      "id": "hero-0-1761895955061",
+      "type": "hero",
+      "props": {
+        "title": "Le web, autrement.",
+        "subtitle": "Des sites vivants, clairs et accessibles.",
+        "cta": "Découvrir",
+        "ctaLink": "services"
+      },
+      "preset": "hero-basic",
+      "tokens": [
+        "bg-gradient-to-br",
+        "from-indigo-500/90",
+        "to-emerald-400/80",
+        "text-white",
+        "shadow-xl",
+        "rounded-3xl"
+      ]
+    }
+  ]
+}
