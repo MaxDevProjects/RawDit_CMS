@@ -7,7 +7,7 @@
       "type": "hero",
       "props": {
         "title": "Le web, autrement.",
-        "subtitle": "Des sites vivants, clairs et accessibles.",
+        "subtitle": "Des sites vivants, clairs et accessibles.\nEt  à votre image.",
         "cta": "Découvrir",
         "ctaLink": "services"
       },
@@ -23,10 +23,9 @@
         "rounded-lg",
         "text-center",
         "mx-auto",
-        "bg-slate-900/80",
-        "border",
-        "border-white/10",
-        "text-white"
+        "bg-white/80",
+        "backdrop-blur",
+        "text-slate-900"
       ]
     },
     {
@@ -42,7 +41,7 @@
         "shadow-xl"
       ],
       "props": {
-        "content": "<p>Ajoutez votre contenu riche ici. Les paragraphes, listes et liens seront stylés automatiquement.</p>"
+        "content": "Ajoutez votre contenu riche ici. Les paragraphes, listes et liens seront stylés automatiquement."
       }
     }
   ]

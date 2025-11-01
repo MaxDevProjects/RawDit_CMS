@@ -11,9 +11,11 @@
         "bg-gradient-to-br",
         "from-indigo-500/90",
         "to-emerald-400/80",
-        "text-white",
-        "shadow-xl",
-        "rounded-3xl"
+        "rounded-3xl",
+        "bg-slate-900/80",
+        "border",
+        "border-white/10",
+        "text-white"
       ],
       "props": {
         "eyebrow": "Nouveauté",
