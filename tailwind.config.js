@@ -57,7 +57,7 @@ export default {
     plugin(({ addVariant }) => {
       addVariant('contrast', '.contrast &');
     }),
-    plugin(({ addComponents, theme }) => {
+    plugin(({ addComponents }) => {
       addComponents({
         '.surface-glass': {
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -65,9 +65,9 @@ export default {
           border: '1px solid rgba(255, 255, 255, 0.1)'
         },
         '.surface-card': {
-          backgroundColor: theme('colors.white'),
-          boxShadow: theme('boxShadow.lg'),
-          borderRadius: theme('borderRadius.lg')
+          backgroundColor: '#FFFFFF',
+          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+          borderRadius: '0.5rem'
         }
       });
     })

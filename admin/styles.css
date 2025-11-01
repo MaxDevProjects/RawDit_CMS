@@ -228,7 +228,7 @@
   }
 
   [data-theme='dark'] .section-highlight::before {
-    border-color: theme('colors.secondary');
+    border-color: var(--color-secondary, #A3E3C2);
   }
 
   [data-theme='dark'] .section-highlight {
@@ -237,13 +237,13 @@
 
   @keyframes section-pulse-dark {
     0% {
-      box-shadow: 0 0 0 0 theme('colors.secondary' / 30%);
+      box-shadow: 0 0 0 0 var(--color-secondary-alpha, rgba(163, 227, 194, 0.3));
     }
     70% {
-      box-shadow: 0 0 0 10px theme('colors.secondary' / 0%);
+      box-shadow: 0 0 0 10px transparent;
     }
     100% {
-      box-shadow: 0 0 0 0 theme('colors.secondary' / 0%);
+      box-shadow: 0 0 0 0 transparent;
     }
   }
 
