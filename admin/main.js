@@ -281,6 +281,13 @@ export function adminApp() {
   let stopPreview = null;
   let notifyTimer = null;
   const saved = restoreState();
+  let pageAutoSaveTimer = null;
+  let seoAutoSaveTimer = null;
+  let autoSaveHideTimer = null;
+  let suppressAutoSave = false;
+  let hasInitialPageSnapshot = false;
+  let hasInitialSeoSnapshot = false;
+  const AUTO_SAVE_DELAY = 800;
 
   return {
     ready: false,
@@ -306,6 +313,11 @@ export function adminApp() {
     settings: defaultSettingsState(),
     media: [],
     sectionPresets,
+    sectionLabels: {
+      hero: 'Section hero',
+      text: 'Bloc texte',
+      image: 'Bloc image'
+    },
     sidebarPagesOpen: false,
     layoutPanel: {
       groups: layoutGroups,
@@ -315,9 +327,16 @@ export function adminApp() {
     },
     preview: {
       mode: saved.previewMode || 'modal',
+      viewport: saved.previewViewport || 'desktop',
       url: '',
       manifest: null,
       modalOpen: false
+    },
+    autoSave: {
+      status: 'idle',
+      message: '',
+      visible: false,
+      timestamp: null
     },
     login: {
       username: 'admin',
@@ -376,6 +395,34 @@ export function adminApp() {
         console.warn('Initialisation du site impossible', error);
         this.view = 'login';
       }
+      this.$nextTick(() => {
+        this.$watch(
+          () => (this.currentPage ? JSON.stringify(this.currentPage) : null),
+          value => {
+            if (!value || suppressAutoSave) return;
+            if (!hasInitialPageSnapshot) {
+              hasInitialPageSnapshot = true;
+              return;
+            }
+            this.queueAutoSave('page');
+          }
+        );
+        this.$watch(
+          () => (this.currentPage ? JSON.stringify(this.pageSeo) : null),
+          value => {
+            if (!value || suppressAutoSave) return;
+            if (!hasInitialSeoSnapshot) {
+              hasInitialSeoSnapshot = true;
+              return;
+            }
+            this.queueAutoSave('seo');
+          }
+        );
+      });
+
+      this._shortcutHandler = event => this.handleShortcuts(event);
+      window.addEventListener('keydown', this._shortcutHandler);
+
       this.ready = true;
       this.loading = false;
     },
@@ -537,39 +584,70 @@ export function adminApp() {
       this.preview.url = buildPreviewUrl(this.siteId, slug);
     },
 
+    setPreviewViewport(mode) {
+      const allowed = ['desktop', 'tablet', 'mobile'];
+      const next = allowed.includes(mode) ? mode : 'desktop';
+      this.preview.viewport = next;
+      persistState({ previewViewport: next });
+    },
+
+    refreshPreviewFrame(options = {}) {
+      const { notify = true } = options;
+      this.setPreviewUrl(this.currentPage?.slug || 'index');
+      if (notify) {
+        this.notify('Preview actualisée');
+      }
+    },
+
     async selectPage(slug) {
       const match = this.pages.find(page => page.slug === slug);
       if (!match) return;
-      this.currentPage = JSON.parse(JSON.stringify(match));
-      this.setPreviewUrl(slug);
-      this.pageTab = 'content';
-      persistState({ pageTab: this.pageTab });
+      const previousSuppression = suppressAutoSave;
+      suppressAutoSave = true;
       try {
-        const seo = (await api.get(`/seo/pages/${slug}`)) || {};
-        this.pageSeo = { indexed: true, ...seo };
-      } catch (error) {
-        console.warn('SEO page indisponible', error);
-        this.pageSeo = { indexed: true };
+        this.currentPage = JSON.parse(JSON.stringify(match));
+        this.setPreviewUrl(slug);
+        this.pageTab = 'content';
+        persistState({ pageTab: this.pageTab });
+        try {
+          const seo = (await api.get(`/seo/pages/${slug}`)) || {};
+          this.pageSeo = { indexed: true, ...seo };
+        } catch (error) {
+          console.warn('SEO page indisponible', error);
+          this.pageSeo = { indexed: true };
+        }
+        const firstSection = this.currentPage.sections?.[0];
+        this.layoutPanel.section = firstSection?.id || null;
+        this.syncLayoutSelection();
+        hasInitialPageSnapshot = false;
+        hasInitialSeoSnapshot = false;
+      } finally {
+        suppressAutoSave = previousSuppression;
       }
-      const firstSection = this.currentPage.sections?.[0];
-      this.layoutPanel.section = firstSection?.id || null;
-      this.syncLayoutSelection();
     },
 
     createPage() {
-      this.currentPage = {
-        title: 'Nouvelle page',
-        slug: `page-${Date.now()}`,
-        layout: 'layout',
-        sections: [createSection('hero')],
-        originalSlug: null
-      };
-      this.pageSeo = { indexed: true };
-      this.layoutPanel.section = this.currentPage.sections[0]?.id || null;
-      this.syncLayoutSelection();
-      this.view = 'pages';
-      this.pageTab = 'content';
-      persistState({ pageTab: this.pageTab });
+      const previousSuppression = suppressAutoSave;
+      suppressAutoSave = true;
+      try {
+        this.currentPage = {
+          title: 'Nouvelle page',
+          slug: `page-${Date.now()}`,
+          layout: 'layout',
+          sections: [createSection('hero')],
+          originalSlug: null
+        };
+        this.pageSeo = { indexed: true };
+        this.layoutPanel.section = this.currentPage.sections[0]?.id || null;
+        this.syncLayoutSelection();
+        this.view = 'pages';
+        this.pageTab = 'content';
+        persistState({ pageTab: this.pageTab });
+        hasInitialPageSnapshot = false;
+        hasInitialSeoSnapshot = false;
+      } finally {
+        suppressAutoSave = previousSuppression;
+      }
     },
 
     addSection(type) {
@@ -587,6 +665,7 @@ export function adminApp() {
         section.preset = preset.id;
         section.tokens = preset.tokens;
         this.syncLayoutSelection();
+        this.queueAutoSave('page');
       }
     },
 
@@ -598,19 +677,39 @@ export function adminApp() {
       this.syncLayoutSelection();
     },
 
-    async savePage() {
+    async savePage(options = {}) {
       if (!this.currentPage) return;
+      const { silent = false } = options;
+      if (!silent) {
+        this.setAutoSaveState('saving', 'Enregistrement…');
+      }
       const payload = JSON.parse(JSON.stringify(this.currentPage));
       const originalSlug = payload.originalSlug;
       delete payload.originalSlug;
       const method = originalSlug ? 'put' : 'post';
       const endpoint = originalSlug ? `/pages/${originalSlug}` : '/pages';
-      await api[method](endpoint, payload);
-      await this.loadCoreData();
-      if (payload.slug) {
-        await this.selectPage(payload.slug);
+      const previousSuppression = suppressAutoSave;
+      suppressAutoSave = true;
+      try {
+        await api[method](endpoint, payload);
+        await this.loadCoreData();
+        if (payload.slug) {
+          await this.selectPage(payload.slug);
+        }
+        if (!silent) {
+          const formatted = new Date().toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          this.setAutoSaveState('saved', `Enregistré à ${formatted}`);
+          this.notify('Page sauvegardée');
+          this.refreshPreviewFrame({ notify: false });
+        }
+      } finally {
+        hasInitialPageSnapshot = false;
+        hasInitialSeoSnapshot = false;
+        suppressAutoSave = previousSuppression;
       }
-      this.notify('Page sauvegardée');
     },
 
     async deletePage() {
@@ -636,10 +735,28 @@ export function adminApp() {
       this.notify('SEO global enregistré');
     },
 
-    async savePageSeo() {
+    async savePageSeo(options = {}) {
       if (!this.currentPage) return;
-      await api.put(`/seo/pages/${this.currentPage.slug}`, this.pageSeo);
-      this.notify('SEO de la page enregistré');
+      const { silent = false } = options;
+      if (!silent) {
+        this.setAutoSaveState('saving', 'Enregistrement SEO…');
+      }
+      const previousSuppression = suppressAutoSave;
+      suppressAutoSave = true;
+      try {
+        await api.put(`/seo/pages/${this.currentPage.slug}`, this.pageSeo);
+        if (!silent) {
+          const formatted = new Date().toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          this.setAutoSaveState('saved', `SEO enregistré à ${formatted}`);
+          this.notify('SEO de la page enregistré');
+        }
+      } finally {
+        hasInitialSeoSnapshot = false;
+        suppressAutoSave = previousSuppression;
+      }
     },
 
     async uploadMedia(event) {
@@ -779,6 +896,16 @@ export function adminApp() {
       api.clearToken();
       this.view = 'login';
       stopPreview?.();
+      clearTimeout(pageAutoSaveTimer);
+      clearTimeout(seoAutoSaveTimer);
+      clearTimeout(autoSaveHideTimer);
+      this.autoSave.visible = false;
+      this.autoSave.status = 'idle';
+      this.autoSave.message = '';
+      this.autoSave.timestamp = null;
+      if (this._shortcutHandler) {
+        window.removeEventListener('keydown', this._shortcutHandler);
+      }
     },
 
     addMenuItem() {
@@ -823,6 +950,10 @@ export function adminApp() {
     selectLayoutSection(id) {
       this.layoutPanel.section = id;
       this.syncLayoutSelection();
+      const uiStore = window.Alpine?.store('ui');
+      if (uiStore) {
+        uiStore.showToolkit = true;
+      }
     },
 
     syncLayoutSelection() {
@@ -852,6 +983,22 @@ export function adminApp() {
       section.tokens = nextTokens;
       this.layoutPanel.selection[groupId] = optionId;
       this.notify('Preset appliqué à la section');
+      this.queueAutoSave('page');
+    },
+
+    activeLayoutSectionLabel() {
+      const sectionId = this.layoutPanel.section;
+      if (!sectionId) {
+        return 'Sélectionnez un bloc dans la zone centrale';
+      }
+      const section = this.currentPage?.sections?.find(sec => sec.id === sectionId);
+      if (!section) {
+        return 'Bloc introuvable';
+      }
+      const label = this.sectionLabels[section.type] || section.type;
+      const preset = this.sectionPresets[section.type]?.find(item => item.id === section.preset);
+      const presetLabel = preset?.label ? ` · ${preset.label}` : '';
+      return `Bloc ciblé · ${label}${presetLabel}`;
     },
 
     toggleSidebarPages() {
@@ -868,6 +1015,97 @@ export function adminApp() {
       this.sidebarPagesOpen = false;
       this.setView('pages');
       this.createPage();
+    },
+
+    queueAutoSave(type) {
+      if (type === 'page') {
+        clearTimeout(pageAutoSaveTimer);
+        pageAutoSaveTimer = setTimeout(() => this.autoSavePage(), AUTO_SAVE_DELAY);
+      } else if (type === 'seo') {
+        clearTimeout(seoAutoSaveTimer);
+        seoAutoSaveTimer = setTimeout(() => this.autoSaveSeo(), AUTO_SAVE_DELAY);
+      }
+    },
+
+    setAutoSaveState(status, message) {
+      this.autoSave.status = status;
+      this.autoSave.message = message;
+      this.autoSave.visible = true;
+      if (autoSaveHideTimer) {
+        clearTimeout(autoSaveHideTimer);
+      }
+      if (status === 'saved') {
+        this.autoSave.timestamp = Date.now();
+        autoSaveHideTimer = setTimeout(() => {
+          if (Date.now() - this.autoSave.timestamp >= 2400) {
+            this.autoSave.visible = false;
+          }
+        }, 2400);
+      }
+    },
+
+    async autoSavePage() {
+      if (!this.currentPage) return;
+      this.setAutoSaveState('saving', 'Enregistrement…');
+      const previousSuppression = suppressAutoSave;
+      suppressAutoSave = true;
+      try {
+        await this.savePage({ silent: true });
+        const formatted = new Date().toLocaleTimeString('fr-FR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        this.setAutoSaveState('saved', `Enregistré à ${formatted}`);
+        this.refreshPreviewFrame({ notify: false });
+        hasInitialPageSnapshot = false;
+        hasInitialSeoSnapshot = false;
+      } catch (error) {
+        console.error('Auto-save page failed', error);
+        this.setAutoSaveState('error', 'Erreur lors de l’enregistrement');
+      } finally {
+        suppressAutoSave = previousSuppression;
+      }
+    },
+
+    async autoSaveSeo() {
+      if (!this.currentPage) return;
+      this.setAutoSaveState('saving', 'Enregistrement SEO…');
+      const previousSuppression = suppressAutoSave;
+      suppressAutoSave = true;
+      try {
+        await this.savePageSeo({ silent: true });
+        const formatted = new Date().toLocaleTimeString('fr-FR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        this.setAutoSaveState('saved', `SEO enregistré à ${formatted}`);
+        hasInitialSeoSnapshot = false;
+      } catch (error) {
+        console.error('Auto-save SEO failed', error);
+        this.setAutoSaveState('error', 'Erreur SEO');
+      } finally {
+        suppressAutoSave = previousSuppression;
+      }
+    },
+
+    handleShortcuts(event) {
+      const meta = navigator.platform.toLowerCase().includes('mac');
+      const primary = meta ? event.metaKey : event.ctrlKey;
+      if (!primary) return;
+      const key = event.key?.toLowerCase();
+      if (key === 's' && !event.shiftKey) {
+        event.preventDefault();
+        this.savePage();
+      } else if (key === 'p' && !event.shiftKey) {
+        event.preventDefault();
+        window.Alpine?.store('ui')?.togglePreview();
+      } else if (key === 'd' && event.shiftKey) {
+        event.preventDefault();
+        window.Alpine?.store('ui')?.toggleToolkit();
+      } else if (key === 'n' && !event.shiftKey) {
+        event.preventDefault();
+        this.createPage();
+      }
     }
   };
 }
@@ -893,6 +1131,26 @@ document.addEventListener('alpine:init', () => {
     }
   };
 
+  const uiStore = {
+    showToolkit: window.innerWidth >= 1024,
+    showPreview: true,
+    toggleToolkit() {
+      this.showToolkit = !this.showToolkit;
+    },
+    togglePreview() {
+      this.showPreview = !this.showPreview;
+    }
+  };
+
+  const syncToolkitVisibility = () => {
+    if (window.innerWidth >= 1024) {
+      uiStore.showToolkit = true;
+    }
+  };
+
+  window.addEventListener('resize', syncToolkitVisibility);
+
+  window.Alpine.store('ui', uiStore);
   window.Alpine.store('theme', themeStore);
   themeStore.set(themeStore.mode, { persist: Boolean(storedPreference) });
 

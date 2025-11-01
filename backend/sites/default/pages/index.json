@@ -16,10 +16,34 @@
         "bg-gradient-to-br",
         "from-indigo-500/90",
         "to-emerald-400/80",
-        "text-white",
-        "shadow-xl",
-        "rounded-3xl"
+        "py-14",
+        "px-10",
+        "space-y-8",
+        "shadow-none",
+        "rounded-lg",
+        "text-center",
+        "mx-auto",
+        "bg-slate-900/80",
+        "border",
+        "border-white/10",
+        "text-white"
       ]
+    },
+    {
+      "id": "text-1762003060434",
+      "type": "text",
+      "preset": "text-prose",
+      "tokens": [
+        "space-y-4",
+        "text-slate-200",
+        "leading-relaxed",
+        "bg-indigo-500/90",
+        "text-white",
+        "shadow-xl"
+      ],
+      "props": {
+        "content": "<p>Ajoutez votre contenu riche ici. Les paragraphes, listes et liens seront stylés automatiquement.</p>"
+      }
     }
   ]
 }

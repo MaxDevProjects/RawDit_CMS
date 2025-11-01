@@ -14,5 +14,9 @@
   "autoDeploy": false,
   "preview": {
     "mode": "iframe"
+  },
+  "appearance": {
+    "useSystem": true,
+    "mode": "light"
   }
 }

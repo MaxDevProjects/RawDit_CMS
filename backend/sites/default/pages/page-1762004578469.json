@@ -1,20 +1,19 @@
 {
-  "title": "Services",
-  "slug": "services",
+  "title": "Nouvelle page",
+  "slug": "page-1762004578469",
   "layout": "layout",
   "sections": [
     {
-      "id": "hero-1761895927470",
+      "id": "hero-1762004578469",
       "type": "hero",
       "preset": "hero-basic",
       "tokens": [
         "bg-gradient-to-br",
         "from-indigo-500/90",
         "to-emerald-400/80",
-        "rounded-3xl",
-        "bg-white/80",
-        "backdrop-blur",
-        "text-slate-900"
+        "text-white",
+        "shadow-xl",
+        "rounded-3xl"
       ],
       "props": {
         "eyebrow": "Nouveauté",
