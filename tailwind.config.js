@@ -1,23 +1,28 @@
 import plugin from 'tailwindcss/plugin';
-import { getCurrentTheme } from './backend/lib/theme.js';
+import fs from 'fs';
+import path from 'path';
 
-const getThemeColors = async () => {
-  try {
-    const theme = await getCurrentTheme();
-    return {
-      primary: theme?.colors?.primary || '#7B61FF',
-      secondary: theme?.colors?.secondary || '#A3E3C2',
-      background: theme?.colors?.background || '#FFFFFF',
-      text: theme?.colors?.text || '#1F2937',
-      contrastBg: '#000000',
-      contrastText: '#FFFFFF',
-      contrastAccent: '#FFD700'
-    };
-  } catch (error) {
-    console.error('Error loading theme:', error);
-    return {};
+// Lecture synchrone du thème par défaut
+const defaultTheme = {
+  colors: {
+    primary: '#7B61FF',
+    secondary: '#A3E3C2',
+    background: '#FFFFFF',
+    text: '#1F2937'
   }
 };
+
+// Essayer de lire le thème actuel de manière synchrone
+let currentTheme = defaultTheme;
+try {
+  const themePath = path.join(process.cwd(), 'backend/sites/default/theme.json');
+  if (fs.existsSync(themePath)) {
+    const themeContent = fs.readFileSync(themePath, 'utf8');
+    currentTheme = JSON.parse(themeContent);
+  }
+} catch (error) {
+  console.warn('Could not load theme.json, using default theme');
+}
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -28,7 +33,15 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
-      colors: await getThemeColors(),
+      colors: {
+        primary: currentTheme.colors?.primary || defaultTheme.colors.primary,
+        secondary: currentTheme.colors?.secondary || defaultTheme.colors.secondary,
+        background: currentTheme.colors?.background || defaultTheme.colors.background,
+        text: currentTheme.colors?.text || defaultTheme.colors.text,
+        contrastBg: '#000000',
+        contrastText: '#FFFFFF',
+        contrastAccent: '#FFD700'
+      },
       fontFamily: {
         display: 'var(--font-display)',
         body: 'var(--font-body)'
