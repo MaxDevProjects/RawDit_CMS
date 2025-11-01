@@ -104,6 +104,14 @@ const navigationItems = [
   }
 ];
 
+const pagesNavItem =
+  navigationItems.find(item => item.id === 'pages') || {
+    id: 'pages',
+    label: 'Pages',
+    icon:
+      '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4h7l5 5v11a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 4v6h6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+
 const layoutGroups = [
   {
     id: 'color',
@@ -281,6 +289,8 @@ export function adminApp() {
     view: saved.view || 'pages',
     pageTab: saved.pageTab || 'content',
     navigation: navigationItems,
+    pagesNav: pagesNavItem,
+    navigationSimple: navigationItems.filter(item => item.id !== 'pages'),
     siteId: api.getSite(),
     sites: [],
     pages: [],
@@ -296,6 +306,7 @@ export function adminApp() {
     settings: defaultSettingsState(),
     media: [],
     sectionPresets,
+    sidebarPagesOpen: false,
     layoutPanel: {
       groups: layoutGroups,
       open: layoutGroups.reduce((acc, group) => ({ ...acc, [group.id]: group.id === 'color' }), {}),
@@ -841,6 +852,22 @@ export function adminApp() {
       section.tokens = nextTokens;
       this.layoutPanel.selection[groupId] = optionId;
       this.notify('Preset appliqué à la section');
+    },
+
+    toggleSidebarPages() {
+      this.sidebarPagesOpen = !this.sidebarPagesOpen;
+    },
+
+    openPageFromSidebar(slug) {
+      this.setView('pages');
+      this.sidebarPagesOpen = false;
+      this.selectPage(slug);
+    },
+
+    createPageFromSidebar() {
+      this.sidebarPagesOpen = false;
+      this.setView('pages');
+      this.createPage();
     }
   };
 }
