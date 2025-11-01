@@ -17,6 +17,7 @@ import previewRouter from './backend/routes/preview.js';
 import settingsRouter from './backend/routes/settings.js';
 import deployRouter from './backend/routes/deploy.js';
 import sitesRouter from './backend/routes/sites.js';
+import historyRouter from './backend/routes/history.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -102,6 +103,7 @@ apiRouter.use('/media', mediaRouter);
 apiRouter.use('/preview', previewRouter);
 apiRouter.use('/settings', settingsRouter);
 apiRouter.use('/build', deployRouter);
+apiRouter.use('/history', historyRouter);
 
 app.use('/api', apiRouter);
 
