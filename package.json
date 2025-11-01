@@ -4,9 +4,10 @@
   "description": "Clower Edit V1 - low tech CMS for static site generation",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm:serve\" \"npm:tailwind:watch\"",
+    "dev": "concurrently \"npm:serve\" \"npm:tailwind:watch\" \"npm:theme:watch\"",
     "serve": "NODE_ENV=development node server.js",
     "tailwind:watch": "tailwindcss -c tailwind.config.js -i ./admin/styles.css -o ./public/assets/admin.css --watch",
+    "theme:watch": "node backend/services/watcher.js",
     "build:css": "tailwindcss -c tailwind.config.js -i ./admin/styles.css -o ./public/assets/admin.css",
     "build": "npm run build:css && node backend/scripts/generate.js",
     "deploy": "node backend/scripts/deploy.js"
