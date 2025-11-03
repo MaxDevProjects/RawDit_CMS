@@ -771,7 +771,7 @@
                 <div class="rounded-3xl border border-slate-200 bg-slate-950/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 contrast:border-contrastAccent/40 contrast:bg-black">
                   <div class="relative h-[280px] min-h-[280px] overflow-hidden rounded-2xl border border-slate-800/80 bg-black/80">
                     <div class="absolute inset-0 flex items-start justify-center">
-                      <iframe class="h-[560px] w-[640px] origin-top transition-transform duration-200 ease-out" :class="{'scale-100': preview.viewport === 'desktop', 'scale-[0.75]': preview.viewport === 'tablet', 'scale-[0.5]': preview.viewport === 'mobile'}" :src="preview.url" title="Aperçu miniature du site" loading="lazy"></iframe>
+                      <iframe class="preview-frame h-[560px] w-[640px] origin-top transition-transform duration-200 ease-out" :class="{'scale-100': preview.viewport === 'desktop', 'scale-[0.75]': preview.viewport === 'tablet', 'scale-[0.5]': preview.viewport === 'mobile'}" :src="preview.url" title="Aperçu miniature du site" loading="lazy"></iframe>
                     </div>
                   </div>
                   <p class="mt-3 text-[11px] uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 contrast:text-contrastAccent">Preview auto à jour</p>
@@ -842,7 +842,7 @@
           </button>
         </div>
       </div>
-      <iframe class="h-[70vh] w-full rounded-2xl border border-white/10 bg-white" :src="preview.url" title="Prévisualisation du site"></iframe>
+      <iframe class="preview-frame h-[70vh] w-full rounded-2xl border border-white/10 bg-white" :src="preview.url" title="Prévisualisation du site"></iframe>
     </div>
   </div>
 </body>

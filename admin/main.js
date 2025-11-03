@@ -1,6 +1,12 @@
 import { createApiClient } from './api.js';
 import { createSection, sectionPresets, getPreset } from './presets.js';
-import { buildPreviewUrl, initPreviewBridge } from './preview.js';
+import {
+  buildPreviewUrl,
+  initPreviewBridge,
+  initPreviewCommunication,
+  applyStyleToPreview,
+  syncSectionsWithPreview
+} from './preview.js';
 
 const THEME_STORAGE_KEY = 'themeMode';
 const THEME_MODES = ['light', 'dark', 'contrast'];
@@ -255,6 +261,11 @@ const layoutGroups = [
   }
 ];
 
+const DESIGN_SYNC_DELAY = 300;
+const CONTENT_SYNC_DELAY = 300;
+const PREVIEW_CHANNEL_NAME = 'update-preview';
+const LIVE_PREVIEW_SUPPRESS_WINDOW = 1600;
+
 function persistState(partial) {
   const current = JSON.parse(localStorage.getItem(stateKey) || '{}');
   localStorage.setItem(stateKey, JSON.stringify({ ...current, ...partial }));
@@ -276,6 +287,30 @@ function allTokensForGroup(group) {
   return group.options.flatMap(option => option.tokens);
 }
 
+function normalizePage(page) {
+  if (!page) {
+    return null;
+  }
+  const sections = Array.isArray(page.sections) ? page.sections : [];
+  const normalizedSections = sections.map((section, index) => {
+    const preset = getPreset(section.type, section.preset || null);
+    const baseTokens = Array.isArray(section.tokens) ? section.tokens : preset?.tokens || [];
+    const safeTokens = baseTokens.filter(Boolean);
+    return {
+      id: section.id || `${section.type}-${index}-${Date.now()}`,
+      ...section,
+      preset: preset?.id || section.preset || null,
+      tokens: safeTokens.length ? safeTokens : (preset?.tokens || []),
+      props: section.props || {}
+    };
+  });
+  return {
+    ...page,
+    originalSlug: page.slug,
+    sections: normalizedSections
+  };
+}
+
 export function adminApp() {
   const api = createApiClient();
   let stopPreview = null;
@@ -288,6 +323,82 @@ export function adminApp() {
   let hasInitialPageSnapshot = false;
   let hasInitialSeoSnapshot = false;
   const AUTO_SAVE_DELAY = 800;
+  const previewChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(PREVIEW_CHANNEL_NAME) : null;
+  const managedTokens = new Set(layoutGroups.flatMap(group => allTokensForGroup(group)));
+  const layoutGroupOptionMap = layoutGroups.reduce((acc, group) => {
+    acc[group.id] = group.options.reduce((optionsAcc, option) => {
+      optionsAcc[option.id] = option;
+      return optionsAcc;
+    }, {});
+    return acc;
+  }, {});
+  let designWatcherTimer = null;
+  let pendingDesignSnapshot = null;
+  let suppressDesignWatcher = false;
+  let pendingSectionsSnapshot = null;
+  let contentSyncTimer = null;
+  let suppressPreviewSync = false;
+  let lastLivePreviewSync = 0;
+  let previewReloadTimer = null;
+  let lastSavedPageSnapshot = null;
+
+  if (previewChannel) {
+    let channelClosed = false;
+    const closeChannel = () => {
+      if (!channelClosed) {
+        previewChannel.close();
+        channelClosed = true;
+      }
+    };
+    window.addEventListener('beforeunload', closeChannel, { once: true });
+  }
+
+  const markLivePreviewSync = () => {
+    lastLivePreviewSync = Date.now();
+  };
+
+  const broadcastPreviewUpdate = payload => {
+    if (previewChannel) {
+      try {
+        previewChannel.postMessage(payload);
+      } catch (error) {
+        console.warn('Broadcast channel update failed', error);
+      }
+    }
+  };
+
+  const pushSectionsToPreview = sections => {
+    if (!Array.isArray(sections)) {
+      return;
+    }
+    const delivered = syncSectionsWithPreview(sections);
+    if (!delivered) {
+      setTimeout(() => {
+        syncSectionsWithPreview(sections);
+      }, CONTENT_SYNC_DELAY);
+    }
+    broadcastPreviewUpdate({ type: 'sectionsSync', sections });
+    markLivePreviewSync();
+  };
+
+  const scheduleSectionsPreviewSync = sections => {
+    try {
+      pendingSectionsSnapshot = JSON.parse(JSON.stringify(sections || []));
+    } catch (error) {
+      console.warn('Sections snapshot serialization failed', error);
+      pendingSectionsSnapshot = Array.isArray(sections) ? sections : [];
+    }
+    if (contentSyncTimer) {
+      clearTimeout(contentSyncTimer);
+    }
+    contentSyncTimer = setTimeout(() => {
+      if (pendingSectionsSnapshot) {
+        pushSectionsToPreview(pendingSectionsSnapshot);
+        pendingSectionsSnapshot = null;
+      }
+      contentSyncTimer = null;
+    }, CONTENT_SYNC_DELAY);
+  };
 
   return {
     ready: false,
@@ -361,6 +472,159 @@ export function adminApp() {
       }, 4000);
     },
 
+    setupDesignStudioWatcher() {
+      if (this._designWatcherInitialized) {
+        return;
+      }
+      this._designWatcherInitialized = true;
+      this.$watch(
+        () =>
+          JSON.stringify({
+            section: this.layoutPanel.section,
+            selection: this.layoutPanel.selection
+          }),
+        (value, oldValue) => {
+          if (!value || !oldValue) {
+            return;
+          }
+          if (suppressDesignWatcher || !this.currentPage) {
+            return;
+          }
+          try {
+            const snapshot = JSON.parse(value);
+            this.scheduleDesignStudioSync(snapshot);
+          } catch (error) {
+            console.warn('Design studio watcher error', error);
+          }
+        }
+      );
+    },
+
+    ensurePreviewCommunication() {
+      if (this._previewCommunicationReady) {
+        return;
+      }
+      this.$nextTick(() => {
+        if (this._previewCommunicationReady) {
+          return;
+        }
+        const iframe = document.querySelector('.preview-frame');
+        if (iframe) {
+          initPreviewCommunication(iframe);
+          this._previewCommunicationReady = true;
+        }
+      });
+    },
+
+    scheduleDesignStudioSync(snapshot) {
+      if (!snapshot?.section) {
+        return;
+      }
+      try {
+        pendingDesignSnapshot = JSON.parse(JSON.stringify(snapshot));
+      } catch (error) {
+        console.warn('Design studio snapshot serialization failed', error);
+        pendingDesignSnapshot = snapshot;
+      }
+      if (designWatcherTimer) {
+        clearTimeout(designWatcherTimer);
+      }
+      designWatcherTimer = setTimeout(() => {
+        if (pendingDesignSnapshot) {
+          this.applyDesignStudioSnapshot(pendingDesignSnapshot);
+          pendingDesignSnapshot = null;
+        }
+        designWatcherTimer = null;
+      }, DESIGN_SYNC_DELAY);
+    },
+
+    applyDesignStudioSnapshot(snapshot) {
+      const sectionId = snapshot?.section;
+      if (!sectionId || !this.currentPage) {
+        return;
+      }
+
+      const section = this.currentPage.sections?.find(sec => sec.id === sectionId);
+      if (!section) {
+        return;
+      }
+
+      const selection = snapshot.selection || {};
+      const previousStyle = section.style || {};
+      const nextStyle = { ...previousStyle };
+      let styleChanged = false;
+
+      this.layoutPanel.groups.forEach(group => {
+        const selectedOptionId = selection[group.id];
+        if (selectedOptionId) {
+          if (nextStyle[group.id] !== selectedOptionId) {
+            nextStyle[group.id] = selectedOptionId;
+            styleChanged = true;
+          }
+        } else if (nextStyle[group.id]) {
+          delete nextStyle[group.id];
+          styleChanged = true;
+        }
+      });
+
+      if (styleChanged || !section.style) {
+        section.style = nextStyle;
+      }
+
+      const resolvedStyle = section.style || nextStyle;
+      const previousTokens = Array.isArray(section.tokens) ? section.tokens.slice() : [];
+      const baseTokens = previousTokens.filter(token => !managedTokens.has(token));
+      const computedTokens = [...baseTokens];
+
+      this.layoutPanel.groups.forEach(group => {
+        const optionId = resolvedStyle[group.id] || selection[group.id];
+        if (!optionId) {
+          return;
+        }
+        const option = layoutGroupOptionMap[group.id]?.[optionId];
+        if (!option) {
+          return;
+        }
+        option.tokens.forEach(token => {
+          if (token && !computedTokens.includes(token)) {
+            computedTokens.push(token);
+          }
+        });
+      });
+
+      const tokensChanged =
+        previousTokens.length !== computedTokens.length ||
+        previousTokens.some((token, index) => token !== computedTokens[index]);
+
+      if (tokensChanged) {
+        section.tokens = computedTokens;
+      }
+
+      if (styleChanged || tokensChanged) {
+        applyStyleToPreview({
+          sectionId,
+          tokens: section.tokens || [],
+          preset: section.preset,
+          style: section.style
+        });
+        markLivePreviewSync();
+      }
+
+      if (styleChanged || tokensChanged) {
+        broadcastPreviewUpdate({
+          type: 'styleUpdate',
+          sectionId,
+          tokens: section.tokens || [],
+          preset: section.preset,
+          style: section.style
+        });
+      }
+
+      if (styleChanged || tokensChanged) {
+        this.queueAutoSave('page');
+      }
+    },
+
     async init() {
       this.loading = true;
       await this.loadSites();
@@ -371,6 +635,11 @@ export function adminApp() {
         this.siteId = this.sites[0];
         api.setSite(this.siteId);
       }
+
+      // Initialise les écouteurs de clic sur les sections
+      this.$nextTick(() => {
+        this.initSectionListeners();
+      });
 
       if (!api.hasToken()) {
         this.view = 'login';
@@ -398,8 +667,21 @@ export function adminApp() {
       this.$nextTick(() => {
         this.$watch(
           () => (this.currentPage ? JSON.stringify(this.currentPage) : null),
-          value => {
-            if (!value || suppressAutoSave) return;
+          (value, oldValue) => {
+            if (!value) return;
+            if (value === lastSavedPageSnapshot) {
+              return;
+            }
+            let snapshot = null;
+            try {
+              snapshot = JSON.parse(value);
+            } catch (error) {
+              console.warn('Current page snapshot parsing failed', error);
+            }
+            if (!suppressPreviewSync && snapshot) {
+              scheduleSectionsPreviewSync(snapshot.sections || []);
+            }
+            if (suppressAutoSave) return;
             if (!hasInitialPageSnapshot) {
               hasInitialPageSnapshot = true;
               return;
@@ -418,6 +700,8 @@ export function adminApp() {
             this.queueAutoSave('seo');
           }
         );
+        this.setupDesignStudioWatcher();
+        this.ensurePreviewCommunication();
       });
 
       this._shortcutHandler = event => this.handleShortcuts(event);
@@ -523,24 +807,7 @@ export function adminApp() {
       };
       this.media = media;
 
-      this.pages = (pages || []).map(page => {
-        const normalizedSections = (page.sections || []).map((section, index) => {
-          const preset = getPreset(section.type, section.preset || null);
-          const tokens = Array.isArray(section.tokens) ? section.tokens : preset?.tokens || [];
-          return {
-            id: section.id || `${section.type}-${index}-${Date.now()}`,
-            ...section,
-            preset: preset?.id || section.preset || null,
-            tokens: tokens.length ? tokens : (preset?.tokens || []),
-            props: section.props || {}
-          };
-        });
-        return {
-          ...page,
-          originalSlug: page.slug,
-          sections: normalizedSections
-        };
-      });
+      this.pages = (pages || []).map(page => normalizePage(page)).filter(Boolean);
 
       if (this.pages.length) {
         await this.selectPage(this.pages[0].slug);
@@ -573,10 +840,26 @@ export function adminApp() {
     },
 
     onPreviewEvent(payload) {
-      this.setPreviewUrl(this.currentPage?.slug || 'index');
-      if (payload?.action === 'generate' || payload?.action === 'deploy') {
+      const action = payload?.action;
+      if (action === 'generate' || action === 'deploy') {
         this.loadManifest();
       }
+      const now = Date.now();
+      const shouldDeferReload = action === 'updated' && now - lastLivePreviewSync < LIVE_PREVIEW_SUPPRESS_WINDOW;
+
+      if (shouldDeferReload) {
+        if (previewReloadTimer) {
+          clearTimeout(previewReloadTimer);
+        }
+        previewReloadTimer = setTimeout(() => {
+          this.setPreviewUrl(this.currentPage?.slug || 'index');
+          this.notify('Prévisualisation actualisée');
+          previewReloadTimer = null;
+        }, LIVE_PREVIEW_SUPPRESS_WINDOW);
+        return;
+      }
+
+      this.setPreviewUrl(this.currentPage?.slug || 'index');
       this.notify('Prévisualisation actualisée');
     },
 
@@ -603,7 +886,18 @@ export function adminApp() {
       const match = this.pages.find(page => page.slug === slug);
       if (!match) return;
       const previousSuppression = suppressAutoSave;
+      const previousPreviewSuppression = suppressPreviewSync;
       suppressAutoSave = true;
+      suppressPreviewSync = true;
+      
+      // Retire le ring de la section précédemment sélectionnée
+      if (this.layoutPanel.section) {
+        const prevElement = document.querySelector(`[data-section-id="${this.layoutPanel.section}"]`);
+        if (prevElement) {
+          prevElement.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+        }
+      }
+      
       try {
         this.currentPage = JSON.parse(JSON.stringify(match));
         this.setPreviewUrl(slug);
@@ -616,13 +910,31 @@ export function adminApp() {
           console.warn('SEO page indisponible', error);
           this.pageSeo = { indexed: true };
         }
+        
+        // Sélectionne la première section par défaut avec le ring
         const firstSection = this.currentPage.sections?.[0];
         this.layoutPanel.section = firstSection?.id || null;
+        
+        if (firstSection?.id) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-section-id="${firstSection.id}"]`);
+            if (element) {
+              element.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+            }
+          }, 0);
+        }
+        
         this.syncLayoutSelection();
         hasInitialPageSnapshot = false;
         hasInitialSeoSnapshot = false;
+        try {
+          lastSavedPageSnapshot = JSON.stringify(this.currentPage);
+        } catch (error) {
+          lastSavedPageSnapshot = null;
+        }
       } finally {
         suppressAutoSave = previousSuppression;
+        suppressPreviewSync = previousPreviewSuppression;
       }
     },
 
@@ -645,6 +957,7 @@ export function adminApp() {
         persistState({ pageTab: this.pageTab });
         hasInitialPageSnapshot = false;
         hasInitialSeoSnapshot = false;
+        lastSavedPageSnapshot = null;
       } finally {
         suppressAutoSave = previousSuppression;
       }
@@ -671,15 +984,31 @@ export function adminApp() {
 
     removeSection(index) {
       if (!this.currentPage) return;
+      const removedSection = this.currentPage.sections[index];
+      if (removedSection) {
+        const element = document.querySelector(`[data-section-id="${removedSection.id}"]`);
+        if (element) {
+          element.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+        }
+      }
+      
       this.currentPage.sections.splice(index, 1);
       const fallback = this.currentPage.sections[0];
       this.layoutPanel.section = fallback?.id || null;
+      
+      if (fallback) {
+        const fallbackElement = document.querySelector(`[data-section-id="${fallback.id}"]`);
+        if (fallbackElement) {
+          fallbackElement.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+        }
+      }
+      
       this.syncLayoutSelection();
     },
 
     async savePage(options = {}) {
       if (!this.currentPage) return;
-      const { silent = false } = options;
+      const { silent = false, reload = false } = options;
       if (!silent) {
         this.setAutoSaveState('saving', 'Enregistrement…');
       }
@@ -689,13 +1018,56 @@ export function adminApp() {
       const method = originalSlug ? 'put' : 'post';
       const endpoint = originalSlug ? `/pages/${originalSlug}` : '/pages';
       const previousSuppression = suppressAutoSave;
+      const previousPreviewSuppression = suppressPreviewSync;
       suppressAutoSave = true;
+      suppressPreviewSync = true;
+      let needsFullReload = reload;
+      let queuedSectionsSync = null;
       try {
-        await api[method](endpoint, payload);
-        await this.loadCoreData();
-        if (payload.slug) {
-          await this.selectPage(payload.slug);
+        const response = await api[method](endpoint, payload);
+        const savedPageRaw = response?.page || payload;
+        const normalizedSavedPage = normalizePage(savedPageRaw);
+        if (!normalizedSavedPage) {
+          return;
         }
+
+        const slugChanged = Boolean(originalSlug && normalizedSavedPage.slug && normalizedSavedPage.slug !== originalSlug);
+        needsFullReload = needsFullReload || slugChanged || method === 'post';
+
+        if (needsFullReload) {
+          await this.loadCoreData();
+          await this.selectPage(normalizedSavedPage.slug);
+        } else {
+          const clonedSavedPage = JSON.parse(JSON.stringify(normalizedSavedPage));
+          const insertionSlug = originalSlug || normalizedSavedPage.slug;
+          const targetIndex = this.pages.findIndex(page => page.slug === insertionSlug);
+          if (targetIndex !== -1) {
+            this.pages.splice(targetIndex, 1, clonedSavedPage);
+          } else {
+            const slugIndex = this.pages.findIndex(page => page.slug === normalizedSavedPage.slug);
+            if (slugIndex !== -1) {
+              this.pages.splice(slugIndex, 1, clonedSavedPage);
+            } else {
+              this.pages.push(clonedSavedPage);
+            }
+          }
+          this.pages.sort((a, b) => a.slug.localeCompare(b.slug));
+
+          Object.assign(this.currentPage, {
+            title: normalizedSavedPage.title,
+            slug: normalizedSavedPage.slug,
+            layout: normalizedSavedPage.layout,
+            sections: JSON.parse(JSON.stringify(normalizedSavedPage.sections)),
+            originalSlug: normalizedSavedPage.slug
+          });
+          queuedSectionsSync = JSON.parse(JSON.stringify(this.currentPage.sections));
+          try {
+            lastSavedPageSnapshot = JSON.stringify(this.currentPage);
+          } catch (error) {
+            lastSavedPageSnapshot = null;
+          }
+        }
+
         if (!silent) {
           const formatted = new Date().toLocaleTimeString('fr-FR', {
             hour: '2-digit',
@@ -703,12 +1075,22 @@ export function adminApp() {
           });
           this.setAutoSaveState('saved', `Enregistré à ${formatted}`);
           this.notify('Page sauvegardée');
-          this.refreshPreviewFrame({ notify: false });
         }
       } finally {
         hasInitialPageSnapshot = false;
         hasInitialSeoSnapshot = false;
         suppressAutoSave = previousSuppression;
+        suppressPreviewSync = previousPreviewSuppression;
+      }
+      if (!needsFullReload && !previousPreviewSuppression && queuedSectionsSync) {
+        scheduleSectionsPreviewSync(queuedSectionsSync);
+      }
+      if (needsFullReload) {
+        try {
+          lastSavedPageSnapshot = JSON.stringify(this.currentPage);
+        } catch (error) {
+          lastSavedPageSnapshot = null;
+        }
       }
     },
 
@@ -899,6 +1281,11 @@ export function adminApp() {
       clearTimeout(pageAutoSaveTimer);
       clearTimeout(seoAutoSaveTimer);
       clearTimeout(autoSaveHideTimer);
+      clearTimeout(contentSyncTimer);
+      clearTimeout(previewReloadTimer);
+      contentSyncTimer = null;
+      previewReloadTimer = null;
+      pendingSectionsSnapshot = null;
       this.autoSave.visible = false;
       this.autoSave.status = 'idle';
       this.autoSave.message = '';
@@ -947,23 +1334,109 @@ export function adminApp() {
       this.layoutPanel.open[id] = !this.layoutPanel.open[id];
     },
 
+    isSectionSelected(sectionId) {
+      return this.layoutPanel.section === sectionId;
+    },
+
+
+    initSectionListeners() {
+      const sections = document.querySelectorAll('[data-section-id]');
+      sections.forEach(section => {
+        section.removeEventListener('click', this.handleSectionClick);
+        section.addEventListener('click', (e) => this.handleSectionClick(e, section));
+      });
+    },
+
+    handleSectionClick(event, section) {
+      event.preventDefault();
+      const sectionId = section.getAttribute('data-section-id');
+      if (sectionId) {
+        this.selectLayoutSection(sectionId);
+        console.log('Section sélectionnée :', sectionId);
+      }
+    },
+
     selectLayoutSection(id) {
+      // Désélectionne la section précédente dans la preview
+      const previewFrame = document.querySelector('.preview-frame');
+      if (previewFrame?.contentWindow) {
+        previewFrame.contentWindow.postMessage({
+          type: 'selectSection',
+          sectionId: null
+        }, '*');
+      }
+      
+      // Mise à jour de la sélection
+      const previousId = this.layoutPanel.section;
       this.layoutPanel.section = id;
+      
+      // Mise à jour des classes pour l'UI
+      if (previousId) {
+        const prevElement = document.querySelector(`[data-section-id="${previousId}"]`);
+        if (prevElement) {
+          prevElement.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+        }
+      }
+      
+      const currentElement = document.querySelector(`[data-section-id="${id}"]`);
+      if (currentElement) {
+        currentElement.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+      }
+      
       this.syncLayoutSelection();
+      
+      // Sélectionne la nouvelle section dans la preview
+      if (previewFrame?.contentWindow) {
+        previewFrame.contentWindow.postMessage({
+          type: 'selectSection',
+          sectionId: id
+        }, '*');
+      }
+      
       const uiStore = window.Alpine?.store('ui');
       if (uiStore) {
         uiStore.showToolkit = true;
+      }
+      
+      // Scroll la preview jusqu'à la section
+      if (id && previewFrame?.contentWindow) {
+        previewFrame.contentWindow.postMessage({
+          type: 'scrollToSection',
+          sectionId: id
+        }, '*');
       }
     },
 
     syncLayoutSelection() {
       const section = this.currentPage?.sections?.find(sec => sec.id === this.layoutPanel.section);
       if (!section) return;
-      this.layoutPanel.groups.forEach(group => {
-        const currentTokens = section.tokens || [];
-        const match = group.options.find(option => option.tokens.every(token => currentTokens.includes(token)));
-        this.layoutPanel.selection[group.id] = match?.id || group.options[0]?.id || null;
-      });
+      suppressDesignWatcher = true;
+      try {
+        const currentTokens = Array.isArray(section.tokens) ? section.tokens : [];
+        const style = { ...(section.style || {}) };
+        this.layoutPanel.groups.forEach(group => {
+          let selectedOption = null;
+          if (style[group.id]) {
+            selectedOption = layoutGroupOptionMap[group.id]?.[style[group.id]] || null;
+          }
+          if (!selectedOption) {
+            selectedOption = group.options.find(option =>
+              option.tokens.every(token => currentTokens.includes(token))
+            );
+          }
+          const fallback = group.options[0] || null;
+          const selectedId = selectedOption?.id || fallback?.id || null;
+          this.layoutPanel.selection[group.id] = selectedId;
+          if (selectedId) {
+            style[group.id] = selectedId;
+          } else {
+            delete style[group.id];
+          }
+        });
+        section.style = style;
+      } finally {
+        suppressDesignWatcher = false;
+      }
     },
 
     applyLayoutOption(groupId, optionId) {
@@ -973,17 +1446,16 @@ export function adminApp() {
       if (!group) return;
       const option = group.options.find(item => item.id === optionId);
       if (!option) return;
-      const removal = allTokensForGroup(group);
-      const nextTokens = (section.tokens || []).filter(token => !removal.includes(token));
-      option.tokens.forEach(token => {
-        if (!nextTokens.includes(token)) {
-          nextTokens.push(token);
-        }
-      });
-      section.tokens = nextTokens;
       this.layoutPanel.selection[groupId] = optionId;
-      this.notify('Preset appliqué à la section');
-      this.queueAutoSave('page');
+      
+      // Ajoute un feedback visuel immédiat
+      const previewFrame = document.querySelector('.preview-frame');
+      if (previewFrame?.contentWindow) {
+        previewFrame.contentWindow.postMessage({
+          type: 'selectSection',
+          sectionId: section.id
+        }, '*');
+      }
     },
 
     activeLayoutSectionLabel() {
@@ -995,10 +1467,13 @@ export function adminApp() {
       if (!section) {
         return 'Bloc introuvable';
       }
-      const label = this.sectionLabels[section.type] || section.type;
-      const preset = this.sectionPresets[section.type]?.find(item => item.id === section.preset);
-      const presetLabel = preset?.label ? ` · ${preset.label}` : '';
-      return `Bloc ciblé · ${label}${presetLabel}`;
+      
+      // Utilise le titre de la section s'il existe, sinon fallback sur le type
+      const sectionTitle = section.props?.title || section.props?.heading || '';
+      const typeLabel = this.sectionLabels[section.type] || section.type;
+      const label = sectionTitle ? `${typeLabel} - ${sectionTitle}` : typeLabel;
+      
+      return `Section active : ${label}`;
     },
 
     toggleSidebarPages() {
@@ -1050,13 +1525,12 @@ export function adminApp() {
       const previousSuppression = suppressAutoSave;
       suppressAutoSave = true;
       try {
-        await this.savePage({ silent: true });
+        await this.savePage({ silent: true, reload: false });
         const formatted = new Date().toLocaleTimeString('fr-FR', {
           hour: '2-digit',
           minute: '2-digit'
         });
         this.setAutoSaveState('saved', `Enregistré à ${formatted}`);
-        this.refreshPreviewFrame({ notify: false });
         hasInitialPageSnapshot = false;
         hasInitialSeoSnapshot = false;
       } catch (error) {
