@@ -6,12 +6,12 @@
     "background": "#F8F8FF"
   },
   "fonts": {
-    "display": "Outfit",
+    "display": "Lato",
     "body": "Inter"
   },
   "radius": {
     "small": "0.5rem",
     "medium": "1rem",
-    "large": "2rem"
+    "large": "2.5rem"
   }
 }
