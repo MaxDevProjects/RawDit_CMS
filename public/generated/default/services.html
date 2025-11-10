@@ -104,6 +104,19 @@
         return `<figure class="media-figure"><img src="${src}" alt="${alt}" />${caption}</figure>`;
       };
 
+      const renderGroup = (section = {}) => {
+        const children = Array.isArray(section.children) ? section.children : [];
+        const hasChildren = children.length > 0;
+        const style = section.style || {};
+        const layout = style.layout || (hasChildren ? 'flex flex-col' : '');
+        const gap = style.gap || (hasChildren ? 'gap-6' : '');
+        const align = style.align || (hasChildren ? 'justify-start items-start' : '');
+        const classNames = [layout, gap, align].filter(Boolean).join(' ').trim();
+        const classAttr = ` class="${escapeAttribute(classNames)}"`;
+        const content = children.map(child => renderSectionContent(child)).join('');
+        return `<div data-group-container${classAttr}>${content}</div>`;
+      };
+
       const renderSectionContent = (section = {}) => {
         const type = section.type || '';
         const props = section.props || {};
@@ -115,6 +128,9 @@
         }
         if (type === 'image') {
           return renderImage(props);
+        }
+        if (type === 'groupe') {
+          return renderGroup(section);
         }
         return '';
       };
@@ -220,7 +236,8 @@
 
           const {
             tokens = [],
-            preset: incomingPreset = null
+            preset: incomingPreset = null,
+            style: incomingStyle = null
           } = event.data;
 
           const baseClass = section.dataset.sliceBase || 'slice';
@@ -240,6 +257,16 @@
 
           const hadHighlight = section.classList.contains('section-highlight');
           section.className = nextClasses.join(' ').trim();
+
+          if (section.dataset.sectionType === 'groupe') {
+            const container = section.querySelector('[data-group-container]');
+            if (container) {
+              const layout = incomingStyle?.layout || '';
+              const gap = incomingStyle?.gap || '';
+              const align = incomingStyle?.align || '';
+              container.className = [layout, gap, align].filter(Boolean).join(' ').trim();
+            }
+          }
 
           if (hadHighlight) {
             section.classList.add('section-highlight');

@@ -1,0 +1,4 @@
+{% set __parent_section = section %}
+{% set section = child %}
+{% include 'sections/text.njk' %}
+{% set section = __parent_section %}

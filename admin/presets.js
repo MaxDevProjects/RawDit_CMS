@@ -46,6 +46,15 @@ export const sectionPresets = {
       surface: 'media-card',
       tokens: ['rounded-3xl', 'border', 'border-white/10', 'shadow-lg', 'bg-white/10', 'p-6']
     }
+  ],
+  groupe: [
+    {
+      id: 'group-basic',
+      label: 'Groupe de contenu',
+      description: 'Conteneur parent pour organiser plusieurs blocs.',
+      surface: 'group',
+      tokens: []
+    }
   ]
 };
 
@@ -84,6 +93,21 @@ export function createSection(type) {
       src: '',
       alt: 'Description visuelle',
       caption: ''
+    };
+  }
+  if (type === 'groupe') {
+    base.children = [];
+    base.style = {
+      groupLayout: {
+        type: 'block',
+        columns: 1,
+        horizontal: 'left',
+        vertical: 'top',
+        gap: 'medium'
+      },
+      layout: '',
+      gap: '',
+      align: ''
     };
   }
   return base;

@@ -261,6 +261,142 @@ const layoutGroups = [
   }
 ];
 
+const groupLayoutDefaults = Object.freeze({
+  type: 'block',
+  columns: 1,
+  horizontal: 'left',
+  vertical: 'top',
+  gap: 'medium'
+});
+
+const groupGapMap = {
+  small: 'gap-4',
+  medium: 'gap-6',
+  large: 'gap-10'
+};
+
+const groupJustifyMap = {
+  left: 'justify-start',
+  center: 'justify-center',
+  right: 'justify-end'
+};
+
+const groupItemsMap = {
+  top: 'items-start',
+  center: 'items-center',
+  bottom: 'items-end'
+};
+
+function clampGroupColumns(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) {
+    return groupLayoutDefaults.columns;
+  }
+  return Math.min(4, Math.max(1, parsed));
+}
+
+function normalizeGroupLayout(layout = {}) {
+  if (!layout || typeof layout !== 'object') {
+    return { ...groupLayoutDefaults };
+  }
+  const normalized = {
+    type: ['block', 'flex', 'grid'].includes(layout.type) ? layout.type : groupLayoutDefaults.type,
+    columns: clampGroupColumns(layout.columns ?? groupLayoutDefaults.columns),
+    horizontal: ['left', 'center', 'right'].includes(layout.horizontal)
+      ? layout.horizontal
+      : groupLayoutDefaults.horizontal,
+    vertical: ['top', 'center', 'bottom'].includes(layout.vertical)
+      ? layout.vertical
+      : groupLayoutDefaults.vertical,
+    gap: ['small', 'medium', 'large'].includes(layout.gap) ? layout.gap : groupLayoutDefaults.gap
+  };
+  return normalized;
+}
+
+function computeGroupLayoutClasses(layout, hasChildren) {
+  if (!hasChildren) {
+    return {
+      layoutClass: '',
+      gapClass: '',
+      alignClass: ''
+    };
+  }
+
+  const safeLayout = normalizeGroupLayout(layout);
+  let layoutClass = '';
+  if (safeLayout.type === 'grid') {
+    layoutClass = `grid grid-cols-${clampGroupColumns(safeLayout.columns)}`;
+  } else if (safeLayout.type === 'flex') {
+    layoutClass = 'flex flex-wrap';
+  } else {
+    layoutClass = 'flex flex-col';
+  }
+
+  const gapClass = groupGapMap[safeLayout.gap] || '';
+  const alignClass = [
+    groupJustifyMap[safeLayout.horizontal] || groupJustifyMap.left,
+    groupItemsMap[safeLayout.vertical] || groupItemsMap.top
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return { layoutClass, gapClass, alignClass };
+}
+
+function applyGroupLayoutStyle(section) {
+  if (!section || section.type !== 'groupe') {
+    return section;
+  }
+  if (!Array.isArray(section.children)) {
+    section.children = [];
+  }
+  if (!section.style || typeof section.style !== 'object') {
+    section.style = {};
+  }
+  const hasChildren = section.children.length > 0;
+  const normalizedLayout = normalizeGroupLayout(section.style.groupLayout);
+  section.style.groupLayout = normalizedLayout;
+  const { layoutClass, gapClass, alignClass } = computeGroupLayoutClasses(normalizedLayout, hasChildren);
+  section.style.layout = hasChildren ? layoutClass : '';
+  section.style.gap = hasChildren ? gapClass : '';
+  section.style.align = hasChildren ? alignClass : '';
+  return section;
+}
+
+function normalizeSection(section, index, { asChild = false } = {}) {
+  if (!section) {
+    return null;
+  }
+  const preset = getPreset(section.type, section.preset || null);
+  const baseTokens = Array.isArray(section.tokens)
+    ? section.tokens
+    : asChild
+      ? []
+      : preset?.tokens || [];
+  const safeTokens = baseTokens.filter(Boolean);
+  const normalized = {
+    ...section,
+    id: section.id || `${section.type || 'section'}-${index}-${Date.now()}`,
+    type: section.type,
+    preset: preset?.id || section.preset || null,
+    tokens: safeTokens.length ? safeTokens : (asChild ? [] : preset?.tokens || []),
+    props: section.props || {},
+    style: section.style && typeof section.style === 'object' ? { ...section.style } : {}
+  };
+
+  if (normalized.type === 'groupe') {
+    const children = Array.isArray(section.children) ? section.children : [];
+    normalized.children = children
+      .map((child, childIndex) => normalizeSection(child, childIndex, { asChild: true }))
+      .filter(Boolean);
+    applyGroupLayoutStyle(normalized);
+  } else if (normalized.children) {
+    delete normalized.children;
+  }
+
+  return normalized;
+}
+
 const DESIGN_SYNC_DELAY = 300;
 const CONTENT_SYNC_DELAY = 300;
 const PREVIEW_CHANNEL_NAME = 'update-preview';
@@ -292,18 +428,9 @@ function normalizePage(page) {
     return null;
   }
   const sections = Array.isArray(page.sections) ? page.sections : [];
-  const normalizedSections = sections.map((section, index) => {
-    const preset = getPreset(section.type, section.preset || null);
-    const baseTokens = Array.isArray(section.tokens) ? section.tokens : preset?.tokens || [];
-    const safeTokens = baseTokens.filter(Boolean);
-    return {
-      id: section.id || `${section.type}-${index}-${Date.now()}`,
-      ...section,
-      preset: preset?.id || section.preset || null,
-      tokens: safeTokens.length ? safeTokens : (preset?.tokens || []),
-      props: section.props || {}
-    };
-  });
+  const normalizedSections = sections
+    .map((section, index) => normalizeSection(section, index))
+    .filter(Boolean);
   return {
     ...page,
     originalSlug: page.slug,
@@ -427,7 +554,18 @@ export function adminApp() {
     sectionLabels: {
       hero: 'Section hero',
       text: 'Bloc texte',
-      image: 'Bloc image'
+      image: 'Bloc image',
+      groupe: 'Groupe de contenu'
+    },
+    groupChildTypes: [
+      { id: 'hero', label: 'Section hero' },
+      { id: 'text', label: 'Bloc texte' },
+      { id: 'image', label: 'Bloc image' }
+    ],
+    groupDrag: {
+      sectionId: null,
+      fromIndex: null,
+      overIndex: null
     },
     sidebarPagesOpen: false,
     layoutPanel: {
@@ -556,7 +694,17 @@ export function adminApp() {
 
       this.layoutPanel.groups.forEach(group => {
         const selectedOptionId = selection[group.id];
-        if (selectedOptionId) {
+        if (section.type === 'groupe' && group.id === 'align') {
+          if (selectedOptionId) {
+            if (nextStyle.alignOption !== selectedOptionId) {
+              nextStyle.alignOption = selectedOptionId;
+              styleChanged = true;
+            }
+          } else if (nextStyle.alignOption) {
+            delete nextStyle.alignOption;
+            styleChanged = true;
+          }
+        } else if (selectedOptionId) {
           if (nextStyle[group.id] !== selectedOptionId) {
             nextStyle[group.id] = selectedOptionId;
             styleChanged = true;
@@ -571,13 +719,20 @@ export function adminApp() {
         section.style = nextStyle;
       }
 
+      if (section.type === 'groupe') {
+        applyGroupLayoutStyle(section);
+      }
+
       const resolvedStyle = section.style || nextStyle;
       const previousTokens = Array.isArray(section.tokens) ? section.tokens.slice() : [];
       const baseTokens = previousTokens.filter(token => !managedTokens.has(token));
       const computedTokens = [...baseTokens];
 
       this.layoutPanel.groups.forEach(group => {
-        const optionId = resolvedStyle[group.id] || selection[group.id];
+        const optionId =
+          section.type === 'groupe' && group.id === 'align'
+            ? resolvedStyle.alignOption || selection[group.id]
+            : resolvedStyle[group.id] || selection[group.id];
         if (!optionId) {
           return;
         }
@@ -967,6 +1122,9 @@ export function adminApp() {
       if (!this.currentPage) return;
       const section = createSection(type);
       section.tokens = section.tokens || [];
+      if (section.type === 'groupe') {
+        this.ensureGroupSection(section);
+      }
       this.currentPage.sections.push(section);
       this.layoutPanel.section = section.id;
       this.syncLayoutSelection();
@@ -1338,6 +1496,170 @@ export function adminApp() {
       return this.layoutPanel.section === sectionId;
     },
 
+    getSectionById(sectionId) {
+      if (!sectionId || !this.currentPage?.sections) {
+        return null;
+      }
+      return this.currentPage.sections.find(sec => sec.id === sectionId) || null;
+    },
+
+    selectedLayoutSection() {
+      const section = this.getSectionById(this.layoutPanel.section);
+      if (section?.type === 'groupe') {
+        this.ensureGroupSection(section);
+      }
+      return section;
+    },
+
+    isGroupSection(sectionId) {
+      const section = this.getSectionById(sectionId);
+      return section?.type === 'groupe';
+    },
+
+    ensureGroupSection(section) {
+      if (!section || section.type !== 'groupe') {
+        return;
+      }
+      if (!Array.isArray(section.children)) {
+        section.children = [];
+      }
+      applyGroupLayoutStyle(section);
+    },
+
+    createGroupChild(type) {
+      const child = createSection(type);
+      child.id = `${type}-child-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      child.tokens = [];
+      child.style = child.style && typeof child.style === 'object' ? { ...child.style } : {};
+      if (child.style.groupLayout) {
+        delete child.style.groupLayout;
+      }
+      delete child.style.layout;
+      delete child.style.gap;
+      delete child.style.align;
+      return child;
+    },
+
+    addGroupChild(sectionId, type) {
+      const section = this.getSectionById(sectionId);
+      if (!section || section.type !== 'groupe') {
+        return;
+      }
+      const child = this.createGroupChild(type);
+      section.children.push(child);
+      this.ensureGroupSection(section);
+      if (this.layoutPanel.section === sectionId) {
+        this.syncLayoutSelection();
+      }
+    },
+
+    removeGroupChild(sectionId, index) {
+      const section = this.getSectionById(sectionId);
+      if (!section || section.type !== 'groupe') {
+        return;
+      }
+      section.children.splice(index, 1);
+      this.ensureGroupSection(section);
+      if (this.layoutPanel.section === sectionId) {
+        this.syncLayoutSelection();
+      }
+    },
+
+    startGroupDrag(sectionId, index) {
+      const section = this.getSectionById(sectionId);
+      if (!section || section.type !== 'groupe') {
+        return;
+      }
+      this.groupDrag.sectionId = sectionId;
+      this.groupDrag.fromIndex = index;
+      this.groupDrag.overIndex = index;
+    },
+
+    hoverGroupDrag(sectionId, index) {
+      if (this.groupDrag.sectionId !== sectionId) {
+        return;
+      }
+      this.groupDrag.overIndex = index;
+    },
+
+    dropGroupDrag(sectionId, index) {
+      const section = this.getSectionById(sectionId);
+      if (!section || section.type !== 'groupe') {
+        this.endGroupDrag();
+        return;
+      }
+      const { fromIndex } = this.groupDrag;
+      if (typeof fromIndex !== 'number') {
+        this.endGroupDrag();
+        return;
+      }
+      const children = section.children || [];
+      const originalLength = children.length;
+      if (
+        fromIndex < 0 ||
+        fromIndex >= originalLength ||
+        index < 0 ||
+        index > originalLength
+      ) {
+        this.endGroupDrag();
+        return;
+      }
+      const [moved] = children.splice(fromIndex, 1);
+      let targetIndex = index;
+      if (fromIndex < index) {
+        targetIndex -= 1;
+      }
+      if (targetIndex < 0) {
+        targetIndex = 0;
+      }
+      if (targetIndex > children.length) {
+        targetIndex = children.length;
+      }
+      children.splice(targetIndex, 0, moved);
+      this.ensureGroupSection(section);
+      if (this.layoutPanel.section === sectionId) {
+        this.syncLayoutSelection();
+      }
+      this.endGroupDrag();
+    },
+
+    endGroupDrag() {
+      this.groupDrag.sectionId = null;
+      this.groupDrag.fromIndex = null;
+      this.groupDrag.overIndex = null;
+    },
+
+    updateGroupLayout(sectionId, patch = {}) {
+      const section = this.getSectionById(sectionId);
+      if (!section || section.type !== 'groupe') {
+        return;
+      }
+      if (!section.style || typeof section.style !== 'object') {
+        section.style = {};
+      }
+      const currentLayout = normalizeGroupLayout(section.style.groupLayout);
+      const nextLayout = { ...currentLayout, ...(patch || {}) };
+      if (nextLayout.type !== 'grid') {
+        nextLayout.columns = clampGroupColumns(nextLayout.columns);
+      } else {
+        nextLayout.columns = clampGroupColumns(nextLayout.columns);
+      }
+      section.style.groupLayout = nextLayout;
+      applyGroupLayoutStyle(section);
+      if (this.layoutPanel.section === sectionId) {
+        this.syncLayoutSelection();
+      }
+    },
+
+    groupHasChildren(sectionId) {
+      const section = this.getSectionById(sectionId);
+      return Array.isArray(section?.children) && section.children.length > 0;
+    },
+
+    groupDragActive(sectionId, index) {
+      return this.groupDrag.sectionId === sectionId && this.groupDrag.overIndex === index;
+    },
+
 
     initSectionListeners() {
       const sections = document.querySelectorAll('[data-section-id]');
@@ -1408,7 +1730,7 @@ export function adminApp() {
     },
 
     syncLayoutSelection() {
-      const section = this.currentPage?.sections?.find(sec => sec.id === this.layoutPanel.section);
+      const section = this.getSectionById(this.layoutPanel.section);
       if (!section) return;
       suppressDesignWatcher = true;
       try {
@@ -1416,8 +1738,10 @@ export function adminApp() {
         const style = { ...(section.style || {}) };
         this.layoutPanel.groups.forEach(group => {
           let selectedOption = null;
-          if (style[group.id]) {
-            selectedOption = layoutGroupOptionMap[group.id]?.[style[group.id]] || null;
+          const storedValue =
+            section.type === 'groupe' && group.id === 'align' ? style.alignOption : style[group.id];
+          if (storedValue) {
+            selectedOption = layoutGroupOptionMap[group.id]?.[storedValue] || null;
           }
           if (!selectedOption) {
             selectedOption = group.options.find(option =>
@@ -1427,13 +1751,22 @@ export function adminApp() {
           const fallback = group.options[0] || null;
           const selectedId = selectedOption?.id || fallback?.id || null;
           this.layoutPanel.selection[group.id] = selectedId;
-          if (selectedId) {
+          if (section.type === 'groupe' && group.id === 'align') {
+            if (selectedId) {
+              style.alignOption = selectedId;
+            } else {
+              delete style.alignOption;
+            }
+          } else if (selectedId) {
             style[group.id] = selectedId;
           } else {
             delete style[group.id];
           }
         });
         section.style = style;
+        if (section.type === 'groupe') {
+          applyGroupLayoutStyle(section);
+        }
       } finally {
         suppressDesignWatcher = false;
       }

@@ -104,6 +104,19 @@
         return `<figure class="media-figure"><img src="${src}" alt="${alt}" />${caption}</figure>`;
       };
 
+      const renderGroup = (section = {}) => {
+        const children = Array.isArray(section.children) ? section.children : [];
+        const hasChildren = children.length > 0;
+        const style = section.style || {};
+        const layout = style.layout || (hasChildren ? 'flex flex-col' : '');
+        const gap = style.gap || (hasChildren ? 'gap-6' : '');
+        const align = style.align || (hasChildren ? 'justify-start items-start' : '');
+        const classNames = [layout, gap, align].filter(Boolean).join(' ').trim();
+        const classAttr = ` class="${escapeAttribute(classNames)}"`;
+        const content = children.map(child => renderSectionContent(child)).join('');
+        return `<div data-group-container${classAttr}>${content}</div>`;
+      };
+
       const renderSectionContent = (section = {}) => {
         const type = section.type || '';
         const props = section.props || {};
@@ -115,6 +128,9 @@
         }
         if (type === 'image') {
           return renderImage(props);
+        }
+        if (type === 'groupe') {
+          return renderGroup(section);
         }
         return '';
       };
@@ -220,7 +236,8 @@
 
           const {
             tokens = [],
-            preset: incomingPreset = null
+            preset: incomingPreset = null,
+            style: incomingStyle = null
           } = event.data;
 
           const baseClass = section.dataset.sliceBase || 'slice';
@@ -240,6 +257,16 @@
 
           const hadHighlight = section.classList.contains('section-highlight');
           section.className = nextClasses.join(' ').trim();
+
+          if (section.dataset.sectionType === 'groupe') {
+            const container = section.querySelector('[data-group-container]');
+            if (container) {
+              const layout = incomingStyle?.layout || '';
+              const gap = incomingStyle?.gap || '';
+              const align = incomingStyle?.align || '';
+              container.className = [layout, gap, align].filter(Boolean).join(' ').trim();
+            }
+          }
 
           if (hadHighlight) {
             section.classList.add('section-highlight');
@@ -518,6 +545,61 @@ Et  à votre image.</p>
         >
           <div class="text-prose" aria-label="Bloc de texte">
   Ajoutez votre contenu riche ici. Les paragraphes, listes et liens seront stylés automatiquement.
+</div>
+
+        </section>
+      
+        
+        
+        <section 
+          id="section-groupe-1762168405963" 
+          class="slice group-basic bg-slate-900/80 border border-white/10 text-white py-6 px-6 space-y-4 shadow-none rounded-2xl text-left" 
+          data-section-id="groupe-1762168405963"
+          data-section-type="groupe"
+          data-slice-base="slice"
+          data-section-preset="group-basic"
+          aria-label="Section 3"
+        >
+          
+
+
+
+
+
+
+
+
+
+<div data-group-container class="flex flex-wrap gap-6 justify-start items-start">
+  
+    
+
+<div class="hero-content">
+  
+    <p class="hero-eyebrow">Nouveauté</p>
+  
+  <h1>Titre remarquable</h1>
+  
+    <p class="hero-subtitle">Sous-titre pour préciser votre proposition de valeur.</p>
+  
+  
+    <a class="hero-cta" href="#contact">En savoir plus</a>
+  
+</div>
+
+
+
+  
+    
+
+<figure class="media-figure">
+  <img src="" alt="Description visuelle" />
+  
+</figure>
+
+
+
+  
 </div>
 
         </section>
