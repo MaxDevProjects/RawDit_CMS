@@ -1,5 +1,6 @@
 import chokidar from 'chokidar';
 import { execSync } from 'child_process';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -35,27 +36,70 @@ const rebuildCSS = () => {
 };
 
 // Watch for theme changes
-const themeWatcher = chokidar.watch([
-  path.join(projectRoot, 'backend/sites/*/theme.json'),
-  path.join(projectRoot, 'backend/templates/**/*.njk')
-], {
+const extractSiteId = targetPath => {
+  const sitesRoot = path.join(projectRoot, 'backend', 'sites');
+  const relativePath = path.relative(sitesRoot, targetPath);
+  const [siteId] = relativePath.split(path.sep);
+  return siteId || 'default';
+};
+
+const regenerateSite = targetPath => {
+  const siteId = extractSiteId(targetPath);
+  console.log(`♻️  Regenerating site "${siteId}" due to ${targetPath}`);
+  try {
+    execSync(`node backend/scripts/generate.js --site=${siteId}`, {
+      cwd: projectRoot,
+      stdio: 'inherit'
+    });
+    console.log(`✅ Site "${siteId}" regenerated.`);
+  } catch (error) {
+    console.error('❌ Error during HTML generation:', error.message);
+  }
+};
+
+const baseWatcherOptions = {
   ignoreInitial: true,
   awaitWriteFinish: {
     stabilityThreshold: 300,
     pollInterval: 100
   }
-});
+};
 
-themeWatcher.on('change', (path) => {
-  console.log(`📄 File changed: ${path}`);
+const themeWatcher = chokidar.watch(
+  [path.join(projectRoot, 'backend/sites/*/theme.json'), path.join(projectRoot, 'backend/templates/**/*.njk')],
+  baseWatcherOptions
+);
+
+themeWatcher.on('change', changedPath => {
+  console.log(`🎨 Theme/template change detected: ${changedPath}`);
   rebuildCSS();
 });
 
-themeWatcher.on('error', error => {
-  console.error('❌ Watcher error:', error);
+const pagesWatcher = chokidar.watch(
+  [
+    path.join(projectRoot, 'backend/sites/*/pages/**/*.json'),
+    path.join(projectRoot, 'backend/sites/*/seo/**/*.json')
+  ],
+  baseWatcherOptions
+);
+
+pagesWatcher.on('all', (event, changedPath) => {
+  if (!changedPath.endsWith('.json')) {
+    return;
+  }
+  console.log(`📝 Page data change (${event}) detected: ${changedPath}`);
+  regenerateSite(changedPath);
 });
 
+const handleError = error => {
+  console.error('❌ Watcher error:', error);
+};
+
+themeWatcher.on('error', handleError);
+pagesWatcher.on('error', handleError);
+
 process.on('SIGINT', () => {
-  themeWatcher.close();
-  process.exit(0);
+  Promise.allSettled([themeWatcher.close(), pagesWatcher.close()]).finally(() => {
+    process.exit(0);
+  });
 });
