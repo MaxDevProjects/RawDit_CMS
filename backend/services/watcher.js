@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, '../..');
 
-const rebuildCSS = () => {
+const rebuildCSS = async () => {
   try {
     console.log('🔄 Rebuilding CSS...');
     // Copier le thème actuel vers un fichier temporaire pour Tailwind
@@ -24,6 +24,7 @@ const rebuildCSS = () => {
     });
     
     console.log('✅ CSS rebuilt successfully');
+    await notifyHotReload({ reason: 'theme-change', siteId: 'default' });
     
     // Nettoyer le fichier temporaire
     const tempThemePath = path.join(projectRoot, '.temp-theme.json');
@@ -43,7 +44,38 @@ const extractSiteId = targetPath => {
   return siteId || 'default';
 };
 
-const regenerateSite = targetPath => {
+const HOT_RELOAD_ENDPOINT = process.env.HOT_RELOAD_URL || `http://localhost:${process.env.PORT || 3000}/__hot-reload`;
+let fetchClientPromise = null;
+
+const resolveFetch = async () => {
+  if (typeof fetch === 'function') {
+    return fetch;
+  }
+  if (!fetchClientPromise) {
+    fetchClientPromise = import('node-fetch').then(module => module.default);
+  }
+  return fetchClientPromise;
+};
+
+const notifyHotReload = async (payload = {}) => {
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+  const fetchClient = await resolveFetch();
+  try {
+    await fetchClient(HOT_RELOAD_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    console.warn('⚠️  Hot reload notification failed:', error.message);
+  }
+};
+
+const regenerateSite = async targetPath => {
   const siteId = extractSiteId(targetPath);
   console.log(`♻️  Regenerating site "${siteId}" due to ${targetPath}`);
   try {
@@ -52,6 +84,7 @@ const regenerateSite = targetPath => {
       stdio: 'inherit'
     });
     console.log(`✅ Site "${siteId}" regenerated.`);
+    await notifyHotReload({ reason: 'content-change', siteId });
   } catch (error) {
     console.error('❌ Error during HTML generation:', error.message);
   }
@@ -70,9 +103,9 @@ const themeWatcher = chokidar.watch(
   baseWatcherOptions
 );
 
-themeWatcher.on('change', changedPath => {
+themeWatcher.on('change', async changedPath => {
   console.log(`🎨 Theme/template change detected: ${changedPath}`);
-  rebuildCSS();
+  await rebuildCSS();
 });
 
 const pagesWatcher = chokidar.watch(
@@ -83,12 +116,12 @@ const pagesWatcher = chokidar.watch(
   baseWatcherOptions
 );
 
-pagesWatcher.on('all', (event, changedPath) => {
+pagesWatcher.on('all', async (event, changedPath) => {
   if (!changedPath.endsWith('.json')) {
     return;
   }
   console.log(`📝 Page data change (${event}) detected: ${changedPath}`);
-  regenerateSite(changedPath);
+  await regenerateSite(changedPath);
 });
 
 const handleError = error => {

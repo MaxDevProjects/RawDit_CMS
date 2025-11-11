@@ -1,7 +1,9 @@
 import express from 'express';
+import { createServer } from 'http';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
+import { Server as SocketIOServer } from 'socket.io';
 import { ensureSite, getSitesRoot } from './backend/lib/sites.js';
 import { securityHeaders } from './backend/middlewares/security.js';
 import { siteResolver, availableSites } from './backend/middlewares/site.js';
@@ -18,12 +20,14 @@ import settingsRouter from './backend/routes/settings.js';
 import deployRouter from './backend/routes/deploy.js';
 import sitesRouter from './backend/routes/sites.js';
 import historyRouter from './backend/routes/history.js';
+import { attachHotReload, emitHotReload } from './backend/services/hotReload.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 const adminDir = path.join(__dirname, 'admin');
 const publicDir = path.join(__dirname, 'public');
@@ -31,6 +35,19 @@ const assetsDir = path.join(publicDir, 'assets');
 const generatedDir = path.join(publicDir, 'generated');
 
 await ensureSite('default');
+
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: '*'
+  }
+});
+
+attachHotReload(io);
+
+io.on('connection', socket => {
+  socket.on('disconnect', () => {});
+});
 
 app.disable('x-powered-by');
 app.use(securityHeaders);
@@ -107,6 +124,18 @@ apiRouter.use('/history', historyRouter);
 
 app.use('/api', apiRouter);
 
+app.post('/__hot-reload', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ ok: false, message: 'Hot reload endpoint disabled in production' });
+  }
+  const payload = {
+    siteId: req.body?.siteId || 'default',
+    reason: req.body?.reason || 'unknown'
+  };
+  const emitted = emitHotReload(payload);
+  res.json({ ok: emitted });
+});
+
 app.get('/', (req, res) => {
   res.redirect('/admin/index.html');
 });
@@ -114,6 +143,6 @@ app.get('/', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Clower Edit server running on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Clower Edit server running on http://${HOST}:${PORT}`);
 });

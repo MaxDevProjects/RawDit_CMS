@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="/socket.io/socket.io.js"></script>
   <script>
     // Informe le parent que la preview est prête
     window.addEventListener('load', () => {
@@ -277,6 +278,17 @@
           }
         }
       });
+
+      if (window.io) {
+        try {
+          const socket = window.io({ transports: ['websocket', 'polling'] });
+          socket.on('hot-reload', () => {
+            window.location.reload();
+          });
+        } catch (error) {
+          console.warn('Hot reload socket connection failed', error);
+        }
+      }
     })();
   </script>
   <style>
@@ -284,7 +296,7 @@
       --color-primary: #ff6b6b;
       --color-secondary: #a1aee2;
       --color-text: #1E1E1E;
-      --color-background: #F8F8FF;
+      --color-background: #ffffff;
       --radius-sm: 0.5rem;
       --radius-md: 1rem;
       --radius-lg: 2.5rem;
@@ -511,7 +523,7 @@
         
         <section 
           id="section-hero-0-1761895955061" 
-          class="slice hero-basic bg-gradient-to-br from-indigo-500/90 to-emerald-400/80 bg-slate-900/80 border border-white/10 text-white py-6 px-6 space-y-4 shadow-none rounded-lg text-left" 
+          class="slice hero-basic bg-gradient-to-br from-indigo-500/90 to-emerald-400/80 bg-indigo-500/90 text-white shadow-xl py-10 px-8 space-y-6 shadow-none rounded-lg text-center mx-auto" 
           data-section-id="hero-0-1761895955061"
           data-section-type="hero"
           data-slice-base="slice"
@@ -535,30 +547,13 @@ Et  à votre image.</p>
         
         
         <section 
-          id="section-text-1762003060434" 
-          class="slice text-prose text-slate-200 leading-relaxed bg-slate-900/80 border border-white/10 text-white py-6 px-6 space-y-4 shadow-none rounded-2xl text-left" 
-          data-section-id="text-1762003060434"
-          data-section-type="text"
-          data-slice-base="slice"
-          data-section-preset="text-prose"
-          aria-label="Section 2"
-        >
-          <div class="text-prose" aria-label="Bloc de texte">
-  Ajoutez votre contenu riche ici. Les paragraphes, listes et liens seront stylés automatiquement.
-</div>
-
-        </section>
-      
-        
-        
-        <section 
           id="section-groupe-1762168405963" 
-          class="slice group-basic bg-slate-900/80 border border-white/10 text-white py-6 px-6 space-y-4 shadow-none rounded-2xl text-left" 
+          class="slice group-basic bg-indigo-500/90 text-white shadow-xl py-6 px-6 space-y-4 shadow-none rounded-2xl text-left" 
           data-section-id="groupe-1762168405963"
           data-section-type="groupe"
           data-slice-base="slice"
           data-section-preset="group-basic"
-          aria-label="Section 3"
+          aria-label="Section 2"
         >
           
 
@@ -570,32 +565,25 @@ Et  à votre image.</p>
 
 
 
-<div data-group-container class="flex flex-wrap gap-6 justify-start items-start">
-  
-    
-
-<div class="hero-content">
-  
-    <p class="hero-eyebrow">Nouveauté</p>
-  
-  <h1>Titre remarquable</h1>
-  
-    <p class="hero-subtitle">Sous-titre pour préciser votre proposition de valeur.</p>
-  
-  
-    <a class="hero-cta" href="#contact">En savoir plus</a>
-  
-</div>
-
-
-
+<div data-group-container class="grid grid-cols-2 gap-6 justify-center items-start">
   
     
 
 <figure class="media-figure">
   <img src="" alt="Description visuelle" />
   
+    <figcaption>test</figcaption>
+  
 </figure>
+
+
+
+  
+    
+
+<div class="text-prose" aria-label="Bloc de texte">
+  <p>Ajoutez votre contenu riche ici. Les paragraphes, listes et liens seront stylés automatiquement.</p>
+</div>
 
 
 
