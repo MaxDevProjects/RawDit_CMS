@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="/socket.io/socket.io.js"></script>
   <script>
     // Informe le parent que la preview est prête
     window.addEventListener('load', () => {
@@ -277,6 +278,17 @@
           }
         }
       });
+
+      if (window.io) {
+        try {
+          const socket = window.io({ transports: ['websocket', 'polling'] });
+          socket.on('hot-reload', () => {
+            window.location.reload();
+          });
+        } catch (error) {
+          console.warn('Hot reload socket connection failed', error);
+        }
+      }
     })();
   </script>
   <style>
@@ -284,7 +296,7 @@
       --color-primary: #ff6b6b;
       --color-secondary: #a1aee2;
       --color-text: #1E1E1E;
-      --color-background: #F8F8FF;
+      --color-background: #ffffff;
       --radius-sm: 0.5rem;
       --radius-md: 1rem;
       --radius-lg: 2.5rem;
