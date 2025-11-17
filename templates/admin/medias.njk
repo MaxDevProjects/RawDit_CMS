@@ -1,0 +1,44 @@
+{% extends "layout_admin.njk" %}
+{% set pageTitle = "Médias" %}
+{% set activeTab = "Médias" %}
+
+{% block sidebar_start %}
+  <div class="space-y-4">
+    <h2 class="text-base font-semibold text-white">Bibliothèque</h2>
+    <p class="text-sm text-slate-400">Préparez vos visuels : filtres, tags et licences.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Images optimisées</li>
+      <li>Vidéos et fichiers</li>
+      <li>Méta et copyright</li>
+    </ul>
+  </div>
+{% endblock %}
+
+{% block content_main %}
+  <div class="space-y-6">
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Aperçu des assets</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Visualisez la médiathèque actuelle et importez de nouveaux supports en toute sécurité.
+      </p>
+    </article>
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Intégrité des fichiers</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Vérifiez les dimensions, les formats et alertes de doublons avant insertion.
+      </p>
+    </article>
+  </div>
+{% endblock %}
+
+{% block sidebar_end %}
+  <div class="space-y-4">
+    <h3 class="text-base font-semibold text-white">Paramètres media</h3>
+    <p class="text-sm text-slate-400">Définissez les tailles, ratios et règles de compression.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Résolutions limitées</li>
+      <li>Compression automatique</li>
+      <li>CDN préféré</li>
+    </ul>
+  </div>
+{% endblock %}

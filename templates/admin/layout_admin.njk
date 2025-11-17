@@ -1,0 +1,81 @@
+{% set adminTabs = [
+  { label: 'Sites', href: '/admin/sites.html' },
+  { label: 'Design', href: '/admin/design.html' },
+  { label: 'Contenus', href: '/admin/contenus.html' },
+  { label: 'Médias', href: '/admin/medias.html' },
+  { label: 'Déploiement', href: '/admin/deploiement.html' },
+  { label: 'Paramètres', href: '/admin/parametres.html' }
+] %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {{ (pageTitle | default(false)) and (pageTitle ~ ' • ') or '' }}{{ data.admin.title }}
+    </title>
+    <link rel="stylesheet" href="/admin/assets/admin.css" />
+    {% block head %}{% endblock %}
+  </head>
+  <body class="bg-slate-950 text-slate-100">
+    <div class="min-h-screen flex flex-col gap-6 p-6">
+      <header class="flex flex-col gap-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-800 bg-white/5 text-lg font-bold text-slate-100 shadow-lg">
+              CL
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Admin</p>
+              <h1 class="text-2xl font-bold text-white">{{ pageTitle or 'Administration' }}</h1>
+              <p class="text-sm text-slate-400">{{ data.site.title }}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            data-logout
+            class="rounded-full border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-slate-800 hover:text-white"
+          >
+            Déconnexion
+          </button>
+        </div>
+        <nav class="flex flex-wrap gap-2 text-sm">
+          {% for tab in adminTabs %}
+            <a
+              href="{{ tab.href }}"
+              class="rounded-full px-4 py-2 font-semibold transition-colors {% if tab.label == activeTab %}bg-white text-slate-900 shadow-lg{% else %}border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white{% endif %}"
+              {% if tab.label == activeTab %}aria-current="page"{% endif %}
+            >
+              {{ tab.label }}
+            </a>
+          {% endfor %}
+        </nav>
+      </header>
+      <div class="grid gap-4 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,280px)]">
+        <aside class="min-h-[240px]">
+          <div class="admin-card h-full flex flex-col gap-4">
+            {% block sidebar_start %}
+              <p class="text-sm text-slate-400">Contenu spécifique à la page.</p>
+            {% endblock %}
+          </div>
+        </aside>
+        <main class="min-h-[240px]">
+          <div class="admin-card h-full flex flex-col gap-4">
+            {% block content_main %}
+              <p class="text-sm text-slate-400">Zone principale. Ajoutez ici les aperçus ou les listes centralisées.</p>
+            {% endblock %}
+          </div>
+        </main>
+        <aside class="min-h-[240px]">
+          <div class="admin-card h-full flex flex-col gap-4">
+            {% block sidebar_end %}
+              <p class="text-sm text-slate-400">Panneau d’options.</p>
+            {% endblock %}
+          </div>
+        </aside>
+      </div>
+    </div>
+    <script src="/admin/assets/admin.js" defer></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

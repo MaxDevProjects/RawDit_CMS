@@ -1,0 +1,44 @@
+{% extends "layout_admin.njk" %}
+{% set pageTitle = "Paramètres" %}
+{% set activeTab = "Paramètres" %}
+
+{% block sidebar_start %}
+  <div class="space-y-4">
+    <h2 class="text-base font-semibold text-white">Accès</h2>
+    <p class="text-sm text-slate-400">Gérez les équipes, rôles et permissions.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Utilisateurs actifs</li>
+      <li>Rôles personnalisés</li>
+      <li>Sessions en cours</li>
+    </ul>
+  </div>
+{% endblock %}
+
+{% block content_main %}
+  <div class="space-y-6">
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Réglages</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Paramétrez les préférences générales, les alertes et l’intégration des outils tiers.
+      </p>
+    </article>
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Sécurité</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Activez 2FA, revoyez les politiques de mot de passe et consultez les logs d’accès.
+      </p>
+    </article>
+  </div>
+{% endblock %}
+
+{% block sidebar_end %}
+  <div class="space-y-4">
+    <h3 class="text-base font-semibold text-white">Support</h3>
+    <p class="text-sm text-slate-400">Définissez les contacts, SLA et procédures d’alerte.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Contacts internes</li>
+      <li>Escalade</li>
+      <li>Documentations</li>
+    </ul>
+  </div>
+{% endblock %}

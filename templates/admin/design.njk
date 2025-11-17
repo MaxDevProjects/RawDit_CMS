@@ -1,0 +1,44 @@
+{% extends "layout_admin.njk" %}
+{% set pageTitle = "Design" %}
+{% set activeTab = "Design" %}
+
+{% block sidebar_start %}
+  <div class="space-y-4">
+    <h2 class="text-base font-semibold text-white">Bibliothèque visuelle</h2>
+    <p class="text-sm text-slate-400">Organisez couleurs, typographies et composants pour garantir l’harmonie.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Palette principale</li>
+      <li>Éléments réutilisables</li>
+      <li>Guidelines d’accessibilité</li>
+    </ul>
+  </div>
+{% endblock %}
+
+{% block content_main %}
+  <div class="space-y-6">
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Thèmes et variantes</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Changez les palettes, testez les dégradés et assurez-vous que les contrastes répondent aux exigences.
+      </p>
+    </article>
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Raccourcis des composants</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Déverrouillez les variantes de boutons, cartes et interstitiels pour accélérer la production.
+      </p>
+    </article>
+  </div>
+{% endblock %}
+
+{% block sidebar_end %}
+  <div class="space-y-4">
+    <h3 class="text-base font-semibold text-white">Options visuelles</h3>
+    <p class="text-sm text-slate-400">Activez/désactivez les snaps, les grilles et les guides.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Grilles : 12 colonnes</li>
+      <li>Micro-interactions</li>
+      <li>Mode sombre automatique</li>
+    </ul>
+  </div>
+{% endblock %}

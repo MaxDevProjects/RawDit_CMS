@@ -1,0 +1,44 @@
+{% extends "layout_admin.njk" %}
+{% set pageTitle = "Contenus" %}
+{% set activeTab = "Contenus" %}
+
+{% block sidebar_start %}
+  <div class="space-y-4">
+    <h2 class="text-base font-semibold text-white">Collections</h2>
+    <p class="text-sm text-slate-400">Classez tous les blocs par section et type de contenu.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Hero, corps, CTA</li>
+      <li>État des publications</li>
+      <li>Méta et commentaires</li>
+    </ul>
+  </div>
+{% endblock %}
+
+{% block content_main %}
+  <div class="space-y-6">
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Blocs en cours</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Synchronisez les contenus entre les sites et vérifiez les traductions avant publication.
+      </p>
+    </article>
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Historique</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Consultez les dernières actions éditoriales, y compris les validations et ajouts récents.
+      </p>
+    </article>
+  </div>
+{% endblock %}
+
+{% block sidebar_end %}
+  <div class="space-y-4">
+    <h3 class="text-base font-semibold text-white">Préférences</h3>
+    <p class="text-sm text-slate-400">Activer les workflows, les validations multiples ou les brouillons rapides.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Mode brouillon</li>
+      <li>Validation multi-utilisateur</li>
+      <li>Alertes de publication</li>
+    </ul>
+  </div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "layout_admin.njk" %}
+{% set pageTitle = "Déploiement" %}
+{% set activeTab = "Déploiement" %}
+
+{% block sidebar_start %}
+  <div class="space-y-4">
+    <h2 class="text-base font-semibold text-white">Environnements</h2>
+    <p class="text-sm text-slate-400">Suivez les déploiements sur staging et production.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Dernier build : stable</li>
+      <li>Validation manuelle</li>
+      <li>Rollback rapide</li>
+    </ul>
+  </div>
+{% endblock %}
+
+{% block content_main %}
+  <div class="space-y-6">
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Pipeline CI/CD</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Lancez un build, surveillez les tâches ou relisez les logs avant la mise en production.
+      </p>
+    </article>
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Historique</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Les trois derniers déploiements sont conservés ici pour faciliter les retours arrière.
+      </p>
+    </article>
+  </div>
+{% endblock %}
+
+{% block sidebar_end %}
+  <div class="space-y-4">
+    <h3 class="text-base font-semibold text-white">Options</h3>
+    <p class="text-sm text-slate-400">Définissez les notifications, permissions et horaires de publication.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Notifications Slack</li>
+      <li>Verrouillage des branches</li>
+      <li>Fenêtres de maintenance</li>
+    </ul>
+  </div>
+{% endblock %}
