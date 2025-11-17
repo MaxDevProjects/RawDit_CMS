@@ -1,45 +1,21 @@
-{% extends "layout_admin.njk" %}
-{% set pageTitle = "Sites" %}
-{% set activeTab = "Sites" %}
-
-{% block sidebar_start %}
-  <div class="space-y-4">
-    <h2 class="text-base font-semibold text-white">Vue rapide</h2>
-    <p class="text-sm text-slate-400">Repérez la structure des sites et basculez entre les environnements.</p>
-    <ul class="space-y-2 text-sm text-slate-300">
-      <li>✓ Liste des sites configurés</li>
-      <li>✓ Accès aux environnements de test</li>
-      <li>✓ Statut des dernières publications</li>
-    </ul>
-  </div>
-{% endblock %}
-
-{% block content_main %}
-  <div class="space-y-6">
-    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-      <h2 class="text-xl font-semibold text-white">Templates</h2>
-      <p class="mt-2 text-sm text-slate-400">
-        Les pages data et templates contribuent à la cohérence du site. Retrouvez-les dans <code>templates/admin</code>
-        et <code>data/*.json</code>.
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="0; url=/admin/sites.html" />
+    <title>Administration – redirection</title>
+    <link rel="stylesheet" href="/admin/assets/admin.css" />
+  </head>
+  <body class="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+    <div class="text-center space-y-4">
+      <h1 class="text-3xl font-semibold">Redirection…</h1>
+      <p class="text-sm text-slate-400">
+        Vous allez être redirigé vers <a href="/admin/sites.html" class="underline text-white">la page Sites</a>.
       </p>
-    </article>
-    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-      <h2 class="text-xl font-semibold text-white">État du contenu</h2>
-      <p class="mt-2 text-sm text-slate-400">
-        Le canal d’écriture est prêt : ajoutez de nouveaux blocs et prévisualisez-les avant publication.
-      </p>
-    </article>
-  </div>
-{% endblock %}
-
-{% block sidebar_end %}
-  <div class="space-y-4">
-    <h3 class="text-base font-semibold text-white">Actions rapides</h3>
-    <p class="text-sm text-slate-400">Préparez des mises à jour, gérez les utilisateurs ou activez un nouveau déploiement.</p>
-    <ol class="list-decimal space-y-1 pl-4 text-sm text-slate-300">
-      <li>Vérifier les permissions</li>
-      <li>Préparer les assets</li>
-      <li>Déployer lorsque tout est validé</li>
-    </ol>
-  </div>
-{% endblock %}
+    </div>
+    <script>
+      window.location.href = '/admin/sites.html';
+    </script>
+  </body>
+</html>

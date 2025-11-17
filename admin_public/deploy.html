@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Déploiement • Clower Atelier
+    </title>
+    <link rel="stylesheet" href="/admin/assets/admin.css" />
+    
+  </head>
+  <body class="bg-slate-950 text-slate-100">
+    <div class="min-h-screen flex flex-col gap-6 p-6">
+      <header class="flex flex-col gap-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-800 bg-white/5 text-lg font-bold text-slate-100 shadow-lg">
+              CL
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Admin</p>
+              <h1 class="text-2xl font-bold text-white">Déploiement</h1>
+              <p class="text-sm text-slate-400">Clower Public</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            data-logout
+            class="rounded-full border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-slate-800 hover:text-white"
+          >
+            Déconnexion
+          </button>
+        </div>
+        <nav class="flex flex-wrap gap-2 text-sm">
+          
+            <a
+              href="/admin/sites.html"
+              class="rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              
+            >
+              Sites
+            </a>
+          
+            <a
+              href="/admin/design.html"
+              class="rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              
+            >
+              Design
+            </a>
+          
+            <a
+              href="/admin/content.html"
+              class="rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              
+            >
+              Contenus
+            </a>
+          
+            <a
+              href="/admin/medias.html"
+              class="rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              
+            >
+              Médias
+            </a>
+          
+            <a
+              href="/admin/deploy.html"
+              class="rounded-full px-4 py-2 font-semibold transition-colors bg-white text-slate-900 shadow-lg"
+              aria-current="page"
+            >
+              Déploiement
+            </a>
+          
+            <a
+              href="/admin/settings.html"
+              class="rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              
+            >
+              Paramètres
+            </a>
+          
+        </nav>
+      </header>
+      <div class="grid gap-4 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,280px)]">
+        <aside class="min-h-[240px]">
+          <div class="admin-card h-full flex flex-col gap-4">
+            
+  <div class="space-y-4">
+    <h2 class="text-base font-semibold text-white">Environnements</h2>
+    <p class="text-sm text-slate-400">Suivez les déploiements sur staging et production.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Dernier build : stable</li>
+      <li>Validation manuelle</li>
+      <li>Rollback rapide</li>
+    </ul>
+  </div>
+
+          </div>
+        </aside>
+        <main class="min-h-[240px]">
+          <div class="admin-card h-full flex flex-col gap-4">
+            
+  <div class="space-y-6">
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Pipeline CI/CD</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Lancez un build, surveillez les tâches ou relisez les logs avant la mise en production.
+      </p>
+    </article>
+    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="text-xl font-semibold text-white">Historique</h2>
+      <p class="mt-2 text-sm text-slate-400">
+        Les trois derniers déploiements sont conservés ici pour faciliter les retours arrière.
+      </p>
+    </article>
+  </div>
+
+          </div>
+        </main>
+        <aside class="min-h-[240px]">
+          <div class="admin-card h-full flex flex-col gap-4">
+            
+  <div class="space-y-4">
+    <h3 class="text-base font-semibold text-white">Options</h3>
+    <p class="text-sm text-slate-400">Définissez les notifications, permissions et horaires de publication.</p>
+    <ul class="space-y-2 text-sm text-slate-300">
+      <li>Notifications Slack</li>
+      <li>Verrouillage des branches</li>
+      <li>Fenêtres de maintenance</li>
+    </ul>
+  </div>
+
+          </div>
+        </aside>
+      </div>
+    </div>
+    <script src="/admin/assets/admin.js" defer></script>
+    
+  </body>
+</html>

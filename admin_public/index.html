@@ -3,34 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Clower Atelier</title>
+    <meta http-equiv="refresh" content="0; url=/admin/sites.html" />
+    <title>Administration – redirection</title>
     <link rel="stylesheet" href="/admin/assets/admin.css" />
   </head>
-  <body class="min-h-screen flex flex-col p-6 gap-4">
-    <header class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-      <div>
-        <p class="text-sm uppercase tracking-widest text-slate-400">Admin</p>
-        <h1 class="text-4xl font-extrabold">Clower Atelier</h1>
-        <p class="text-slate-300">Admin minimal pour éditer les blocs.</p>
-      </div>
-      <button
-        type="button"
-        data-logout
-        class="self-start rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
-      >
-        Déconnexion
-      </button>
-    </header>
-    <main class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <section class="admin-card">
-        <h2 class="text-2xl font-semibold mb-2">Templates</h2>
-        <p>Les pages se trouvent dans <code>templates/admin</code>.</p>
-      </section>
-      <section class="admin-card">
-        <h2 class="text-2xl font-semibold mb-2">Données</h2>
-        <p>Les contenus proviennent de <code>data/*.json</code>.</p>
-      </section>
-    </main>
-    <script src="/admin/assets/admin.js" defer></script>
+  <body class="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+    <div class="text-center space-y-4">
+      <h1 class="text-3xl font-semibold">Redirection…</h1>
+      <p class="text-sm text-slate-400">
+        Vous allez être redirigé vers <a href="/admin/sites.html" class="underline text-white">la page Sites</a>.
+      </p>
+    </div>
+    <script>
+      window.location.href = '/admin/sites.html';
+    </script>
   </body>
 </html>

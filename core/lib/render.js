@@ -25,7 +25,10 @@ export async function renderAllTemplates(data) {
 
 async function renderTarget(target, data) {
   const { templateDir, outDir, name } = target;
-  const templateFiles = await collectFiles(templateDir, (file) => file.endsWith('.njk'));
+  const templateFiles = (await collectFiles(templateDir, (file) => file.endsWith('.njk'))).filter((filePath) => {
+    const filename = path.basename(filePath);
+    return !filename.startsWith('layout_');
+  });
   await ensureDir(outDir);
   if (templateFiles.length === 0) {
     return;
