@@ -1,23 +1,100 @@
 import path from 'node:path';
+import { createServer } from 'node:net';
 import chokidar from 'chokidar';
 import express from 'express';
 import { paths } from './lib/paths.js';
 import { buildAll } from './build.js';
+import { AuthService } from './lib/auth-service.js';
+import { SessionStore } from './lib/session-store.js';
+
+const COOKIE_NAME = 'admin_session';
+const authService = new AuthService();
+const sessionStore = new SessionStore();
 
 process.env.NODE_ENV = 'development';
 
-const PORT = Number(process.env.PORT || 8080);
+/**
+ * Trouve un port libre à 5 chiffres (entre 10000 et 99999)
+ */
+async function findFreePort(startPort = 10000) {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.listen(startPort, () => {
+      const port = server.address().port;
+      server.close(() => resolve(port));
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        resolve(findFreePort(startPort + 1));
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
+
+const PORT = Number(process.env.PORT) || 'auto';
 
 async function start() {
   await buildAll({ clean: true });
 
+  // Déterminer le port à utiliser
+  let port = PORT;
+  if (port === 'auto') {
+    port = await findFreePort(10000);
+  }
+
   const app = express();
-  app.use('/admin', express.static(paths.adminPublic, { extensions: ['html'] }));
-  app.use('/admin_public', express.static(paths.adminPublic, { extensions: ['html'] }));
+  app.use(express.json());
+
+  app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body || {};
+    const authResult = await authService.authenticate(username, password);
+    if (!authResult) {
+      return res.status(401).json({ message: 'Identifiants invalides' });
+    }
+    const token = sessionStore.createSession(authResult.username);
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV !== 'development',
+      maxAge: 1000 * 60 * 60 * 8, // 8h
+      path: '/',
+    });
+    res.json({ username: authResult.username });
+  });
+
+  app.post('/api/logout', (req, res) => {
+    const token = readSessionCookie(req);
+    sessionStore.destroySession(token);
+    res.clearCookie(COOKIE_NAME, { path: '/' });
+    res.status(204).end();
+  });
+
+  /**
+   * Endpoint pour vérifier le statut d'authentification
+   * Utilisé par le client pour confirmer l'authentification
+   */
+  app.get('/api/auth/me', (req, res) => {
+    const token = readSessionCookie(req);
+    const session = sessionStore.getSession(token);
+    
+    if (!session) {
+      return res.status(401).json({ authenticated: false });
+    }
+    
+    res.json({
+      authenticated: true,
+      username: session.username,
+    });
+  });
+
+  app.use('/admin', adminGuardMiddleware, express.static(paths.adminPublic, { extensions: ['html'] }));
+  app.use('/admin_public', adminGuardMiddleware, express.static(paths.adminPublic, { extensions: ['html'] }));
   app.use('/', express.static(paths.public, { extensions: ['html'] }));
 
-  const server = app.listen(PORT, () => {
-    console.log(`[dev] Serveur disponible sur http://localhost:${PORT}`);
+  const server = app.listen(port, () => {
+    console.log(`[dev] Serveur disponible sur http://localhost:${port}`);
   });
 
   const watcher = chokidar.watch([paths.templates, paths.data], {
@@ -63,8 +140,73 @@ async function start() {
   process.on('SIGTERM', shutdown);
 }
 
+function adminGuardMiddleware(req, res, next) {
+  // Les chemins publics (login et assets) n'ont pas besoin d'authentification
+  if (isPublicPath(req.path)) {
+    return next();
+  }
+
+  // Toutes les autres pages HTML doivent être protégées
+  if (isHtmlPath(req.path)) {
+    const token = readSessionCookie(req);
+    const session = sessionStore.getSession(token);
+    
+    if (!session) {
+      // Pas de session valide : redirection vers login
+      const loginUrl = `${req.baseUrl}/login.html`;
+      return res.redirect(302, loginUrl);
+    }
+    
+    // Session valide : stockage de l'utilisateur dans la requête
+    req.user = session.username;
+  }
+
+  return next();
+}
+
+/**
+ * Vérifie si le chemin est une page HTML
+ */
+function isHtmlPath(requestPath) {
+  const ext = path.extname(requestPath);
+  // Considère comme HTML : pas d'extension, .html, ou racine
+  return requestPath === '/' || ext === '.html' || ext === '';
+}
+
+/**
+ * Vérifie si le chemin est public (pas besoin d'authentification)
+ */
+function isPublicPath(requestPath) {
+  // Login page est toujours accessible
+  if (requestPath === '/login.html' || requestPath === '/login') {
+    return true;
+  }
+  
+  // Assets statiques sont toujours accessibles
+  if (requestPath.startsWith('/assets/')) {
+    return true;
+  }
+  
+  // Autres méthodes HTTP que GET/HEAD (ex: POST) ne sont pas protégées par ce middleware
+  return false;
+}
+
+function readSessionCookie(req) {
+  const header = req.headers.cookie;
+  if (!header) {
+    return null;
+  }
+  const cookies = header.split(';').map((part) => part.trim());
+  for (const cookie of cookies) {
+    const [name, ...rest] = cookie.split('=');
+    if (name === COOKIE_NAME) {
+      return decodeURIComponent(rest.join('='));
+    }
+  }
+  return null;
+}
+
 start().catch((err) => {
   console.error('[dev] Impossible de démarrer:', err);
   process.exit(1);
 });
-

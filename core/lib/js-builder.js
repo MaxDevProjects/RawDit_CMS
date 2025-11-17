@@ -14,6 +14,11 @@ const ENTRIES = [
     entry: path.join(paths.scripts, 'admin.js'),
     outfile: path.join(paths.adminPublic, 'assets', 'admin.js'),
   },
+  {
+    name: 'admin-login',
+    entry: path.join(paths.scripts, 'admin-login.js'),
+    outfile: path.join(paths.adminPublic, 'assets', 'admin-login.js'),
+  },
 ];
 
 export async function buildScripts() {
@@ -34,4 +39,3 @@ export async function buildScripts() {
     });
   }
 }
-

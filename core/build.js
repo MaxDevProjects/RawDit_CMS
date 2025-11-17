@@ -6,6 +6,7 @@ import { loadData } from './lib/data-loader.js';
 import { renderAllTemplates } from './lib/render.js';
 import { buildScripts } from './lib/js-builder.js';
 import { buildCss } from './lib/css-builder.js';
+import { ensureDefaultAdminUser } from './lib/auth-bootstrap.js';
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
@@ -17,6 +18,7 @@ export async function buildAll({ clean = true } = {}) {
     await Promise.all([ensureDir(paths.public), ensureDir(paths.adminPublic)]);
   }
 
+  await ensureDefaultAdminUser();
   const data = await loadData();
 
   await Promise.all([renderAllTemplates(data), buildScripts()]);

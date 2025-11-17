@@ -6,3 +6,7 @@ credentials
 public/generated/
 backend/sites/
 old
+
+# Documentation US1.3 (fichiers générés automatiquement)
+docs-agents
+

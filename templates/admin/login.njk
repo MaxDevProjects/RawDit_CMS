@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexion admin</title>
+    <link rel="stylesheet" href="/admin/assets/admin.css" />
+  </head>
+  <body class="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100 px-6">
+    <div class="w-full max-w-md space-y-6">
+      <header class="text-center">
+        <p class="uppercase text-xs tracking-[0.4em] text-slate-500">Admin</p>
+        <h1 class="text-3xl font-bold mt-2">Connexion</h1>
+      </header>
+      <form class="admin-card space-y-4" data-login-form>
+        <label class="block space-y-2">
+          <span class="text-sm text-slate-300">Identifiant</span>
+          <input
+            type="text"
+            name="username"
+            required
+            class="w-full rounded-lg bg-slate-900/70 border border-slate-700 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            placeholder="admin"
+          />
+        </label>
+        <label class="block space-y-2">
+          <span class="text-sm text-slate-300">Mot de passe</span>
+          <input
+            type="password"
+            name="password"
+            required
+            class="w-full rounded-lg bg-slate-900/70 border border-slate-700 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            placeholder="••••••••"
+          />
+        </label>
+        <button
+          type="submit"
+          class="w-full rounded-xl bg-slate-100/90 text-slate-900 font-semibold py-3 hover:bg-white transition-colors disabled:opacity-60"
+        >
+          Se connecter
+        </button>
+        <p data-login-status class="text-sm text-red-300 min-h-[1.5rem]"></p>
+      </form>
+    </div>
+    <script src="/admin/assets/admin-login.js" defer></script>
+  </body>
+</html>
+

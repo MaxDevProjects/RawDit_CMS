@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node ./core/dev.js",
     "build": "node ./core/build.js",
-    "rebuild-css": "node ./core/rebuild-css.js"
+    "rebuild-css": "node ./core/rebuild-css.js",
+    "user:add": "node ./core/scripts/create-user.js",
+    "user:list": "node ./core/scripts/create-user.js -l"
   },
   "repository": {
     "type": "git",
@@ -21,6 +23,7 @@
   },
   "homepage": "https://github.com/MaxDevProjects/Clower-edit#readme",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "@tailwindcss/cli": "^4.1.17",
     "chokidar": "^3.6.0",
     "esbuild": "^0.27.0",

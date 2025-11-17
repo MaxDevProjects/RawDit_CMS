@@ -7,10 +7,19 @@
     <link rel="stylesheet" href="/admin/assets/admin.css" />
   </head>
   <body class="min-h-screen flex flex-col p-6 gap-4">
-    <header>
-      <p class="text-sm uppercase tracking-widest text-slate-400">Admin</p>
-      <h1 class="text-4xl font-extrabold">{{ data.admin.title }}</h1>
-      <p class="text-slate-300">{{ data.admin.tagline }}</p>
+    <header class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="text-sm uppercase tracking-widest text-slate-400">Admin</p>
+        <h1 class="text-4xl font-extrabold">{{ data.admin.title }}</h1>
+        <p class="text-slate-300">{{ data.admin.tagline }}</p>
+      </div>
+      <button
+        type="button"
+        data-logout
+        class="self-start rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+      >
+        Déconnexion
+      </button>
     </header>
     <main class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <section class="admin-card">
@@ -25,4 +34,3 @@
     <script src="/admin/assets/admin.js" defer></script>
   </body>
 </html>
-
