@@ -1,0 +1,2 @@
+(()=>{document.addEventListener("DOMContentLoaded",()=>{console.log("[admin] Atelier charg\xE9")});})();
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsiLi4vLi4vY29yZS9zY3JpcHRzL2FkbWluLmpzIl0sCiAgInNvdXJjZXNDb250ZW50IjogWyJkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCdET01Db250ZW50TG9hZGVkJywgKCkgPT4ge1xuICBjb25zb2xlLmxvZygnW2FkbWluXSBBdGVsaWVyIGNoYXJnXHUwMEU5Jyk7XG59KTtcblxuIl0sCiAgIm1hcHBpbmdzIjogIk1BQUEsU0FBUyxpQkFBaUIsbUJBQW9CLElBQU0sQ0FDbEQsUUFBUSxJQUFJLDJCQUF3QixDQUN0QyxDQUFDIiwKICAibmFtZXMiOiBbXQp9Cg==

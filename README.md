@@ -1,86 +1,23 @@
-# Clower Edit V1
+# Clower-edit
 
-Clower Edit est un mini CMS artisanal permettant d'éditer des pages depuis une interface web légère et de générer un site statique en HTML. Le projet met l'accent sur la sobriété numérique : il s'appuie sur des fichiers JSON plats, des templates Nunjucks et un déploiement SFTP intégré.
-
-## Fonctionnalités principales
-
-- Interface d'administration construite avec TailwindCSS et Alpine.js
-- Authentification basique via JWT et mot de passe haché avec bcrypt
-- CRUD complet sur les fichiers JSON représentant les pages
-- Génération statique HTML avec Nunjucks (`backend/generate.js`)
-- Prévisualisation locale instantanée via BroadcastChannel
-- Gestion et personnalisation du thème (couleurs, polices, rayons)
-- Déploiement SFTP simplifié (`backend/deploy.js`)
-
-## Prérequis
-
-- Node.js 18+
-- npm
-
-## Installation
-
-```bash
-npm install
-```
-
-## Scripts npm
-
-- `npm run dev` : lance le serveur Express et la compilation Tailwind en mode watch
-- `npm run build` : génère les assets CSS puis les pages HTML statiques
-- `npm run deploy` : lit la configuration FTP/SFTP et publie le contenu du dossier `public/`
-
-## Utilisation
-
-1. Lancez le mode développement :
-   ```bash
-   npm run dev
-   ```
-2. Ouvrez `http://localhost:3000` et connectez-vous (identifiant : `admin`, mot de passe : `admin`).
-3. Créez ou éditez vos pages. Chaque sauvegarde déclenche une régénération statique.
-4. Modifiez les couleurs et polices dans l'onglet Thème.
-5. Renseignez vos informations FTP/SFTP dans l'onglet Paramètres puis utilisez l'onglet Déploiement.
-
-### Lancement dans GitHub Codespaces
-
-1. Créez un nouveau Codespace sur ce dépôt et attendez l'ouverture de VS Code dans le navigateur.
-2. Ouvrez un terminal intégré puis installez les dépendances :
-   ```bash
-   npm install
-   ```
-3. Démarrez le serveur de développement :
-   ```bash
-   npm run dev
-   ```
-4. Dans l'onglet **Ports** de Codespaces, repérez le port `3000` et cliquez sur l'URL exposée pour ouvrir l'interface d'administration dans un nouvel onglet.
-5. Identifiez-vous avec `admin` / `admin` puis éditez le contenu comme décrit ci-dessus.
-
-## Structure du projet
+Base du projet avec une arborescence claire pour séparer moteur, données et sorties statiques.
 
 ```
-clower-edit/
-├── admin/              # Interface d'administration
-├── backend/            # API, génération statique et déploiement
-├── public/             # Sortie HTML statique
-├── server.js           # Serveur Express
-├── tailwind.config.js  # Configuration Tailwind
-└── package.json
+core/            Scripts NodeJS (lecture/écriture JSON, rendu Nunjucks, build Tailwind)
+data/            Sources JSON (sites, pages, blocs, thèmes, utilisateurs, etc.)
+templates/
+  site/          Layouts et blocs Nunjucks pour le site public
+  admin/         Layouts et pages Nunjucks pour l'interface admin
+admin_public/    Assets HTML/CSS/JS générés pour l'admin
+public/          Site statique généré
 ```
 
-## Déploiement
+> ℹ️ Le dossier `old/` est conservé uniquement pour référence et ne fait pas partie de la nouvelle structure.
 
-Le déploiement repose sur `ssh2-sftp-client`. Assurez-vous que votre serveur distant est accessible via SFTP et que les identifiants sont renseignés dans `backend/config/settings.json`. La commande `npm run deploy` génère automatiquement les pages avant l'envoi.
+## Scripts NPM
 
-## Tests manuels recommandés
+- `npm run dev` : lance le serveur Express (http://localhost:8080) qui sert `public/` sur `/` et `admin_public/` sur `/admin`. Le watcher `chokidar` reconstruit automatiquement HTML, JS et CSS dès qu'un fichier `data/**/*.json` ou `templates/**/*` change.
+- `npm run build` : reconstruit entièrement les sorties `public/` et `admin_public/` (nettoyage, rendu Nunjucks, bundle JS via esbuild et Tailwind CLI v4 en mode minifié).
+- `npm run rebuild-css` : exécute uniquement la phase Tailwind (utile lors de l'itération sur `core/styles/*.css` sans toucher aux templates).
 
-- Création, édition et suppression d'une page
-- Vérification de la génération dans `public/`
-- Changement de thème appliqué sur les pages générées
-- Déploiement de test vers un serveur SFTP de préproduction
-
-## Sécurité
-
-Les identifiants administrateur sont stockés dans `backend/config/settings.json`. Modifiez-les dès la première utilisation. Les jetons JWT sont valides pendant 12 heures et sont stockés côté client dans `localStorage`.
-
-## Licence
-
-Projet fourni pour démonstration : adaptez et enrichissez selon vos besoins.
+Les scripts Node correspondants se trouvent dans `core/` et assurent la lecture/écriture JSON, le rendu Nunjucks et la génération Tailwind comme indiqué dans la note technique.

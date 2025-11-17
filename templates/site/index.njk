@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ data.site.title }}</title>
+    <link rel="stylesheet" href="/assets/site.css" />
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <header class="p-10 text-center">
+      <p class="uppercase tracking-wide text-sm text-slate-500">Site public</p>
+      <h1 class="text-5xl font-black">{{ data.site.title }}</h1>
+      <p class="max-w-2xl mx-auto text-lg text-slate-600 mt-4">{{ data.site.description }}</p>
+    </header>
+    <main class="flex-1 px-6 py-10">
+      <div class="max-w-3xl mx-auto space-y-6">
+        <article class="bg-white rounded-2xl shadow p-8">
+          <h2 class="text-2xl font-semibold mb-2">Templates Nunjucks</h2>
+          <p class="text-slate-600">Chaque page est rendue à partir des fichiers <code>templates/site</code>.</p>
+        </article>
+      </div>
+    </main>
+    <script src="/assets/site.js" defer></script>
+  </body>
+</html>
+
