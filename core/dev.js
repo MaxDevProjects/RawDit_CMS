@@ -227,7 +227,9 @@ function readSessionCookie(req) {
     const [name, ...rest] = cookie.split('=');
     if (name === COOKIE_NAME) {
       return decodeURIComponent(rest.join('='));
+    }
   }
+  return null;
 }
 
 function requireAuthJson(req, res, next) {
@@ -273,8 +275,6 @@ async function readSites() {
 async function writeSites(sites) {
   await ensureDir(paths.data);
   await fs.writeFile(SITES_FILE, JSON.stringify(sites, null, 2) + '\n', 'utf8');
-}
-  return null;
 }
 
 start().catch((err) => {
