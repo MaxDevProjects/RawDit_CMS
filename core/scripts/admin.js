@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.error('[admin] Impossible de se déconnecter', err);
       } finally {
-        window.location.href = '/admin/login.html';
+        window.location.href = '/admin/index.html';
       }
     });
   }
@@ -88,14 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   loadStoredSite();
-
-  const HUB_SECTION_SELECTORS = {
-    design: 'design',
-    content: 'content',
-    media: 'media',
-    deploy: 'deploy',
-    settings: 'settings',
-  };
 
   const siteCards = document.querySelectorAll('[data-site-card]');
   const siteSelectButtons = document.querySelectorAll('[data-site-select]');
@@ -188,8 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const hubTabLinks = document.querySelectorAll('[data-hub-tab]');
-
   const updateSiteLabels = (name) => {
     if (siteNameLabel && name) {
       siteNameLabel.textContent = name;
@@ -202,12 +192,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const updateHubTabs = (slug) => {
-    hubTabLinks.forEach((link) => {
-      const section = link.dataset.hubTab;
-      if (!section) {
-        link.classList.remove('pointer-events-none', 'opacity-50', 'text-slate-400');
-        link.removeAttribute('aria-disabled');
+  const updateWorkspaceNavLinks = (slug) => {
+    workspaceNavLinks.forEach((link) => {
+      const tab = link.dataset.workspaceTab;
+      if (!tab) {
         return;
       }
       if (!slug) {
@@ -217,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const slugPath = encodeURIComponent(stripLeadingSlash(slug));
-      link.href = `/admin/site/${slugPath}/${section}`;
+      link.href = `/admin/site/${slugPath}/${tab}`;
       link.classList.remove('pointer-events-none', 'opacity-50', 'text-slate-400');
       link.removeAttribute('aria-disabled');
     });
@@ -248,9 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (options.persist !== false) {
       persistSiteState(normalizedSlug, options.siteName || activeSiteName);
     }
-    const label = options.siteName || activeSiteName;
-    updateSiteLabels(label);
-    updateHubTabs(normalizedSlug);
+    const finalName = options.siteName || activeSiteName;
+    updateSiteLabels(finalName);
+    updateWorkspaceNavLinks(normalizedSlug);
   };
 
   const selectSite = async (slug, name) => {
@@ -315,7 +303,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   highlightFromStorageOrDefault();
   syncActiveSiteFromServer();
-  updateHubTabs(storedSite.slug);
+  if (workspaceContext) {
+    updateWorkspaceNavLinks(workspaceContext.slugValue);
+  } else if (storedSite.slug) {
+    updateWorkspaceNavLinks(storedSite.slug);
+  }
 
   siteSelectButtons.forEach((button) => {
     button.addEventListener('click', () => {
@@ -526,17 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '/admin/sites';
   });
 
-  if (workspaceContext) {
-    workspaceNavLinks.forEach((link) => {
-      const tab = link.dataset.workspaceTab;
-      if (!tab) {
-        return;
-      }
-      const url = `/admin/site/${encodeURIComponent(workspaceContext.slugPart)}/${tab}`;
-      link.href = url;
-    });
-    if (storedSite.name) {
-      updateSiteLabels(storedSite.name);
-    }
+  if (workspaceContext && storedSite.name) {
+    updateSiteLabels(storedSite.name);
   }
 });

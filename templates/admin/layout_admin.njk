@@ -43,21 +43,20 @@
           Menu
         </button>
         {% set isHubView = activeTab == 'Sites' %}
-        <nav class="hidden lg:flex items-center gap-6 text-sm" aria-label="Navigation admin">
-          {% for tab in adminTabs %}
-            {% set isActive = tab.label == activeTab %}
-            {% set isDisabled = isHubView and tab.section %}
-            <a
-              href="{{ tab.href }}"
-              data-hub-tab="{{ tab.section if tab.section }}"
-              class="pb-2 border-b-2 {{ 'border-[#9C6BFF] text-slate-900' if isActive else 'border-transparent text-slate-600 hover:text-slate-900' }} {{ 'pointer-events-none opacity-50 text-slate-400' if isDisabled }}"
-              {% if isActive %}aria-current="page"{% endif %}
-              {% if isDisabled %}aria-disabled="true"{% endif %}
-            >
-              {{ tab.label }}
-            </a>
-          {% endfor %}
-        </nav>
+        {% if not isHubView %}
+          <nav class="hidden lg:flex items-center gap-6 text-sm" aria-label="Navigation admin">
+            {% for tab in adminTabs %}
+              {% set isActive = tab.label == activeTab %}
+              <a
+                href="{{ tab.href }}"
+                class="pb-2 border-b-2 {{ 'border-[#9C6BFF] text-slate-900' if isActive else 'border-transparent text-slate-600 hover:text-slate-900' }}"
+                {% if isActive %}aria-current="page"{% endif %}
+              >
+                {{ tab.label }}
+              </a>
+            {% endfor %}
+          </nav>
+        {% endif %}
         <button
           type="button"
           data-logout
@@ -66,25 +65,24 @@
           Se déconnecter
         </button>
       </div>
-      <nav class="lg:hidden border-t border-slate-200">
-        <ul class="flex items-center gap-4 overflow-x-auto px-4 py-2 text-sm" aria-label="Navigation admin mobile">
-          {% for tab in adminTabs %}
-            {% set isActive = tab.label == activeTab %}
-            {% set isDisabled = isHubView and tab.section %}
-            <li>
-              <a
-                href="{{ tab.href }}"
-                data-hub-tab="{{ tab.section if tab.section }}"
-                class="pb-2 border-b-2 {{ 'border-[#9C6BFF] text-slate-900' if isActive else 'border-transparent text-slate-600 hover:text-slate-900' }} {{ 'pointer-events-none opacity-50 text-slate-400' if isDisabled }}"
-                {% if isActive %}aria-current="page"{% endif %}
-                {% if isDisabled %}aria-disabled="true"{% endif %}
-              >
-                {{ tab.label }}
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      </nav>
+      {% if not isHubView %}
+        <nav class="lg:hidden border-t border-slate-200">
+          <ul class="flex items-center gap-4 overflow-x-auto px-4 py-2 text-sm" aria-label="Navigation admin mobile">
+            {% for tab in adminTabs %}
+              {% set isActive = tab.label == activeTab %}
+              <li>
+                <a
+                  href="{{ tab.href }}"
+                  class="pb-2 border-b-2 {{ 'border-[#9C6BFF] text-slate-900' if isActive else 'border-transparent text-slate-600 hover:text-slate-900' }}"
+                  {% if isActive %}aria-current="page"{% endif %}
+                >
+                  {{ tab.label }}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </nav>
+      {% endif %}
     </header>
 
     <div data-admin-sidebar-overlay class="fixed inset-0 z-40 hidden bg-black/40 backdrop-blur-sm lg:hidden"></div>

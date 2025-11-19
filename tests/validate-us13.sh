@@ -66,7 +66,7 @@ echo "🛡️  Routes Protégées"
 echo "──────────────"
 check "Routes /admin protégées" "grep -q \"app.use('/admin', adminGuardMiddleware\" ./core/dev.js"
 check "Routes /admin_public protégées" "grep -q \"app.use('/admin_public', adminGuardMiddleware\" ./core/dev.js"
-check "Login page publique" "grep -q \"'/login.html'\" ./core/dev.js"
+check "Page index (login) publique" "grep -q \"'/index.html'\" ./core/dev.js"
 check "Assets publics" "grep -q \"'/assets/'\" ./core/dev.js"
 echo ""
 

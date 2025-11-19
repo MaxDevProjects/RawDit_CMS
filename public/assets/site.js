@@ -1,1 +1,2 @@
 (()=>{document.addEventListener("DOMContentLoaded",()=>{console.log("[site] Front office pr\xEAt")});})();
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsiLi4vLi4vY29yZS9zY3JpcHRzL3NpdGUuanMiXSwKICAic291cmNlc0NvbnRlbnQiOiBbImRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoJ0RPTUNvbnRlbnRMb2FkZWQnLCAoKSA9PiB7XG4gIGNvbnNvbGUubG9nKCdbc2l0ZV0gRnJvbnQgb2ZmaWNlIHByXHUwMEVBdCcpO1xufSk7XG5cbiJdLAogICJtYXBwaW5ncyI6ICJNQUFBLFNBQVMsaUJBQWlCLG1CQUFvQixJQUFNLENBQ2xELFFBQVEsSUFBSSw2QkFBMEIsQ0FDeEMsQ0FBQyIsCiAgIm5hbWVzIjogW10KfQo=

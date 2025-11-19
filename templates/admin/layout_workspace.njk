@@ -19,13 +19,13 @@
   <body class="min-h-screen bg-[#F8FAFC] font-['Inter'] text-[#1E1E1E] antialiased">
     <header class="bg-white border-b border-slate-200">
       <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-        <button
-          type="button"
+        <a
+          href="/admin/sites"
           data-workspace-back
           class="inline-flex items-center gap-1 text-sm font-semibold text-[#1E1E1E] hover:text-[#9C6BFF]"
         >
           ← Retour à mes sites
-        </button>
+        </a>
         <div class="flex-1 text-center text-sm text-slate-600">
           Site :
           <span data-workspace-site-name class="font-semibold text-slate-900">Site actif</span>
@@ -44,7 +44,7 @@
             {% set isActive = activeWorkspaceTab == tab.id %}
             <li>
               <a
-                href="#"
+                href="{{tab.id}}"
                 data-workspace-tab="{{ tab.id }}"
                 class="pb-2 border-b-2 {{ 'border-[#9C6BFF] text-slate-900' if isActive else 'border-transparent text-slate-600 hover:text-slate-900' }}"
                 {% if isActive %}aria-current="page"{% endif %}

@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.querySelector('form[data-login-form]');
   const status = document.querySelector('[data-login-status]');
 
+  redirectIfAuthenticated();
+
   if (!form) {
     return;
   }
@@ -36,4 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
       submitButton.disabled = false;
     }
   });
+
+  async function redirectIfAuthenticated() {
+    try {
+      const response = await fetch('/api/auth/me', { credentials: 'same-origin' });
+      if (!response.ok) {
+        return;
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (payload.authenticated) {
+        window.location.href = '/admin/sites';
+      }
+    } catch (err) {
+      console.warn('[login] Impossible de vérifier la session active', err);
+    }
+  }
 });

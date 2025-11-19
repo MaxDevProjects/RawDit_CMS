@@ -14,20 +14,20 @@ echo ""
 COOKIES="/tmp/admin_cookies.txt"
 rm -f "$COOKIES"
 
-echo "1️⃣  Tentative d'accès direct à /admin_public/index.html"
+echo "1️⃣  Tentative d'accès direct à /admin_public/sites.html"
 echo "   (Sans authentification)"
 echo ""
 echo "   Commande:"
-echo "   curl -v $BASE_URL/admin_public/index.html"
+echo "   curl -v $BASE_URL/admin_public/sites.html"
 echo ""
-echo "   Réponse attendue: HTTP 302 avec Location: /admin_public/login.html"
+echo "   Réponse attendue: HTTP 302 avec Location: /admin_public/index.html"
 echo ""
 read -p "   Appuyer sur Entrée pour continuer..."
 echo ""
 
-curl -i "$BASE_URL/admin_public/index.html" 2>&1 | head -20
+curl -i "$BASE_URL/admin_public/sites.html" 2>&1 | head -20
 echo ""
-echo "   ✅ Redirection correcte vers login !"
+echo "   ✅ Redirection correcte vers la page index !"
 echo ""
 
 echo "2️⃣  Tentative de connexion avec mauvais identifiants"
@@ -100,12 +100,12 @@ if [ "$http_code" = "200" ]; then
   echo "5️⃣  Accès à la page admin (maintenant autorisé)"
   echo ""
   echo "   Commande:"
-  echo "   curl $BASE_URL/admin_public/index.html -b cookies.txt"
+  echo "   curl $BASE_URL/admin_public/sites.html -b cookies.txt"
   echo ""
   read -p "   Appuyer sur Entrée pour accéder à la page..."
   echo ""
   
-  curl -s "$BASE_URL/admin_public/index.html" -b "$COOKIES" | head -20
+  curl -s "$BASE_URL/admin_public/sites.html" -b "$COOKIES" | head -20
   echo ""
   echo "   ... (contenu HTML)"
   echo ""

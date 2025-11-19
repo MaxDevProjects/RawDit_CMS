@@ -31,21 +31,21 @@ test_result() {
   fi
 }
 
-# Test 1: Accès à page admin sans authentification
-echo -e "${YELLOW}Test 1: Accès à /admin_public/index.html sans authentification${NC}"
-status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/admin_public/index.html")
+# Test 1: Accès à la page Sites sans authentification
+echo -e "${YELLOW}Test 1: Accès à /admin_public/sites.html sans authentification${NC}"
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/admin_public/sites.html")
 test_result "Redirection 302" "302" "$status"
 echo ""
 
-# Test 2: Vérification que la redirection va vers login
-echo -e "${YELLOW}Test 2: Vérification de la redirection vers login${NC}"
-location=$(curl -s -i "$BASE_URL/admin_public/index.html" 2>&1 | grep "Location:" | cut -d' ' -f2 | tr -d '\r')
-test_result "Redirection vers /admin_public/login.html" "/admin_public/login.html" "$location"
+# Test 2: Vérification que la redirection va vers l'index (login)
+echo -e "${YELLOW}Test 2: Vérification de la redirection vers index${NC}"
+location=$(curl -s -i "$BASE_URL/admin_public/sites.html" 2>&1 | grep "Location:" | cut -d' ' -f2 | tr -d '\r')
+test_result "Redirection vers /admin_public/index.html" "/admin_public/index.html" "$location"
 echo ""
 
-# Test 3: Accès à la page login (public)
-echo -e "${YELLOW}Test 3: Accès à /admin_public/login.html (page publique)${NC}"
-status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/admin_public/login.html")
+# Test 3: Accès à la page index (publique)
+echo -e "${YELLOW}Test 3: Accès à /admin_public/index.html (page publique)${NC}"
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/admin_public/index.html")
 test_result "Accès autorisé (200)" "200" "$status"
 echo ""
 
@@ -86,6 +86,6 @@ echo "========================================="
 echo ""
 echo "Notes pour tester avec authentification:"
 echo "1. Vérifier les identifiants dans data/users.json"
-echo "2. Utiliser le formulaire de login sur $BASE_URL/admin_public/login.html"
+echo "2. Utiliser le formulaire de login sur $BASE_URL/admin_public/index.html"
 echo "3. Ou faire un POST /api/login avec les bonnes identifiants"
 echo ""

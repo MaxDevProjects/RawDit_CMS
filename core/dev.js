@@ -174,6 +174,14 @@ async function start() {
     res.sendFile(templatePath);
   });
 
+  app.get(['/admin/login', '/admin/login.html'], (req, res) => {
+    res.redirect(302, '/admin/index.html');
+  });
+
+  app.get(['/admin_public/login', '/admin_public/login.html'], (req, res) => {
+    res.redirect(302, '/admin_public/index.html');
+  });
+
   app.use('/admin', adminGuardMiddleware, express.static(paths.adminPublic, { extensions: ['html'] }));
   app.use('/admin_public', adminGuardMiddleware, express.static(paths.adminPublic, { extensions: ['html'] }));
   app.use('/', express.static(paths.public, { extensions: ['html'] }));
@@ -226,7 +234,7 @@ async function start() {
 }
 
 function adminGuardMiddleware(req, res, next) {
-  // Les chemins publics (login et assets) n'ont pas besoin d'authentification
+  // Les chemins publics (page d'accueil/login et assets) n'ont pas besoin d'authentification
   if (isPublicPath(req.path)) {
     return next();
   }
@@ -237,8 +245,8 @@ function adminGuardMiddleware(req, res, next) {
     const session = sessionStore.getSession(token);
     
     if (!session) {
-      // Pas de session valide : redirection vers login
-      const loginUrl = `${req.baseUrl}/login.html`;
+      // Pas de session valide : redirection vers la page index (login)
+      const loginUrl = `${req.baseUrl}/index.html`;
       return res.redirect(302, loginUrl);
     }
     
@@ -262,7 +270,12 @@ function isHtmlPath(requestPath) {
  * Vérifie si le chemin est public (pas besoin d'authentification)
  */
 function isPublicPath(requestPath) {
-  // Login page est toujours accessible
+  // Page index (login) est toujours accessible
+  if (requestPath === '/' || requestPath === '/index.html' || requestPath === '/index') {
+    return true;
+  }
+
+  // Compatibilité : ancien chemin login redirigé vers index
   if (requestPath === '/login.html' || requestPath === '/login') {
     return true;
   }
