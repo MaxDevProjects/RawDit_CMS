@@ -10,164 +10,290 @@
     <link rel="stylesheet" href="/admin/assets/admin.css" />
     
   </head>
-  <body class="bg-slate-950 text-slate-100">
-    <div class="min-h-screen flex flex-col gap-4 px-4 py-4 sm:px-6 lg:gap-6 lg:py-6">
-      <header class="rounded-3xl border border-slate-800 bg-slate-900/70 p-4 shadow-lg">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex min-w-0 flex-1 items-center gap-3">
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-800 bg-white/5 text-lg font-bold text-slate-100 shadow-lg">
-              CL
-            </div>
-            <div class="min-w-0">
-              <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Admin</p>
-              <h1 class="truncate text-2xl font-bold text-white">Sites</h1>
-              <p class="text-sm text-slate-400">Clower Public</p>
-            </div>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              data-admin-sidebar-toggle
-              class="inline-flex items-center gap-2 rounded-full border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:bg-slate-800 hover:text-white lg:hidden"
-            >
-              Menu
-            </button>
-            <button
-              type="button"
-              data-logout
-              class="rounded-full border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-slate-800 hover:text-white"
-            >
-              Déconnexion
-            </button>
-          </div>
+  <body class="min-h-screen bg-[#F8FAFC] font-['Inter'] text-[#1E1E1E] antialiased">
+    <header class="bg-white border-b border-slate-200">
+      <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-['Outfit'] tracking-[0.25em] text-slate-500 uppercase">
+            CLOWEREDIT
+          </span>
+          <span class="hidden text-xs text-slate-500 sm:inline-flex">Site : Clower Public</span>
         </div>
-        <nav class="mt-4 flex gap-2 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/40 p-2 text-sm" aria-label="Navigation admin">
+        <button
+          type="button"
+          data-admin-sidebar-toggle
+          class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 lg:hidden"
+        >
+          Menu
+        </button>
+        <nav class="hidden lg:flex items-center gap-6 text-sm" aria-label="Navigation admin">
           
+            
             <a
               href="/admin/sites.html"
-              class="whitespace-nowrap rounded-full px-4 py-2 font-semibold transition-colors bg-white text-slate-900 shadow-lg"
+              class="pb-2 border-b-2 border-[#9C6BFF] text-slate-900"
               aria-current="page"
             >
               Sites
             </a>
           
+            
             <a
               href="/admin/design.html"
-              class="whitespace-nowrap rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
               
             >
               Design
             </a>
           
+            
             <a
               href="/admin/content.html"
-              class="whitespace-nowrap rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
               
             >
               Contenus
             </a>
           
+            
             <a
               href="/admin/medias.html"
-              class="whitespace-nowrap rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
               
             >
               Médias
             </a>
           
+            
             <a
               href="/admin/deploy.html"
-              class="whitespace-nowrap rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
               
             >
               Déploiement
             </a>
           
+            
             <a
               href="/admin/settings.html"
-              class="whitespace-nowrap rounded-full px-4 py-2 font-semibold transition-colors border border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white"
+              class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
               
             >
               Paramètres
             </a>
           
         </nav>
-      </header>
-
-      <div data-admin-sidebar-overlay class="fixed inset-0 z-40 hidden bg-black/70 backdrop-blur-sm lg:hidden"></div>
-
-      <div class="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,280px)]">
-        <aside
-          data-admin-sidebar
-          class="hidden lg:block lg:min-h-[240px]"
-          aria-label="Menu latéral"
+        <button
+          type="button"
+          data-logout
+          class="text-sm text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg border border-slate-200"
         >
-          <div class="fixed inset-y-0 left-0 z-50 w-80 max-w-[90vw] overflow-y-auto rounded-r-3xl border border-slate-800 bg-slate-950/95 p-4 shadow-2xl lg:relative lg:inset-auto lg:z-auto lg:w-auto lg:max-w-none lg:overflow-visible lg:border-none lg:bg-transparent lg:p-0 lg:shadow-none">
-            <div class="flex items-center justify-between pb-4 lg:hidden">
-              <p class="text-base font-semibold text-white">Menu</p>
-              <button
-                type="button"
-                data-admin-sidebar-close
-                class="inline-flex items-center rounded-full border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
+          Se déconnecter
+        </button>
+      </div>
+      <nav class="lg:hidden border-t border-slate-200">
+        <ul class="flex items-center gap-4 overflow-x-auto px-4 py-2 text-sm" aria-label="Navigation admin mobile">
+          
+            
+            <li>
+              <a
+                href="/admin/sites.html"
+                class="pb-2 border-b-2 border-[#9C6BFF] text-slate-900"
+                aria-current="page"
               >
-                Fermer
-              </button>
-            </div>
-            <div class="admin-card flex h-full flex-col gap-4">
-              
-  <div class="space-y-4">
-    <h2 class="text-base font-semibold text-white">Vue rapide</h2>
-    <p class="text-sm text-slate-400">Repérez la structure des sites et basculez entre les environnements.</p>
-    <ul class="space-y-2 text-sm text-slate-300">
-      <li>✓ Liste des sites configurés</li>
-      <li>✓ Accès aux environnements de test</li>
-      <li>✓ Statut des dernières publications</li>
+                Sites
+              </a>
+            </li>
+          
+            
+            <li>
+              <a
+                href="/admin/design.html"
+                class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
+                
+              >
+                Design
+              </a>
+            </li>
+          
+            
+            <li>
+              <a
+                href="/admin/content.html"
+                class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
+                
+              >
+                Contenus
+              </a>
+            </li>
+          
+            
+            <li>
+              <a
+                href="/admin/medias.html"
+                class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
+                
+              >
+                Médias
+              </a>
+            </li>
+          
+            
+            <li>
+              <a
+                href="/admin/deploy.html"
+                class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
+                
+              >
+                Déploiement
+              </a>
+            </li>
+          
+            
+            <li>
+              <a
+                href="/admin/settings.html"
+                class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
+                
+              >
+                Paramètres
+              </a>
+            </li>
+          
+        </ul>
+      </nav>
+    </header>
+
+    <div data-admin-sidebar-overlay class="fixed inset-0 z-40 hidden bg-black/40 backdrop-blur-sm lg:hidden"></div>
+
+    <div class="max-w-6xl mx-auto px-4 py-6 space-y-4 lg:grid lg:grid-cols-[280px,1fr,320px] lg:gap-6 lg:space-y-0">
+      <aside
+        data-admin-sidebar
+        class="hidden lg:block space-y-4"
+        aria-label="Navigation latérale"
+      >
+        <div class="fixed inset-y-0 left-0 z-50 w-80 max-w-[90vw] overflow-y-auto bg-white p-6 shadow-xl lg:relative lg:inset-auto lg:z-auto lg:w-auto lg:max-w-none lg:rounded-2xl lg:border lg:border-slate-200 lg:shadow-sm">
+          <div class="flex items-center justify-between pb-4 lg:hidden">
+            <p class="text-base font-semibold text-slate-900">Menu</p>
+            <button
+              type="button"
+              data-admin-sidebar-close
+              class="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900"
+            >
+              Fermer
+            </button>
+          </div>
+          <div class="space-y-4">
+            
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Vue rapide</h2>
+    <p class="text-sm text-slate-600 mb-3">
+      Repérez la structure des sites et basculez entre les environnements.
+    </p>
+    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+      <li>Liste des sites configurés</li>
+      <li>Accès aux environnements de test</li>
+      <li>Statut des dernières publications</li>
     </ul>
-  </div>
-
-            </div>
-          </div>
-        </aside>
-
-        <main class="order-1 flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-900/60 p-4 shadow-xl lg:order-none lg:bg-transparent lg:p-0 lg:shadow-none">
-          <div class="admin-card flex h-full flex-col gap-4">
-            
-  <div class="space-y-6">
-    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-      <h2 class="text-xl font-semibold text-white">Templates</h2>
-      <p class="mt-2 text-sm text-slate-400">
-        Les pages data et templates contribuent à la cohérence du site. Retrouvez-les dans <code>templates/admin</code>
-        et <code>data/*.json</code>.
-      </p>
-    </article>
-    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-      <h2 class="text-xl font-semibold text-white">État du contenu</h2>
-      <p class="mt-2 text-sm text-slate-400">
-        Le canal d’écriture est prêt : ajoutez de nouveaux blocs et prévisualisez-les avant publication.
-      </p>
-    </article>
-  </div>
+  </section>
 
           </div>
-        </main>
+        </div>
+      </aside>
 
-        <aside class="order-2 rounded-3xl border border-slate-800 bg-slate-900/60 p-4 shadow-xl lg:order-none lg:bg-transparent lg:p-0 lg:shadow-none">
-          <div class="admin-card flex h-full flex-col gap-4">
-            
+      <main class="space-y-4" id="main-content">
+        
   <div class="space-y-4">
-    <h3 class="text-base font-semibold text-white">Actions rapides</h3>
-    <p class="text-sm text-slate-400">Préparez des mises à jour, gérez les utilisateurs ou activez un nouveau déploiement.</p>
-    <ol class="list-decimal space-y-1 pl-4 text-sm text-slate-300">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 class="text-lg font-semibold">Vos sites</h1>
+        <p class="text-sm text-slate-600">
+          Gérez vos projets et choisissez celui sur lequel travailler.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="inline-flex items-center rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-medium text-white
+               hover:bg-[#8654f5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9C6BFF]"
+      >
+        + Créer un site
+      </button>
+    </div>
+
+    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+        <header class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold">clower.studio</h2>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF]">
+            Actif
+          </span>
+        </header>
+        <div class="text-xs text-slate-600 space-y-1">
+          <p>Slug : /clower-studio</p>
+          <p>Chemin de sortie : /public/clower-studio</p>
+          <p>Dernier déploiement : Jamais déployé</p>
+        </div>
+        <footer class="flex items-center justify-between gap-2">
+          <button class="text-xs inline-flex justify-center flex-1 rounded-lg bg-slate-900 text-white py-1.5">
+            Travailler sur ce site
+          </button>
+          <button class="text-xs text-slate-600 hover:text-slate-900">
+            Configurer
+          </button>
+        </footer>
+      </article>
+
+      <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+        <header class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold">atelier.clower</h2>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+            Brouillon
+          </span>
+        </header>
+        <div class="text-xs text-slate-600 space-y-1">
+          <p>Slug : /atelier</p>
+          <p>Chemin de sortie : /public/atelier</p>
+          <p>Dernier déploiement : Brouillon local</p>
+        </div>
+        <footer class="flex items-center justify-between gap-2">
+          <button class="text-xs inline-flex justify-center flex-1 rounded-lg bg-slate-900 text-white py-1.5">
+            Travailler sur ce site
+          </button>
+          <button class="text-xs text-slate-600 hover:text-slate-900">
+            Configurer
+          </button>
+        </footer>
+      </article>
+    </section>
+
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+      <h2 class="text-sm font-semibold mb-2">Templates & données</h2>
+      <p class="text-sm text-slate-600">
+        Les pages data et templates contribuent à la cohérence du site. Retrouvez-les dans
+        <code>templates/admin</code> et <code>data/*.json</code>.
+      </p>
+    </section>
+  </div>
+
+      </main>
+
+      <aside class="space-y-4" aria-label="Panneau latéral">
+        
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Actions rapides</h2>
+    <p class="text-sm text-slate-600 mb-2">
+      Préparez vos mises à jour ou vos déploiements.
+    </p>
+    <ol class="list-decimal list-inside text-sm text-slate-600 space-y-1">
       <li>Vérifier les permissions</li>
       <li>Préparer les assets</li>
       <li>Déployer lorsque tout est validé</li>
     </ol>
-  </div>
+  </section>
 
-          </div>
-        </aside>
-      </div>
+      </aside>
     </div>
+
     <script src="/admin/assets/admin.js" defer></script>
     
   </body>

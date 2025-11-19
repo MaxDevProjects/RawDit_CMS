@@ -3,43 +3,103 @@
 {% set activeTab = "Sites" %}
 
 {% block sidebar_start %}
-  <div class="space-y-4">
-    <h2 class="text-base font-semibold text-white">Vue rapide</h2>
-    <p class="text-sm text-slate-400">Repérez la structure des sites et basculez entre les environnements.</p>
-    <ul class="space-y-2 text-sm text-slate-300">
-      <li>✓ Liste des sites configurés</li>
-      <li>✓ Accès aux environnements de test</li>
-      <li>✓ Statut des dernières publications</li>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Vue rapide</h2>
+    <p class="text-sm text-slate-600 mb-3">
+      Repérez la structure des sites et basculez entre les environnements.
+    </p>
+    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+      <li>Liste des sites configurés</li>
+      <li>Accès aux environnements de test</li>
+      <li>Statut des dernières publications</li>
     </ul>
-  </div>
+  </section>
 {% endblock %}
 
 {% block content_main %}
-  <div class="space-y-6">
-    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-      <h2 class="text-xl font-semibold text-white">Templates</h2>
-      <p class="mt-2 text-sm text-slate-400">
-        Les pages data et templates contribuent à la cohérence du site. Retrouvez-les dans <code>templates/admin</code>
-        et <code>data/*.json</code>.
+  <div class="space-y-4">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 class="text-lg font-semibold">Vos sites</h1>
+        <p class="text-sm text-slate-600">
+          Gérez vos projets et choisissez celui sur lequel travailler.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="inline-flex items-center rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-medium text-white
+               hover:bg-[#8654f5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9C6BFF]"
+      >
+        + Créer un site
+      </button>
+    </div>
+
+    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+        <header class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold">clower.studio</h2>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF]">
+            Actif
+          </span>
+        </header>
+        <div class="text-xs text-slate-600 space-y-1">
+          <p>Slug : /clower-studio</p>
+          <p>Chemin de sortie : /public/clower-studio</p>
+          <p>Dernier déploiement : Jamais déployé</p>
+        </div>
+        <footer class="flex items-center justify-between gap-2">
+          <button class="text-xs inline-flex justify-center flex-1 rounded-lg bg-slate-900 text-white py-1.5">
+            Travailler sur ce site
+          </button>
+          <button class="text-xs text-slate-600 hover:text-slate-900">
+            Configurer
+          </button>
+        </footer>
+      </article>
+
+      <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+        <header class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold">atelier.clower</h2>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+            Brouillon
+          </span>
+        </header>
+        <div class="text-xs text-slate-600 space-y-1">
+          <p>Slug : /atelier</p>
+          <p>Chemin de sortie : /public/atelier</p>
+          <p>Dernier déploiement : Brouillon local</p>
+        </div>
+        <footer class="flex items-center justify-between gap-2">
+          <button class="text-xs inline-flex justify-center flex-1 rounded-lg bg-slate-900 text-white py-1.5">
+            Travailler sur ce site
+          </button>
+          <button class="text-xs text-slate-600 hover:text-slate-900">
+            Configurer
+          </button>
+        </footer>
+      </article>
+    </section>
+
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+      <h2 class="text-sm font-semibold mb-2">Templates & données</h2>
+      <p class="text-sm text-slate-600">
+        Les pages data et templates contribuent à la cohérence du site. Retrouvez-les dans
+        <code>templates/admin</code> et <code>data/*.json</code>.
       </p>
-    </article>
-    <article class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-      <h2 class="text-xl font-semibold text-white">État du contenu</h2>
-      <p class="mt-2 text-sm text-slate-400">
-        Le canal d’écriture est prêt : ajoutez de nouveaux blocs et prévisualisez-les avant publication.
-      </p>
-    </article>
+    </section>
   </div>
 {% endblock %}
 
 {% block sidebar_end %}
-  <div class="space-y-4">
-    <h3 class="text-base font-semibold text-white">Actions rapides</h3>
-    <p class="text-sm text-slate-400">Préparez des mises à jour, gérez les utilisateurs ou activez un nouveau déploiement.</p>
-    <ol class="list-decimal space-y-1 pl-4 text-sm text-slate-300">
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Actions rapides</h2>
+    <p class="text-sm text-slate-600 mb-2">
+      Préparez vos mises à jour ou vos déploiements.
+    </p>
+    <ol class="list-decimal list-inside text-sm text-slate-600 space-y-1">
       <li>Vérifier les permissions</li>
       <li>Préparer les assets</li>
       <li>Déployer lorsque tout est validé</li>
     </ol>
-  </div>
+  </section>
 {% endblock %}
