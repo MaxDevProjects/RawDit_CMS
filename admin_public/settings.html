@@ -11,13 +11,22 @@
     
   </head>
   <body class="min-h-screen bg-[#F8FAFC] font-['Inter'] text-[#1E1E1E] antialiased">
-    <header class="bg-white border-b border-slate-200">
+    <header class="bg-white border-b border-slate-200 relative">
       <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
         <div class="flex items-center gap-2">
           <span class="text-sm font-['Outfit'] tracking-[0.25em] text-slate-500 uppercase">
             CLOWEREDIT
           </span>
-          <span class="hidden text-xs text-slate-500 sm:inline-flex">Site : Clower Public</span>
+          <span class="hidden text-xs text-slate-500 sm:inline-flex">
+            Site :
+            <span
+              data-current-site-name
+              data-default-site-name="Clower Public"
+              class="font-semibold text-slate-900 ml-1"
+            >
+              Clower Public
+            </span>
+          </span>
         </div>
         <button
           type="button"
@@ -165,6 +174,12 @@
     </header>
 
     <div data-admin-sidebar-overlay class="fixed inset-0 z-40 hidden bg-black/40 backdrop-blur-sm lg:hidden"></div>
+    <div
+      data-site-toast
+      class="fixed top-20 inset-x-0 z-50 hidden pointer-events-none"
+    >
+      <div class="mx-auto w-fit rounded-full bg-slate-900/90 px-4 py-2 text-xs font-medium text-white shadow-lg pointer-events-auto" data-site-toast-message></div>
+    </div>
 
     <div class="max-w-6xl mx-auto px-4 py-6 space-y-4 lg:grid lg:grid-cols-[280px,1fr,320px] lg:gap-6 lg:space-y-0">
       <aside

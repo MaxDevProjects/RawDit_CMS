@@ -3,6 +3,7 @@
 {% set activeTab = "Sites" %}
 {% set siteList = data.sites | default([]) %}
 {% set hasSites = siteList | length > 0 %}
+<span class="hidden border-[#9C6BFF] ring-2 ring-[#9C6BFF] shadow-md"></span>
 
 {% block sidebar_start %}
   <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
@@ -34,14 +35,17 @@
     {% if hasSites %}
       <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {% for site in siteList %}
-          <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+          <article
+            class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 transition-all"
+            data-site-card="{{ site.slug }}"
+            data-site-name="{{ site.name }}"
+            data-site-default="{{ 'true' if site.isActive else 'false' }}"
+          >
             <header class="flex items-center justify-between">
               <h3 class="text-base font-semibold font-['Outfit']">{{ site.name }}</h3>
-              {% if site.isActive %}
-                <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF]">
-                  Actif
-                </span>
-              {% endif %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF] {% if not site.isActive %}hidden{% endif %}" data-site-active-badge>
+                Actif
+              </span>
             </header>
             <div class="text-sm text-slate-600 space-y-1">
               <p>Slug : {{ site.slug }}</p>
@@ -52,7 +56,12 @@
               </p>
             </div>
             <footer class="flex items-center justify-between gap-2 flex-wrap">
-              <button class="text-sm inline-flex justify-center flex-1 rounded-lg bg-[#1E1E1E] text-white py-2">
+              <button
+                class="text-sm inline-flex justify-center flex-1 rounded-lg bg-[#1E1E1E] text-white py-2"
+                data-site-select="{{ site.slug }}"
+                data-site-select-name="{{ site.name }}"
+                aria-label="Travailler sur le site {{ site.name }}"
+              >
                 Travailler sur ce site
               </button>
               <button class="text-sm text-slate-600 hover:text-slate-900 px-2 py-1">

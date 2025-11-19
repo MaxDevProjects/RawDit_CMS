@@ -11,13 +11,22 @@
     
   </head>
   <body class="min-h-screen bg-[#F8FAFC] font-['Inter'] text-[#1E1E1E] antialiased">
-    <header class="bg-white border-b border-slate-200">
+    <header class="bg-white border-b border-slate-200 relative">
       <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
         <div class="flex items-center gap-2">
           <span class="text-sm font-['Outfit'] tracking-[0.25em] text-slate-500 uppercase">
             CLOWEREDIT
           </span>
-          <span class="hidden text-xs text-slate-500 sm:inline-flex">Site : Clower Public</span>
+          <span class="hidden text-xs text-slate-500 sm:inline-flex">
+            Site :
+            <span
+              data-current-site-name
+              data-default-site-name="Clower Public"
+              class="font-semibold text-slate-900 ml-1"
+            >
+              Clower Public
+            </span>
+          </span>
         </div>
         <button
           type="button"
@@ -165,6 +174,12 @@
     </header>
 
     <div data-admin-sidebar-overlay class="fixed inset-0 z-40 hidden bg-black/40 backdrop-blur-sm lg:hidden"></div>
+    <div
+      data-site-toast
+      class="fixed top-20 inset-x-0 z-50 hidden pointer-events-none"
+    >
+      <div class="mx-auto w-fit rounded-full bg-slate-900/90 px-4 py-2 text-xs font-medium text-white shadow-lg pointer-events-auto" data-site-toast-message></div>
+    </div>
 
     <div class="max-w-6xl mx-auto px-4 py-6 space-y-4 lg:grid lg:grid-cols-[280px,1fr,320px] lg:gap-6 lg:space-y-0">
       <aside
@@ -218,14 +233,17 @@
     
       <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         
-          <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+          <article
+            class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 transition-all"
+            data-site-card="/clower-studio"
+            data-site-name="Clower Studio"
+            data-site-default="true"
+          >
             <header class="flex items-center justify-between">
               <h3 class="text-base font-semibold font-['Outfit']">Clower Studio</h3>
-              
-                <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF]">
-                  Actif
-                </span>
-              
+              <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF] " data-site-active-badge>
+                Actif
+              </span>
             </header>
             <div class="text-sm text-slate-600 space-y-1">
               <p>Slug : /clower-studio</p>
@@ -236,7 +254,12 @@
               </p>
             </div>
             <footer class="flex items-center justify-between gap-2 flex-wrap">
-              <button class="text-sm inline-flex justify-center flex-1 rounded-lg bg-[#1E1E1E] text-white py-2">
+              <button
+                class="text-sm inline-flex justify-center flex-1 rounded-lg bg-[#1E1E1E] text-white py-2"
+                data-site-select="/clower-studio"
+                data-site-select-name="Clower Studio"
+                aria-label="Travailler sur le site Clower Studio"
+              >
                 Travailler sur ce site
               </button>
               <button class="text-sm text-slate-600 hover:text-slate-900 px-2 py-1">
@@ -245,10 +268,17 @@
             </footer>
           </article>
         
-          <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+          <article
+            class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 transition-all"
+            data-site-card="/atelier"
+            data-site-name="Atelier Clower"
+            data-site-default="false"
+          >
             <header class="flex items-center justify-between">
               <h3 class="text-base font-semibold font-['Outfit']">Atelier Clower</h3>
-              
+              <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF] hidden" data-site-active-badge>
+                Actif
+              </span>
             </header>
             <div class="text-sm text-slate-600 space-y-1">
               <p>Slug : /atelier</p>
@@ -259,7 +289,12 @@
               </p>
             </div>
             <footer class="flex items-center justify-between gap-2 flex-wrap">
-              <button class="text-sm inline-flex justify-center flex-1 rounded-lg bg-[#1E1E1E] text-white py-2">
+              <button
+                class="text-sm inline-flex justify-center flex-1 rounded-lg bg-[#1E1E1E] text-white py-2"
+                data-site-select="/atelier"
+                data-site-select-name="Atelier Clower"
+                aria-label="Travailler sur le site Atelier Clower"
+              >
                 Travailler sur ce site
               </button>
               <button class="text-sm text-slate-600 hover:text-slate-900 px-2 py-1">
