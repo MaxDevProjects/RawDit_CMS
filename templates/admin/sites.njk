@@ -1,18 +1,15 @@
 {% extends "layout_admin.njk" %}
 {% set pageTitle = "Sites" %}
 {% set activeTab = "Sites" %}
+{% set siteList = data.sites | default([]) %}
+{% set hasSites = siteList | length > 0 %}
 
 {% block sidebar_start %}
   <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Vue rapide</h2>
-    <p class="text-sm text-slate-600 mb-3">
-      Repérez la structure des sites et basculez entre les environnements.
+    <h2 class="text-sm font-semibold mb-2">Aide / contexte</h2>
+    <p class="text-sm text-slate-600">
+      Ici tu gères tes sites ClowerEdit (un par projet client par exemple).
     </p>
-    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
-      <li>Liste des sites configurés</li>
-      <li>Accès aux environnements de test</li>
-      <li>Statut des dernières publications</li>
-    </ul>
   </section>
 {% endblock %}
 
@@ -34,59 +31,54 @@
       </button>
     </div>
 
-    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
-        <header class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold">clower.studio</h2>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF]">
-            Actif
-          </span>
-        </header>
-        <div class="text-xs text-slate-600 space-y-1">
-          <p>Slug : /clower-studio</p>
-          <p>Chemin de sortie : /public/clower-studio</p>
-          <p>Dernier déploiement : Jamais déployé</p>
+    {% if hasSites %}
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {% for site in siteList %}
+          <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+            <header class="flex items-center justify-between">
+              <h3 class="text-base font-semibold font-['Outfit']">{{ site.name }}</h3>
+              {% if site.isActive %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF]">
+                  Actif
+                </span>
+              {% endif %}
+            </header>
+            <div class="text-sm text-slate-600 space-y-1">
+              <p>Slug : {{ site.slug }}</p>
+              <p>Chemin de sortie : {{ site.outputPath }}</p>
+              <p>
+                Dernier déploiement :
+                {{ site.lastDeployment or 'Jamais déployé' }}
+              </p>
+            </div>
+            <footer class="flex items-center justify-between gap-2 flex-wrap">
+              <button class="text-sm inline-flex justify-center flex-1 rounded-lg bg-[#1E1E1E] text-white py-2">
+                Travailler sur ce site
+              </button>
+              <button class="text-sm text-slate-600 hover:text-slate-900 px-2 py-1">
+                Configurer
+              </button>
+            </footer>
+          </article>
+        {% endfor %}
+      </section>
+    {% else %}
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center space-y-4">
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF] text-2xl">
+          ✨
         </div>
-        <footer class="flex items-center justify-between gap-2">
-          <button class="text-xs inline-flex justify-center flex-1 rounded-lg bg-slate-900 text-white py-1.5">
-            Travailler sur ce site
-          </button>
-          <button class="text-xs text-slate-600 hover:text-slate-900">
-            Configurer
-          </button>
-        </footer>
-      </article>
-
-      <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
-        <header class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold">atelier.clower</h2>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-            Brouillon
-          </span>
-        </header>
-        <div class="text-xs text-slate-600 space-y-1">
-          <p>Slug : /atelier</p>
-          <p>Chemin de sortie : /public/atelier</p>
-          <p>Dernier déploiement : Brouillon local</p>
+        <div class="space-y-2">
+          <p class="text-lg font-semibold text-slate-900">Aucun site encore.</p>
+          <p class="text-sm text-slate-600">Crée ton premier site pour commencer 🚀</p>
         </div>
-        <footer class="flex items-center justify-between gap-2">
-          <button class="text-xs inline-flex justify-center flex-1 rounded-lg bg-slate-900 text-white py-1.5">
-            Travailler sur ce site
-          </button>
-          <button class="text-xs text-slate-600 hover:text-slate-900">
-            Configurer
-          </button>
-        </footer>
-      </article>
-    </section>
-
-    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-      <h2 class="text-sm font-semibold mb-2">Templates & données</h2>
-      <p class="text-sm text-slate-600">
-        Les pages data et templates contribuent à la cohérence du site. Retrouvez-les dans
-        <code>templates/admin</code> et <code>data/*.json</code>.
-      </p>
-    </section>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#8654f5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9C6BFF]"
+        >
+          Créer un site
+        </button>
+      </section>
+    {% endif %}
   </div>
 {% endblock %}
 

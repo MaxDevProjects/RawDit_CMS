@@ -186,15 +186,10 @@
           <div class="space-y-4">
             
   <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Vue rapide</h2>
-    <p class="text-sm text-slate-600 mb-3">
-      Repérez la structure des sites et basculez entre les environnements.
+    <h2 class="text-sm font-semibold mb-2">Aide / contexte</h2>
+    <p class="text-sm text-slate-600">
+      Ici tu gères tes sites ClowerEdit (un par projet client par exemple).
     </p>
-    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
-      <li>Liste des sites configurés</li>
-      <li>Accès aux environnements de test</li>
-      <li>Statut des dernières publications</li>
-    </ul>
   </section>
 
           </div>
@@ -220,59 +215,61 @@
       </button>
     </div>
 
-    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
-        <header class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold">clower.studio</h2>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF]">
-            Actif
-          </span>
-        </header>
-        <div class="text-xs text-slate-600 space-y-1">
-          <p>Slug : /clower-studio</p>
-          <p>Chemin de sortie : /public/clower-studio</p>
-          <p>Dernier déploiement : Jamais déployé</p>
-        </div>
-        <footer class="flex items-center justify-between gap-2">
-          <button class="text-xs inline-flex justify-center flex-1 rounded-lg bg-slate-900 text-white py-1.5">
-            Travailler sur ce site
-          </button>
-          <button class="text-xs text-slate-600 hover:text-slate-900">
-            Configurer
-          </button>
-        </footer>
-      </article>
-
-      <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
-        <header class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold">atelier.clower</h2>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-            Brouillon
-          </span>
-        </header>
-        <div class="text-xs text-slate-600 space-y-1">
-          <p>Slug : /atelier</p>
-          <p>Chemin de sortie : /public/atelier</p>
-          <p>Dernier déploiement : Brouillon local</p>
-        </div>
-        <footer class="flex items-center justify-between gap-2">
-          <button class="text-xs inline-flex justify-center flex-1 rounded-lg bg-slate-900 text-white py-1.5">
-            Travailler sur ce site
-          </button>
-          <button class="text-xs text-slate-600 hover:text-slate-900">
-            Configurer
-          </button>
-        </footer>
-      </article>
-    </section>
-
-    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-      <h2 class="text-sm font-semibold mb-2">Templates & données</h2>
-      <p class="text-sm text-slate-600">
-        Les pages data et templates contribuent à la cohérence du site. Retrouvez-les dans
-        <code>templates/admin</code> et <code>data/*.json</code>.
-      </p>
-    </section>
+    
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        
+          <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+            <header class="flex items-center justify-between">
+              <h3 class="text-base font-semibold font-['Outfit']">Clower Studio</h3>
+              
+                <span class="text-xs px-2 py-0.5 rounded-full bg-[#9C6BFF]/10 text-[#9C6BFF]">
+                  Actif
+                </span>
+              
+            </header>
+            <div class="text-sm text-slate-600 space-y-1">
+              <p>Slug : /clower-studio</p>
+              <p>Chemin de sortie : /public/clower-studio</p>
+              <p>
+                Dernier déploiement :
+                12/11/2025, 14:32
+              </p>
+            </div>
+            <footer class="flex items-center justify-between gap-2 flex-wrap">
+              <button class="text-sm inline-flex justify-center flex-1 rounded-lg bg-[#1E1E1E] text-white py-2">
+                Travailler sur ce site
+              </button>
+              <button class="text-sm text-slate-600 hover:text-slate-900 px-2 py-1">
+                Configurer
+              </button>
+            </footer>
+          </article>
+        
+          <article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+            <header class="flex items-center justify-between">
+              <h3 class="text-base font-semibold font-['Outfit']">Atelier Clower</h3>
+              
+            </header>
+            <div class="text-sm text-slate-600 space-y-1">
+              <p>Slug : /atelier</p>
+              <p>Chemin de sortie : /public/atelier</p>
+              <p>
+                Dernier déploiement :
+                Jamais déployé
+              </p>
+            </div>
+            <footer class="flex items-center justify-between gap-2 flex-wrap">
+              <button class="text-sm inline-flex justify-center flex-1 rounded-lg bg-[#1E1E1E] text-white py-2">
+                Travailler sur ce site
+              </button>
+              <button class="text-sm text-slate-600 hover:text-slate-900 px-2 py-1">
+                Configurer
+              </button>
+            </footer>
+          </article>
+        
+      </section>
+    
   </div>
 
       </main>
