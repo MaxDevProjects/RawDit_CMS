@@ -89,6 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   loadStoredSite();
 
+  const HUB_SECTION_SELECTORS = {
+    design: 'design',
+    content: 'content',
+    media: 'media',
+    deploy: 'deploy',
+    settings: 'settings',
+  };
+
   const siteCards = document.querySelectorAll('[data-site-card]');
   const siteSelectButtons = document.querySelectorAll('[data-site-select]');
   const siteNameLabel = document.querySelector('[data-current-site-name]');
@@ -180,6 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const hubTabLinks = document.querySelectorAll('[data-hub-tab]');
+
   const updateSiteLabels = (name) => {
     if (siteNameLabel && name) {
       siteNameLabel.textContent = name;
@@ -190,6 +200,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (workspaceBackName && name) {
       workspaceBackName.textContent = name;
     }
+  };
+
+  const updateHubTabs = (slug) => {
+    hubTabLinks.forEach((link) => {
+      const section = link.dataset.hubTab;
+      if (!section) {
+        link.classList.remove('pointer-events-none', 'opacity-50', 'text-slate-400');
+        link.removeAttribute('aria-disabled');
+        return;
+      }
+      if (!slug) {
+        link.href = '#';
+        link.classList.add('pointer-events-none', 'opacity-50', 'text-slate-400');
+        link.setAttribute('aria-disabled', 'true');
+        return;
+      }
+      const slugPath = encodeURIComponent(stripLeadingSlash(slug));
+      link.href = `/admin/site/${slugPath}/${section}`;
+      link.classList.remove('pointer-events-none', 'opacity-50', 'text-slate-400');
+      link.removeAttribute('aria-disabled');
+    });
   };
 
   const applyActiveSite = (slug, options = {}) => {
@@ -217,7 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (options.persist !== false) {
       persistSiteState(normalizedSlug, options.siteName || activeSiteName);
     }
-    updateSiteLabels(options.siteName || activeSiteName);
+    const label = options.siteName || activeSiteName;
+    updateSiteLabels(label);
+    updateHubTabs(normalizedSlug);
   };
 
   const selectSite = async (slug, name) => {
@@ -282,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   highlightFromStorageOrDefault();
   syncActiveSiteFromServer();
+  updateHubTabs(storedSite.slug);
 
   siteSelectButtons.forEach((button) => {
     button.addEventListener('click', () => {
