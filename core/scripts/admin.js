@@ -81,6 +81,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const siteNameLabel = document.querySelector('[data-current-site-name]');
   const siteToast = document.querySelector('[data-site-toast]');
   const siteToastMessage = document.querySelector('[data-site-toast-message]');
+  const siteCreateButtons = document.querySelectorAll('[data-site-create]');
+  const siteModal = document.querySelector('[data-site-modal]');
+  const siteForm = document.querySelector('[data-site-form]');
+  const siteNameInput = document.querySelector('[data-site-name]');
+  const siteSlugInput = document.querySelector('[data-site-slug]');
+  const siteSlugError = document.querySelector('[data-site-slug-error]');
+  const siteModalError = document.querySelector('[data-site-modal-error]');
+  const siteModalCancelButtons = document.querySelectorAll('[data-site-modal-cancel]');
+  const siteModalSubmitButton = document.querySelector('[data-site-modal-submit]');
+  let slugManuallyEdited = false;
+  let lastFocusedElement = null;
+  const focusableSelector =
+    'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+  const trapFocus = (event) => {
+    if (!siteModal || siteModal.classList.contains('hidden') || event.key !== 'Tab') {
+      return;
+    }
+    const focusableElements = Array.from(siteModal.querySelectorAll(focusableSelector)).filter(
+      (el) => !el.hasAttribute('disabled') && !el.getAttribute('aria-hidden'),
+    );
+    if (focusableElements.length === 0) {
+      return;
+    }
+    const first = focusableElements[0];
+    const last = focusableElements[focusableElements.length - 1];
+    if (event.shiftKey) {
+      if (document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      }
+    } else if (document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
   let toastTimeoutId = null;
 
   const showToast = (message) => {
@@ -157,5 +192,181 @@ document.addEventListener('DOMContentLoaded', () => {
       applyActiveSite(slug);
       showToast(`${name} est maintenant le site actif.`);
     });
+  });
+
+  const slugify = (value) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+  const normalizeSlugValue = (value) => {
+    const base = slugify(value || '');
+    if (!base) {
+      return '';
+    }
+    return `/${base}`;
+  };
+
+  const openSiteModal = () => {
+    if (!siteModal) {
+      return;
+    }
+    lastFocusedElement = document.activeElement;
+    siteModal.classList.remove('hidden');
+    siteModal.classList.add('flex');
+    slugManuallyEdited = false;
+    siteForm?.reset();
+    if (siteSlugError) {
+      siteSlugError.textContent = '';
+    }
+    if (siteModalError) {
+      siteModalError.textContent = '';
+    }
+    if (siteSlugInput && siteNameInput) {
+      siteSlugInput.value = normalizeSlugValue(siteNameInput.value);
+    }
+    document.addEventListener('keydown', trapFocus);
+    window.setTimeout(() => {
+      siteNameInput?.focus();
+    }, 0);
+  };
+
+  const closeSiteModal = () => {
+    if (!siteModal) {
+      return;
+    }
+    siteModal.classList.add('hidden');
+    siteModal.classList.remove('flex');
+    document.removeEventListener('keydown', trapFocus);
+    slugManuallyEdited = false;
+    siteForm?.reset();
+    if (siteSlugError) {
+      siteSlugError.textContent = '';
+    }
+    if (siteModalError) {
+      siteModalError.textContent = '';
+    }
+    if (lastFocusedElement) {
+      lastFocusedElement.focus();
+    }
+  };
+
+  siteCreateButtons.forEach((button) => {
+    button.addEventListener('click', openSiteModal);
+  });
+
+  siteModalCancelButtons.forEach((button) => {
+    button.addEventListener('click', closeSiteModal);
+  });
+
+  siteModal?.addEventListener('click', (event) => {
+    if (event.target === siteModal) {
+      closeSiteModal();
+    }
+  });
+
+  siteNameInput?.addEventListener('input', () => {
+    if (!siteSlugInput) {
+      return;
+    }
+    if (!slugManuallyEdited || siteSlugInput.value.trim().length === 0) {
+      siteSlugInput.value = slugify(siteNameInput.value);
+    }
+  });
+
+  siteSlugInput?.addEventListener('input', () => {
+    slugManuallyEdited = true;
+    if (siteSlugError) {
+      siteSlugError.textContent = '';
+    }
+  });
+
+  const getSlugSet = () => new Set(Array.from(siteCards).map((card) => card.dataset.siteCard));
+
+  siteForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!siteNameInput || !siteSlugInput) {
+      return;
+    }
+    const nameValue = (siteNameInput.value || '').trim();
+    let slugValue = siteSlugInput.value || '';
+    if (!slugValue) {
+      slugValue = nameValue;
+    }
+    const normalizedSlug = normalizeSlugValue(slugValue);
+    if (!nameValue || !normalizedSlug) {
+      if (siteSlugError) {
+        siteSlugError.textContent = 'Nom et slug sont requis.';
+      }
+      return;
+    }
+    const existingSlugs = getSlugSet();
+    if (existingSlugs.has(normalizedSlug)) {
+      if (siteSlugError) {
+        siteSlugError.textContent = 'Ce slug est déjà utilisé.';
+      }
+      return;
+    }
+    if (siteSlugError) {
+      siteSlugError.textContent = '';
+    }
+    if (siteModalError) {
+      siteModalError.textContent = '';
+    }
+    if (siteModalSubmitButton) {
+      siteModalSubmitButton.disabled = true;
+      siteModalSubmitButton.textContent = 'Création...';
+    }
+    try {
+      const response = await fetch('/api/sites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: nameValue, slug: normalizedSlug }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        const message = payload.message || 'Impossible de créer ce site.';
+        if (siteModalError) {
+          siteModalError.textContent = message;
+        }
+        if (payload.field === 'slug' && siteSlugError) {
+          siteSlugError.textContent = message;
+        }
+        return;
+      }
+      const createdSite = await response.json();
+      let slugForStorage = createdSite?.slug || normalizedSlug;
+      if (!slugForStorage.startsWith('/')) {
+        slugForStorage = `/${slugForStorage}`;
+      }
+      try {
+        window.localStorage.setItem(ACTIVE_SITE_KEY, slugForStorage);
+      } catch {
+        // ignore
+      }
+      closeSiteModal();
+      window.location.href = '/admin/design.html';
+    } catch (err) {
+      console.error('[admin] Impossible de créer le site', err);
+      if (siteModalError) {
+        siteModalError.textContent = 'Erreur inattendue. Réessaie dans un instant.';
+      }
+    } finally {
+      if (siteModalSubmitButton) {
+        siteModalSubmitButton.disabled = false;
+        siteModalSubmitButton.textContent = 'Créer';
+      }
+    }
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && siteModal && !siteModal.classList.contains('hidden')) {
+      closeSiteModal();
+    }
   });
 });

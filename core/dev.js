@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { promises as fs } from 'node:fs';
 import { createServer } from 'node:net';
 import chokidar from 'chokidar';
 import express from 'express';
@@ -6,10 +7,12 @@ import { paths } from './lib/paths.js';
 import { buildAll } from './build.js';
 import { AuthService } from './lib/auth-service.js';
 import { SessionStore } from './lib/session-store.js';
+import { ensureDir } from './lib/fs-utils.js';
 
 const COOKIE_NAME = 'admin_session';
 const authService = new AuthService();
 const sessionStore = new SessionStore();
+const SITES_FILE = path.join(paths.data, 'sites.json');
 
 process.env.NODE_ENV = 'development';
 
@@ -69,6 +72,29 @@ async function start() {
     sessionStore.destroySession(token);
     res.clearCookie(COOKIE_NAME, { path: '/' });
     res.status(204).end();
+  });
+
+  app.post('/api/sites', requireAuthJson, async (req, res) => {
+    const { name, slug } = req.body || {};
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    const normalizedSlug = normalizeSlug(slug || trimmedName);
+    if (!trimmedName || !normalizedSlug) {
+      return res.status(400).json({ message: 'Nom et slug sont requis.', field: 'slug' });
+    }
+    const existingSites = await readSites();
+    if (existingSites.some((site) => site.slug === normalizedSlug)) {
+      return res.status(400).json({ message: 'Ce slug est déjà utilisé.', field: 'slug' });
+    }
+    const newSite = {
+      name: trimmedName,
+      slug: normalizedSlug,
+      outputPath: `/public${normalizedSlug}`,
+      lastDeployment: null,
+      isActive: false,
+    };
+    existingSites.push(newSite);
+    await writeSites(existingSites);
+    res.status(201).json(newSite);
   });
 
   /**
@@ -201,8 +227,53 @@ function readSessionCookie(req) {
     const [name, ...rest] = cookie.split('=');
     if (name === COOKIE_NAME) {
       return decodeURIComponent(rest.join('='));
-    }
   }
+}
+
+function requireAuthJson(req, res, next) {
+  const token = readSessionCookie(req);
+  const session = sessionStore.getSession(token);
+  if (!session) {
+    return res.status(401).json({ message: 'Authentification requise.' });
+  }
+  req.user = session.username;
+  return next();
+}
+
+function slugify(value) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function normalizeSlug(value) {
+  const base = slugify(value || '');
+  if (!base) {
+    return '';
+  }
+  return `/${base}`;
+}
+
+async function readSites() {
+  try {
+    const raw = await fs.readFile(SITES_FILE, 'utf8');
+    return JSON.parse(raw || '[]');
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return [];
+    }
+    throw err;
+  }
+}
+
+async function writeSites(sites) {
+  await ensureDir(paths.data);
+  await fs.writeFile(SITES_FILE, JSON.stringify(sites, null, 2) + '\n', 'utf8');
+}
   return null;
 }
 

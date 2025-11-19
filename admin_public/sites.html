@@ -213,6 +213,7 @@
 
       <main class="space-y-4" id="main-content">
         
+  <span class="hidden border-[#9C6BFF] ring-2 ring-[#9C6BFF] shadow-md"></span>
   <div class="space-y-4">
     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div>
@@ -223,6 +224,7 @@
       </div>
       <button
         type="button"
+        data-site-create
         class="inline-flex items-center rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-medium text-white
                hover:bg-[#8654f5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9C6BFF]"
       >
@@ -307,6 +309,73 @@
     
   </div>
 
+  <div
+    data-site-modal
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="site-modal-title"
+  >
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 id="site-modal-title" class="text-lg font-semibold text-slate-900">Créer un site</h2>
+          <p class="text-sm text-slate-600">Ajoute un nom et un slug pour démarrer un nouveau projet.</p>
+        </div>
+        <button
+          type="button"
+          data-site-modal-cancel
+          class="text-slate-500 hover:text-slate-900 text-sm"
+          aria-label="Fermer la fenêtre de création de site"
+        >
+          ✕
+        </button>
+      </div>
+      <form data-site-form class="space-y-4">
+        <label class="block space-y-2">
+          <span class="text-sm font-medium text-slate-800">Nom du site</span>
+          <input
+            type="text"
+            name="siteName"
+            data-site-name
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9C6BFF] focus:border-[#9C6BFF]"
+            placeholder="Ex : Clower Studio"
+            required
+          />
+        </label>
+        <label class="block space-y-2">
+          <span class="text-sm font-medium text-slate-800">Slug</span>
+          <input
+            type="text"
+            name="siteSlug"
+            data-site-slug
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9C6BFF] focus:border-[#9C6BFF]"
+            placeholder="Ex : clower-studio"
+            required
+          />
+          <p data-site-slug-error class="text-xs text-red-600 min-h-[1rem]"></p>
+        </label>
+        <p data-site-modal-error class="text-sm text-red-600 min-h-[1rem]"></p>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button
+            type="button"
+            data-site-modal-cancel
+            class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            data-site-modal-submit
+            class="inline-flex items-center rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#8654f5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9C6BFF]"
+          >
+            Créer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
       </main>
 
       <aside class="space-y-4" aria-label="Panneau latéral">
@@ -328,5 +397,7 @@
 
     <script src="/admin/assets/admin.js" defer></script>
     
+  
+
   </body>
 </html>
