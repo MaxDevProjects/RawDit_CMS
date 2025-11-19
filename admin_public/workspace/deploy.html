@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Déploiement • Clower Atelier
+    </title>
+    <link rel="stylesheet" href="/admin/assets/admin.css" />
+    
+  </head>
+  <body class="min-h-screen bg-[#F8FAFC] font-['Inter'] text-[#1E1E1E] antialiased">
+    <header class="bg-white border-b border-slate-200">
+      <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <button
+          type="button"
+          data-workspace-back
+          class="inline-flex items-center gap-1 text-sm font-semibold text-[#1E1E1E] hover:text-[#9C6BFF]"
+        >
+          ← Retour à mes sites
+        </button>
+        <div class="flex-1 text-center text-sm text-slate-600">
+          Site :
+          <span data-workspace-site-name class="font-semibold text-slate-900">Site actif</span>
+        </div>
+        <button
+          type="button"
+          data-logout
+          class="text-sm text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg border border-slate-200"
+        >
+          Se déconnecter
+        </button>
+      </div>
+      <nav class="border-t border-slate-200" aria-label="Navigation workspace">
+        <ul class="max-w-6xl mx-auto flex items-center gap-6 overflow-x-auto px-4 py-2 text-sm">
+          
+            
+            <li>
+              <a
+                href="#"
+                data-workspace-tab="design"
+                class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
+                
+              >
+                Design
+              </a>
+            </li>
+          
+            
+            <li>
+              <a
+                href="#"
+                data-workspace-tab="content"
+                class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
+                
+              >
+                Contenus
+              </a>
+            </li>
+          
+            
+            <li>
+              <a
+                href="#"
+                data-workspace-tab="media"
+                class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
+                
+              >
+                Médias
+              </a>
+            </li>
+          
+            
+            <li>
+              <a
+                href="#"
+                data-workspace-tab="deploy"
+                class="pb-2 border-b-2 border-[#9C6BFF] text-slate-900"
+                aria-current="page"
+              >
+                Déploiement
+              </a>
+            </li>
+          
+            
+            <li>
+              <a
+                href="#"
+                data-workspace-tab="settings"
+                class="pb-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900"
+                
+              >
+                Paramètres
+              </a>
+            </li>
+          
+        </ul>
+      </nav>
+    </header>
+
+    <div data-site-toast class="fixed top-20 inset-x-0 z-50 hidden pointer-events-none">
+      <div class="mx-auto w-fit rounded-full bg-slate-900/90 px-4 py-2 text-xs font-medium text-white shadow-lg pointer-events-auto" data-site-toast-message></div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-6 space-y-4 lg:grid lg:grid-cols-[280px,1fr,320px] lg:gap-6 lg:space-y-0">
+      <aside class="space-y-4">
+        
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Environnements</h2>
+    <p class="text-sm text-slate-600">Suivez staging et production rapidement.</p>
+  </section>
+
+      </aside>
+
+      <main class="space-y-4" id="workspace-main">
+        
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
+    <h1 class="text-xl font-semibold text-slate-900">Workspace Déploiement</h1>
+    <p class="text-sm text-slate-600">
+      Les pipelines, logs et historiques s’afficheront ici pour le site actif.
+    </p>
+  </section>
+
+      </main>
+
+      <aside class="space-y-4">
+        
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Notifications</h2>
+    <p class="text-sm text-slate-600">Paramétrez Slack, e-mails ou verrous de déploiement.</p>
+  </section>
+
+      </aside>
+    </div>
+
+    <div
+      data-workspace-back-modal
+      class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="workspace-back-title"
+    >
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 id="workspace-back-title" class="text-lg font-semibold text-slate-900">
+              Quitter l’édition de <span data-workspace-back-name>ce site</span> ?
+            </h2>
+            <p class="text-sm text-slate-600" data-workspace-back-message>
+              Tu vas revenir à la liste de tes sites. Tes modifications non déployées restent enregistrées.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-workspace-back-cancel
+            class="text-slate-500 hover:text-slate-900 text-sm"
+            aria-label="Fermer la confirmation"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            data-workspace-back-cancel
+            class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            data-workspace-back-confirm
+            class="inline-flex items-center rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#8654f5]"
+          >
+            Retour à mes sites
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/admin/assets/admin.js" defer></script>
+    
+  </body>
+</html>
