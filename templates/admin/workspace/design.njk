@@ -1,0 +1,26 @@
+{% extends "layout_workspace.njk" %}
+{% set pageTitle = "Design" %}
+{% set activeWorkspaceTab = "design" %}
+
+{% block sidebar_start %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Guides design</h2>
+    <p class="text-sm text-slate-600">Préparez les compositions de ce site actif.</p>
+  </section>
+{% endblock %}
+
+{% block content_main %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
+    <h1 class="text-xl font-semibold text-slate-900">Workspace Design</h1>
+    <p class="text-sm text-slate-600">
+      Cette zone accueillera les outils de conception (aperçus, thèmes, etc.) pour le site actif.
+    </p>
+  </section>
+{% endblock %}
+
+{% block sidebar_end %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Options rapides</h2>
+    <p class="text-sm text-slate-600">Activez ou désactivez les helpers de design ici.</p>
+  </section>
+{% endblock %}

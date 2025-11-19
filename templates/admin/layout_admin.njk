@@ -42,13 +42,16 @@
         >
           Menu
         </button>
+        {% set isHubView = activeTab == 'Sites' %}
         <nav class="hidden lg:flex items-center gap-6 text-sm" aria-label="Navigation admin">
           {% for tab in adminTabs %}
             {% set isActive = tab.label == activeTab %}
+            {% set isDisabled = isHubView and tab.label != 'Sites' %}
             <a
-              href="{{ tab.href }}"
-              class="pb-2 border-b-2 {{ 'border-[#9C6BFF] text-slate-900' if isActive else 'border-transparent text-slate-600 hover:text-slate-900' }}"
+              href="{{ isDisabled and '#' or tab.href }}"
+              class="pb-2 border-b-2 {{ 'border-[#9C6BFF] text-slate-900' if isActive else 'border-transparent text-slate-600 hover:text-slate-900' }} {{ 'pointer-events-none opacity-50 text-slate-400' if isDisabled }}"
               {% if isActive %}aria-current="page"{% endif %}
+              {% if isDisabled %}aria-disabled="true" tabindex="-1"{% endif %}
             >
               {{ tab.label }}
             </a>
@@ -66,11 +69,13 @@
         <ul class="flex items-center gap-4 overflow-x-auto px-4 py-2 text-sm" aria-label="Navigation admin mobile">
           {% for tab in adminTabs %}
             {% set isActive = tab.label == activeTab %}
+            {% set isDisabled = isHubView and tab.label != 'Sites' %}
             <li>
               <a
-                href="{{ tab.href }}"
-                class="pb-2 border-b-2 {{ 'border-[#9C6BFF] text-slate-900' if isActive else 'border-transparent text-slate-600 hover:text-slate-900' }}"
+                href="{{ isDisabled and '#' or tab.href }}"
+                class="pb-2 border-b-2 {{ 'border-[#9C6BFF] text-slate-900' if isActive else 'border-transparent text-slate-600 hover:text-slate-900' }} {{ 'pointer-events-none opacity-50 text-slate-400' if isDisabled }}"
                 {% if isActive %}aria-current="page"{% endif %}
+                {% if isDisabled %}aria-disabled="true" tabindex="-1"{% endif %}
               >
                 {{ tab.label }}
               </a>

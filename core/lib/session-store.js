@@ -10,6 +10,7 @@ export class SessionStore {
     this.sessions.set(token, {
       username,
       createdAt: Date.now(),
+      currentSiteSlug: null,
     });
     return token;
   }
@@ -27,5 +28,26 @@ export class SessionStore {
     }
     this.sessions.delete(token);
   }
-}
 
+  setCurrentSite(token, slug) {
+    if (!token) {
+      return;
+    }
+    const session = this.sessions.get(token);
+    if (!session) {
+      return;
+    }
+    session.currentSiteSlug = slug;
+  }
+
+  getCurrentSite(token) {
+    if (!token) {
+      return null;
+    }
+    const session = this.sessions.get(token);
+    if (!session) {
+      return null;
+    }
+    return session.currentSiteSlug || null;
+  }
+}

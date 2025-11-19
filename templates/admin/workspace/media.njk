@@ -1,0 +1,26 @@
+{% extends "layout_workspace.njk" %}
+{% set pageTitle = "Médias" %}
+{% set activeWorkspaceTab = "media" %}
+
+{% block sidebar_start %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Bibliothèque</h2>
+    <p class="text-sm text-slate-600">Filtres, tags et droits des assets du site.</p>
+  </section>
+{% endblock %}
+
+{% block content_main %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
+    <h1 class="text-xl font-semibold text-slate-900">Workspace Médias</h1>
+    <p class="text-sm text-slate-600">
+      Ici vous gérerez les uploads, conversions et métadonnées des fichiers du site actif.
+    </p>
+  </section>
+{% endblock %}
+
+{% block sidebar_end %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Règles</h2>
+    <p class="text-sm text-slate-600">Formats, tailles et CDN configurés apparaîtront ici.</p>
+  </section>
+{% endblock %}

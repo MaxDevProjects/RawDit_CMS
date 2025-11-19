@@ -13,6 +13,10 @@ const COOKIE_NAME = 'admin_session';
 const authService = new AuthService();
 const sessionStore = new SessionStore();
 const SITES_FILE = path.join(paths.data, 'sites.json');
+const WORKSPACE_SECTIONS = ['design', 'content', 'media', 'deploy', 'settings'];
+const WORKSPACE_FILES = Object.fromEntries(
+  WORKSPACE_SECTIONS.map((section) => [section, path.join(paths.adminPublic, 'workspace', `${section}.html`)]),
+);
 
 process.env.NODE_ENV = 'development';
 
@@ -94,7 +98,39 @@ async function start() {
     };
     existingSites.push(newSite);
     await writeSites(existingSites);
+    const token = readSessionCookie(req);
+    sessionStore.setCurrentSite(token, normalizedSlug);
     res.status(201).json(newSite);
+  });
+
+  app.post('/api/sites/select', requireAuthJson, async (req, res) => {
+    const { slug } = req.body || {};
+    const normalizedSlug = normalizeSlug(slug);
+    if (!normalizedSlug) {
+      return res.status(400).json({ message: 'Slug invalide.', field: 'slug' });
+    }
+    const sites = await readSites();
+    const site = sites.find((entry) => entry.slug === normalizedSlug);
+    if (!site) {
+      return res.status(404).json({ message: 'Site introuvable.' });
+    }
+    const token = readSessionCookie(req);
+    sessionStore.setCurrentSite(token, normalizedSlug);
+    res.json({ slug: normalizedSlug, name: site.name });
+  });
+
+  app.get('/api/sites/current', requireAuthJson, async (req, res) => {
+    const token = readSessionCookie(req);
+    const currentSlug = sessionStore.getCurrentSite(token);
+    if (!currentSlug) {
+      return res.status(404).json({ message: 'Aucun site actif.' });
+    }
+    const sites = await readSites();
+    const site = sites.find((entry) => entry.slug === currentSlug);
+    if (!site) {
+      return res.status(404).json({ message: 'Site introuvable.' });
+    }
+    res.json(site);
   });
 
   /**
@@ -113,6 +149,29 @@ async function start() {
       authenticated: true,
       username: session.username,
     });
+  });
+
+  app.get('/admin/sites', adminGuardMiddleware, (req, res) => {
+    res.sendFile(path.join(paths.adminPublic, 'sites.html'));
+  });
+
+  app.get('/admin/site/:slug', adminGuardMiddleware, (req, res) => {
+    const safeSlug = encodeURIComponent(req.params.slug);
+    res.redirect(`/admin/site/${safeSlug}/design`);
+  });
+
+  app.get('/admin/site/:slug/:section', adminGuardMiddleware, (req, res, next) => {
+    const { slug, section } = req.params;
+    const templatePath = WORKSPACE_FILES[section];
+    if (!templatePath) {
+      return next();
+    }
+    const normalizedSlug = normalizeSlug(slug);
+    if (normalizedSlug) {
+      const token = readSessionCookie(req);
+      sessionStore.setCurrentSite(token, normalizedSlug);
+    }
+    res.sendFile(templatePath);
   });
 
   app.use('/admin', adminGuardMiddleware, express.static(paths.adminPublic, { extensions: ['html'] }));

@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(payload),
       });
       if (response.ok) {
-        window.location.href = '/admin_public';
+        window.location.href = '/admin/sites';
         return;
       }
       const body = await response.json().catch(() => ({}));
@@ -37,4 +37,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-

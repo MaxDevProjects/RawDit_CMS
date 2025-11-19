@@ -76,9 +76,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const ACTIVE_SITE_KEY = 'clower:currentSite';
+  const ACTIVE_SITE_NAME_KEY = 'clower:currentSiteName';
+  const storedSite = { slug: null, name: '' };
+  const loadStoredSite = () => {
+    try {
+      storedSite.slug = window.localStorage.getItem(ACTIVE_SITE_KEY);
+      storedSite.name = window.localStorage.getItem(ACTIVE_SITE_NAME_KEY) || '';
+    } catch {
+      storedSite.slug = null;
+      storedSite.name = '';
+    }
+  };
+  loadStoredSite();
+
   const siteCards = document.querySelectorAll('[data-site-card]');
   const siteSelectButtons = document.querySelectorAll('[data-site-select]');
   const siteNameLabel = document.querySelector('[data-current-site-name]');
+  const workspaceSiteLabel = document.querySelector('[data-workspace-site-name]');
+  const workspaceBackName = document.querySelector('[data-workspace-back-name]');
+  const workspaceBackModal = document.querySelector('[data-workspace-back-modal]');
+  const workspaceBackButtons = document.querySelectorAll('[data-workspace-back]');
+  const workspaceBackCancel = document.querySelectorAll('[data-workspace-back-cancel]');
+  const workspaceBackConfirm = document.querySelector('[data-workspace-back-confirm]');
+  const workspaceNavLinks = document.querySelectorAll('[data-workspace-tab]');
   const siteToast = document.querySelector('[data-site-toast]');
   const siteToastMessage = document.querySelector('[data-site-toast-message]');
   const siteCreateButtons = document.querySelectorAll('[data-site-create]');
@@ -90,8 +110,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const siteModalError = document.querySelector('[data-site-modal-error]');
   const siteModalCancelButtons = document.querySelectorAll('[data-site-modal-cancel]');
   const siteModalSubmitButton = document.querySelector('[data-site-modal-submit]');
+  const workspaceContext = getWorkspaceContext();
   let slugManuallyEdited = false;
   let lastFocusedElement = null;
+  let toastTimeoutId = null;
+
   const focusableSelector =
     'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
   const trapFocus = (event) => {
@@ -116,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
       first.focus();
     }
   };
-  let toastTimeoutId = null;
 
   const showToast = (message) => {
     if (!siteToast || !siteToastMessage) {
@@ -132,14 +154,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2500);
   };
 
+  const ensureLeadingSlash = (slug) => {
+    if (!slug) {
+      return '';
+    }
+    return slug.startsWith('/') ? slug : `/${slug}`;
+  };
+
+  const stripLeadingSlash = (slug) => slug?.replace(/^\//, '') || '';
+
+  const persistSiteState = (slug, name) => {
+    const normalizedSlug = slug ? ensureLeadingSlash(slug) : null;
+    try {
+      if (normalizedSlug) {
+        window.localStorage.setItem(ACTIVE_SITE_KEY, normalizedSlug);
+        storedSite.slug = normalizedSlug;
+      }
+      if (typeof name === 'string' && name.length > 0) {
+        window.localStorage.setItem(ACTIVE_SITE_NAME_KEY, name);
+        storedSite.name = name;
+      }
+    } catch {
+      storedSite.slug = normalizedSlug || storedSite.slug;
+      storedSite.name = name || storedSite.name;
+    }
+  };
+
+  const updateSiteLabels = (name) => {
+    if (siteNameLabel && name) {
+      siteNameLabel.textContent = name;
+    }
+    if (workspaceSiteLabel && name) {
+      workspaceSiteLabel.textContent = name;
+    }
+    if (workspaceBackName && name) {
+      workspaceBackName.textContent = name;
+    }
+  };
+
   const applyActiveSite = (slug, options = {}) => {
     if (!slug) {
       return;
     }
-    let activeSiteName = siteNameLabel?.dataset.defaultSiteName || '';
+    const normalizedSlug = ensureLeadingSlash(slug);
+    let activeSiteName =
+      options.siteName || storedSite.name || siteNameLabel?.dataset.defaultSiteName || '';
     siteCards.forEach((card) => {
-      const cardSlug = card.dataset.siteCard;
-      const isActive = cardSlug === slug;
+      const cardSlug = ensureLeadingSlash(card.dataset.siteCard || '');
+      const isActive = cardSlug === normalizedSlug;
       const badge = card.querySelector('[data-site-active-badge]');
       if (isActive) {
         card.classList.add('border-[#9C6BFF]', 'ring-2', 'ring-[#9C6BFF]', 'shadow-md');
@@ -152,49 +214,93 @@ document.addEventListener('DOMContentLoaded', () => {
         badge?.classList.add('hidden');
       }
     });
-    if (siteNameLabel && activeSiteName) {
-      siteNameLabel.textContent = activeSiteName;
-    }
     if (options.persist !== false) {
-      try {
-        window.localStorage.setItem(ACTIVE_SITE_KEY, slug);
-      } catch {
-        // ignore storage errors
+      persistSiteState(normalizedSlug, options.siteName || activeSiteName);
+    }
+    updateSiteLabels(options.siteName || activeSiteName);
+  };
+
+  const selectSite = async (slug, name) => {
+    const normalizedSlug = ensureLeadingSlash(slug);
+    try {
+      const response = await fetch('/api/sites/select', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ slug: normalizedSlug }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        showToast(payload.message || 'Impossible de sélectionner ce site.');
+        return;
       }
+      const payload = await response.json().catch(() => ({}));
+      const finalSlug = ensureLeadingSlash(payload.slug || normalizedSlug);
+      const finalName = payload.name || name;
+      persistSiteState(finalSlug, finalName);
+      applyActiveSite(finalSlug, { siteName: finalName, persist: false });
+      const slugPath = encodeURIComponent(stripLeadingSlash(finalSlug));
+      window.location.href = `/admin/site/${slugPath}/design`;
+    } catch (err) {
+      console.error('[admin] Impossible de sélectionner le site', err);
+      showToast('Erreur inattendue lors de la sélection.');
     }
   };
 
-  const resolveInitialSite = () => {
+  const syncActiveSiteFromServer = async () => {
     try {
-      const stored = window.localStorage.getItem(ACTIVE_SITE_KEY);
-      if (stored) {
-        return stored;
+      const response = await fetch('/api/sites/current', { credentials: 'same-origin' });
+      if (!response.ok) {
+        if (response.status === 404 && workspaceContext) {
+          window.location.href = '/admin/sites';
+        }
+        return;
       }
-    } catch {
-      // ignore
+      const site = await response.json();
+      const normalizedSlug = ensureLeadingSlash(site.slug);
+      persistSiteState(normalizedSlug, site.name);
+      applyActiveSite(normalizedSlug, { siteName: site.name, persist: false });
+    } catch (err) {
+      console.warn('[admin] Impossible de récupérer le site actif', err);
+    }
+  };
+
+  const highlightFromStorageOrDefault = () => {
+    if (storedSite.slug) {
+      applyActiveSite(storedSite.slug, { siteName: storedSite.name, persist: false });
+      return;
     }
     const defaultCard = document.querySelector('[data-site-card][data-site-default="true"]') || siteCards[0];
-    return defaultCard?.dataset.siteCard || null;
+    if (defaultCard) {
+      applyActiveSite(defaultCard.dataset.siteCard, {
+        siteName: defaultCard.dataset.siteName || '',
+        persist: false,
+      });
+    }
   };
 
-  const initialSite = resolveInitialSite();
-  if (initialSite) {
-    applyActiveSite(initialSite, { persist: false });
-  }
+  highlightFromStorageOrDefault();
+  syncActiveSiteFromServer();
 
   siteSelectButtons.forEach((button) => {
     button.addEventListener('click', () => {
+      if (button.disabled) {
+        return;
+      }
       const slug = button.dataset.siteSelect;
       const name = button.dataset.siteSelectName || 'Ce site';
       if (!slug) {
         return;
       }
-      applyActiveSite(slug);
-      showToast(`${name} est maintenant le site actif.`);
+      button.disabled = true;
+      selectSite(slug, name).finally(() => {
+        button.disabled = false;
+      });
     });
   });
 
-  const slugify = (value) =>
+  const workspaceSlugify = (value) =>
     value
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -203,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/^-+|-+$/g, '');
 
   const normalizeSlugValue = (value) => {
-    const base = slugify(value || '');
+    const base = workspaceSlugify(value || '');
     if (!base) {
       return '';
     }
@@ -219,14 +325,10 @@ document.addEventListener('DOMContentLoaded', () => {
     siteModal.classList.add('flex');
     slugManuallyEdited = false;
     siteForm?.reset();
-    if (siteSlugError) {
-      siteSlugError.textContent = '';
-    }
-    if (siteModalError) {
-      siteModalError.textContent = '';
-    }
+    siteSlugError && (siteSlugError.textContent = '');
+    siteModalError && (siteModalError.textContent = '');
     if (siteSlugInput && siteNameInput) {
-      siteSlugInput.value = normalizeSlugValue(siteNameInput.value);
+      siteSlugInput.value = workspaceSlugify(siteNameInput.value);
     }
     document.addEventListener('keydown', trapFocus);
     window.setTimeout(() => {
@@ -243,15 +345,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.removeEventListener('keydown', trapFocus);
     slugManuallyEdited = false;
     siteForm?.reset();
-    if (siteSlugError) {
-      siteSlugError.textContent = '';
-    }
-    if (siteModalError) {
-      siteModalError.textContent = '';
-    }
-    if (lastFocusedElement) {
-      lastFocusedElement.focus();
-    }
+    siteSlugError && (siteSlugError.textContent = '');
+    siteModalError && (siteModalError.textContent = '');
+    lastFocusedElement?.focus();
   };
 
   siteCreateButtons.forEach((button) => {
@@ -273,18 +369,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (!slugManuallyEdited || siteSlugInput.value.trim().length === 0) {
-      siteSlugInput.value = slugify(siteNameInput.value);
+      siteSlugInput.value = workspaceSlugify(siteNameInput.value);
     }
   });
 
   siteSlugInput?.addEventListener('input', () => {
     slugManuallyEdited = true;
-    if (siteSlugError) {
-      siteSlugError.textContent = '';
-    }
+    siteSlugError && (siteSlugError.textContent = '');
   });
 
-  const getSlugSet = () => new Set(Array.from(siteCards).map((card) => card.dataset.siteCard));
+  const getSlugSet = () =>
+    new Set(Array.from(siteCards).map((card) => ensureLeadingSlash(card.dataset.siteCard || '')));
 
   siteForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -298,24 +393,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const normalizedSlug = normalizeSlugValue(slugValue);
     if (!nameValue || !normalizedSlug) {
-      if (siteSlugError) {
-        siteSlugError.textContent = 'Nom et slug sont requis.';
-      }
+      siteSlugError && (siteSlugError.textContent = 'Nom et slug sont requis.');
       return;
     }
     const existingSlugs = getSlugSet();
     if (existingSlugs.has(normalizedSlug)) {
-      if (siteSlugError) {
-        siteSlugError.textContent = 'Ce slug est déjà utilisé.';
-      }
+      siteSlugError && (siteSlugError.textContent = 'Ce slug est déjà utilisé.');
       return;
     }
-    if (siteSlugError) {
-      siteSlugError.textContent = '';
-    }
-    if (siteModalError) {
-      siteModalError.textContent = '';
-    }
+    siteSlugError && (siteSlugError.textContent = '');
+    siteModalError && (siteModalError.textContent = '');
     if (siteModalSubmitButton) {
       siteModalSubmitButton.disabled = true;
       siteModalSubmitButton.textContent = 'Création...';
@@ -331,31 +418,22 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         const message = payload.message || 'Impossible de créer ce site.';
-        if (siteModalError) {
-          siteModalError.textContent = message;
-        }
-        if (payload.field === 'slug' && siteSlugError) {
-          siteSlugError.textContent = message;
+        siteModalError && (siteModalError.textContent = message);
+        if (payload.field === 'slug') {
+          siteSlugError && (siteSlugError.textContent = message);
         }
         return;
       }
       const createdSite = await response.json();
-      let slugForStorage = createdSite?.slug || normalizedSlug;
-      if (!slugForStorage.startsWith('/')) {
-        slugForStorage = `/${slugForStorage}`;
-      }
-      try {
-        window.localStorage.setItem(ACTIVE_SITE_KEY, slugForStorage);
-      } catch {
-        // ignore
-      }
+      const finalSlug = ensureLeadingSlash(createdSite?.slug || normalizedSlug);
+      const finalName = createdSite?.name || nameValue;
+      persistSiteState(finalSlug, finalName);
       closeSiteModal();
-      window.location.href = '/admin/design.html';
+      const slugPath = encodeURIComponent(stripLeadingSlash(finalSlug));
+      window.location.href = `/admin/site/${slugPath}/design`;
     } catch (err) {
       console.error('[admin] Impossible de créer le site', err);
-      if (siteModalError) {
-        siteModalError.textContent = 'Erreur inattendue. Réessaie dans un instant.';
-      }
+      siteModalError && (siteModalError.textContent = 'Erreur inattendue. Réessaie dans un instant.');
     } finally {
       if (siteModalSubmitButton) {
         siteModalSubmitButton.disabled = false;
@@ -365,8 +443,66 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && siteModal && !siteModal.classList.contains('hidden')) {
-      closeSiteModal();
+    if (event.key === 'Escape') {
+      if (siteModal && !siteModal.classList.contains('hidden')) {
+        closeSiteModal();
+      }
+      if (workspaceBackModal && !workspaceBackModal.classList.contains('hidden')) {
+        closeWorkspaceBackModal();
+      }
     }
   });
+
+  function getWorkspaceContext() {
+    const match = window.location.pathname.match(/^\/admin\/site\/([^/]+)(?:\/([^/]+))?/);
+    if (!match) {
+      return null;
+    }
+    return {
+      slugPart: decodeURIComponent(match[1]),
+      slugValue: ensureLeadingSlash(decodeURIComponent(match[1])),
+      section: match[2] || 'design',
+    };
+  }
+
+  function openWorkspaceBackModal() {
+    if (!workspaceBackModal) {
+      window.location.href = '/admin/sites';
+      return;
+    }
+    workspaceBackModal.classList.remove('hidden');
+    workspaceBackModal.classList.add('flex');
+  }
+
+  function closeWorkspaceBackModal() {
+    if (!workspaceBackModal) {
+      return;
+    }
+    workspaceBackModal.classList.add('hidden');
+    workspaceBackModal.classList.remove('flex');
+  }
+
+  workspaceBackButtons.forEach((button) => {
+    button.addEventListener('click', openWorkspaceBackModal);
+  });
+  workspaceBackCancel.forEach((button) => {
+    button.addEventListener('click', closeWorkspaceBackModal);
+  });
+  workspaceBackConfirm?.addEventListener('click', () => {
+    window.location.href = '/admin/sites';
+  });
+
+  if (workspaceContext) {
+    workspaceNavLinks.forEach((link) => {
+      const tab = link.dataset.workspaceTab;
+      if (!tab) {
+        return;
+      }
+      const url = `/admin/site/${encodeURIComponent(workspaceContext.slugPart)}/${tab}`;
+      link.href = url;
+    });
+    if (storedSite.name) {
+      updateSiteLabels(storedSite.name);
+    }
+  }
 });

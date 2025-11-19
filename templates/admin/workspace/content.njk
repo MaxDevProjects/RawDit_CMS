@@ -1,0 +1,26 @@
+{% extends "layout_workspace.njk" %}
+{% set pageTitle = "Contenus" %}
+{% set activeWorkspaceTab = "content" %}
+
+{% block sidebar_start %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Collections</h2>
+    <p class="text-sm text-slate-600">Organisez les blocs éditoriaux de ce site.</p>
+  </section>
+{% endblock %}
+
+{% block content_main %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
+    <h1 class="text-xl font-semibold text-slate-900">Workspace Contenus</h1>
+    <p class="text-sm text-slate-600">
+      Cette section affichera les listes de contenus, statuts et workflows pour le site actif.
+    </p>
+  </section>
+{% endblock %}
+
+{% block sidebar_end %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Préférences</h2>
+    <p class="text-sm text-slate-600">Configurez les validations et les alertes depuis ce panneau.</p>
+  </section>
+{% endblock %}

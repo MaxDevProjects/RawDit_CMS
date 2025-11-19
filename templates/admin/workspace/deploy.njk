@@ -1,0 +1,26 @@
+{% extends "layout_workspace.njk" %}
+{% set pageTitle = "Déploiement" %}
+{% set activeWorkspaceTab = "deploy" %}
+
+{% block sidebar_start %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Environnements</h2>
+    <p class="text-sm text-slate-600">Suivez staging et production rapidement.</p>
+  </section>
+{% endblock %}
+
+{% block content_main %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
+    <h1 class="text-xl font-semibold text-slate-900">Workspace Déploiement</h1>
+    <p class="text-sm text-slate-600">
+      Les pipelines, logs et historiques s’afficheront ici pour le site actif.
+    </p>
+  </section>
+{% endblock %}
+
+{% block sidebar_end %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <h2 class="text-sm font-semibold mb-2">Notifications</h2>
+    <p class="text-sm text-slate-600">Paramétrez Slack, e-mails ou verrous de déploiement.</p>
+  </section>
+{% endblock %}
