@@ -541,11 +541,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const activeTitle = document.querySelector('[data-active-page-title]');
     const activeSlug = document.querySelector('[data-active-page-slug]');
-    const previewTitle = document.querySelector('[data-page-preview-title]');
-    const previewDescription = document.querySelector('[data-page-preview-description]');
     const previewTags = document.querySelector('[data-page-preview-tags]');
-    const previewBlocks = document.querySelector('[data-preview-blocks]');
-    const previewBlocksEmpty = document.querySelector('[data-preview-blocks-empty]');
+    const previewFrame = document.querySelector('[data-page-preview-frame]');
+    const previewOpenButton = document.querySelector('[data-preview-open]');
+    const previewStatus = document.querySelector('[data-preview-status]');
+    const previewHighlightOverlay = document.querySelector('[data-preview-highlight]');
     const blockList = document.querySelector('[data-blocks-list]');
     const blockListEmpty = document.querySelector('[data-blocks-empty]');
     const blockCountBadge = document.querySelector('[data-block-count]');
@@ -789,55 +789,18 @@ document.addEventListener('DOMContentLoaded', () => {
         activeSlug.textContent = page?.slug || '/';
       }
     };
-    const renderPreview = (page) => {
-      if (!page) {
+    const renderPreviewMeta = (page) => {
+      if (!previewTags) {
         return;
       }
-      if (previewTitle) {
-        previewTitle.textContent = page.title;
-      }
-      if (previewDescription) {
-        previewDescription.textContent =
-          page.description || 'Sélectionnez une page pour afficher son aperçu.';
-      }
-      if (previewTags) {
-        previewTags.innerHTML = '';
-        const tags = page.badges && page.badges.length > 0 ? page.badges : ['Aucun bloc'];
-        tags.forEach((tag) => {
-          const badge = document.createElement('span');
-          badge.className = 'rounded-full bg-slate-100 px-3 py-1';
-          badge.textContent = tag;
-          previewTags.appendChild(badge);
-        });
-      }
-    };
-    const renderPreviewBlocks = (page) => {
-      if (!previewBlocks) {
-        return;
-      }
-      previewBlocks.innerHTML = '';
-      const blocks = page?.blocks || [];
-      if (!blocks.length) {
-        previewBlocksEmpty?.classList.remove('hidden');
-        return;
-      }
-      previewBlocksEmpty?.classList.add('hidden');
-      blocks.forEach((block, index) => {
-        const isActive = block.id === activeBlockId;
-        const card = document.createElement('div');
-        card.dataset.previewBlockId = block.id;
-        card.className = [
-          'rounded-2xl border bg-white/80 px-4 py-3 shadow-sm transition',
-          isActive
-            ? 'border-[#9C6BFF]/50 ring-2 ring-[#9C6BFF]/40'
-            : 'border-slate-200 hover:border-[#9C6BFF]/40',
-        ].join(' ');
-        card.innerHTML = `
-          <p class="text-[11px] uppercase tracking-wide text-slate-400">Bloc ${index + 1}</p>
-          <p class="text-sm font-semibold text-slate-900">${block.label}</p>
-          <p class="text-xs text-slate-500">${block.type} • ${block.status}</p>
-        `;
-        previewBlocks.appendChild(card);
+      previewTags.innerHTML = '';
+      const tags =
+        page && page.badges && page.badges.length > 0 ? page.badges : ['Structure en cours'];
+      tags.forEach((tag) => {
+        const badge = document.createElement('span');
+        badge.className = 'rounded-full bg-slate-100 px-3 py-1';
+        badge.textContent = tag;
+        previewTags.appendChild(badge);
       });
     };
     const getStatusBadgeClasses = (status) => {
@@ -898,6 +861,237 @@ document.addEventListener('DOMContentLoaded', () => {
           block.status,
         )}`;
         blockDetailStatus.classList.remove('hidden');
+      }
+    };
+    const renderPreviewBlockMarkup = (block, index) => {
+      const base = (block.type || '').toLowerCase();
+      const safeLabel = block.label || `Bloc ${index + 1}`;
+      const description = block.description || '';
+      const propsList =
+        block.props && block.props.length > 0
+          ? block.props.map((prop) => `<li>${prop.label}: <strong>${prop.value}</strong></li>`).join('')
+          : '';
+      const shared = `
+        <div class="preview-block__header">
+          <span class="preview-type">${block.type || 'Bloc'}</span>
+          <span class="preview-status">${block.status || ''}</span>
+        </div>
+        <h3>${safeLabel}</h3>
+        <p class="preview-desc">${description}</p>
+        ${
+          propsList
+            ? `<ul class="preview-props">
+            ${propsList}
+          </ul>`
+            : ''
+        }
+      `;
+      switch (base) {
+        case 'hero':
+          return `<section class="preview-block preview-hero" data-preview-block="${block.id}">
+            ${shared}
+            <button class="preview-cta">Appeler à l'action</button>
+          </section>`;
+        case 'paragraphe':
+        case 'texte':
+          return `<section class="preview-block preview-text" data-preview-block="${block.id}">${shared}</section>`;
+        case 'image':
+          return `<figure class="preview-block preview-image" data-preview-block="${block.id}">
+            <div class="preview-image__media"></div>
+            ${shared}
+          </figure>`;
+        case 'groupe':
+        case 'sections':
+        case 'grid':
+          return `<section class="preview-block preview-group" data-preview-block="${block.id}">
+            ${shared}
+            <div class="preview-group__rows">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </section>`;
+        default:
+          return `<section class="preview-block" data-preview-block="${block.id}">${shared}</section>`;
+      }
+    };
+    const buildPreviewHtml = (page) => {
+      const pageTitle = page?.title || 'Page';
+      const blocks = page?.blocks || [];
+      const blocksMarkup =
+        blocks.length > 0
+          ? blocks.map((block, index) => renderPreviewBlockMarkup(block, index)).join('')
+          : `<section class="preview-block preview-empty" data-preview-block="none">
+              <p>Ajoutez vos premiers blocs pour voir la preview se construire.</p>
+            </section>`;
+      return `<!DOCTYPE html>
+      <html lang="fr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Prévisualisation – ${pageTitle}</title>
+          <style>
+            :root {
+              font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+              background-color: #f8fafc;
+              color: #0f172a;
+            }
+            body {
+              margin: 0;
+              padding: 48px 24px 80px;
+              background-color: #f8fafc;
+              color: #0f172a;
+            }
+            .preview-page {
+              max-width: 960px;
+              margin: 0 auto;
+              display: flex;
+              flex-direction: column;
+              gap: 24px;
+            }
+            .preview-block {
+              border-radius: 24px;
+              padding: 24px;
+              border: 1px solid rgba(15, 23, 42, 0.08);
+              background: white;
+              box-shadow: 0 20px 30px rgba(15, 23, 42, 0.04);
+              transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            }
+            .preview-block h3 {
+              margin: 4px 0 6px;
+              font-size: 20px;
+            }
+            .preview-block p {
+              margin: 0;
+              font-size: 15px;
+              color: #475569;
+            }
+            .preview-block__header {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              color: #94a3b8;
+            }
+            .preview-type {
+              padding: 2px 8px;
+              border-radius: 999px;
+              background: #f1f5f9;
+              color: #475569;
+            }
+            .preview-status {
+              color: #94a3b8;
+            }
+            .preview-block-active {
+              border-color: rgba(156, 107, 255, 0.6) !important;
+              background: rgba(156, 107, 255, 0.05);
+              box-shadow: 0 0 0 1px rgba(156, 107, 255, 0.2);
+            }
+            .preview-hero {
+              padding: 48px;
+              text-align: center;
+              background: linear-gradient(120deg, #ede9fe, #f8fafc);
+            }
+            .preview-hero h3 {
+              font-size: 28px;
+            }
+            .preview-hero .preview-cta {
+              margin-top: 16px;
+              border: none;
+              background: #9c6bff;
+              color: white;
+              font-weight: 600;
+              padding: 12px 24px;
+              border-radius: 999px;
+            }
+            .preview-image__media {
+              width: 100%;
+              height: 220px;
+              border-radius: 20px;
+              background: linear-gradient(130deg, #c084fc, #a855f7);
+              margin-bottom: 16px;
+              opacity: 0.8;
+            }
+            .preview-group__rows {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+              gap: 12px;
+              margin-top: 16px;
+            }
+            .preview-group__rows div {
+              height: 80px;
+              border-radius: 16px;
+              background: #f1f5f9;
+            }
+            .preview-props {
+              margin: 12px 0 0;
+              padding-left: 18px;
+              color: #475569;
+              font-size: 13px;
+            }
+            .preview-empty {
+              text-align: center;
+              border-style: dashed;
+              border-color: rgba(15, 23, 42, 0.2);
+              color: #64748b;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="preview-page">
+            ${blocksMarkup}
+          </div>
+        </body>
+      </html>`;
+    };
+    const updatePreviewStatus = (text) => {
+      if (!previewStatus) {
+        return;
+      }
+      if (!text) {
+        previewStatus.classList.add('hidden');
+        return;
+      }
+      previewStatus.classList.remove('hidden');
+      previewStatus.textContent = text;
+    };
+    const updatePreviewFrame = (page) => {
+      if (!previewFrame) {
+        return;
+      }
+      const html = buildPreviewHtml(page);
+      latestPreviewHtml = html;
+      updatePreviewStatus('Actualisation…');
+      previewFrame.setAttribute(
+        'title',
+        `Prévisualisation de la page ${page?.title || ''}`.trim(),
+      );
+      previewFrame.srcdoc = html;
+      previewReady = false;
+    };
+    const applyPreviewHighlight = (blockId) => {
+      if (!previewFrame) {
+        return;
+      }
+      const doc = previewFrame.contentDocument;
+      if (!doc) {
+        return;
+      }
+      const nodes = doc.querySelectorAll('[data-preview-block]');
+      nodes.forEach((node) => {
+        if (node.dataset.previewBlock === blockId) {
+          node.classList.add('preview-block-active');
+          if (previewReady && blockId) {
+            node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          }
+        } else {
+          node.classList.remove('preview-block-active');
+        }
+      });
+      if (previewHighlightOverlay) {
+        previewHighlightOverlay.style.borderColor = blockId ? 'rgba(156, 107, 255, 0.5)' : 'transparent';
       }
     };
     const renderBlockList = (page) => {
@@ -1075,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         activeBlockId = null;
         renderBlockList(currentPage);
         renderBlockDetails(null);
-        renderPreviewBlocks(currentPage);
+        applyPreviewHighlight(null);
         return;
       }
       const targetBlock =
@@ -1083,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', () => {
       activeBlockId = targetBlock?.id || null;
       renderBlockList(currentPage);
       renderBlockDetails(targetBlock);
-      renderPreviewBlocks(currentPage);
+      applyPreviewHighlight(activeBlockId);
     };
     const updateCurrentPageBlocks = (newBlocks) => {
       if (!currentPage) {
@@ -1193,7 +1387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setActiveBlock(activeBlockId);
       } else {
         renderBlockDetails(null);
-        renderPreviewBlocks(currentPage);
+        applyPreviewHighlight(null);
       }
       showToast('Bloc supprimé');
     }
@@ -1234,10 +1428,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       renderPageLists(pages, activePageId);
       setActiveLabels(currentPage);
-      renderPreview(currentPage);
+      renderPreviewMeta(currentPage);
+      updatePreviewFrame(currentPage);
       renderBlockList(currentPage);
       renderBlockDetails(getActiveBlock());
-      renderPreviewBlocks(currentPage);
+      applyPreviewHighlight(activeBlockId);
       updateDraggableState();
       if (blockLibraryOpen) {
         closeBlockLibrary();
@@ -1315,6 +1510,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeBlockId = null;
     let blockLibraryOpen = false;
     let pendingDeleteBlockId = null;
+    let latestPreviewHtml = '';
+    let previewReady = false;
 
     renderPageLists(pages, activePageId);
     setActivePage(activePageId);
@@ -1403,6 +1600,21 @@ document.addEventListener('DOMContentLoaded', () => {
     blockDeleteModal?.addEventListener('click', (event) => {
       if (event.target === blockDeleteModal) {
         closeBlockDeleteModal();
+      }
+    });
+    previewFrame?.addEventListener('load', () => {
+      previewReady = true;
+      updatePreviewStatus('À jour');
+      applyPreviewHighlight(activeBlockId);
+    });
+    previewOpenButton?.addEventListener('click', () => {
+      if (!latestPreviewHtml) {
+        latestPreviewHtml = buildPreviewHtml(currentPage);
+      }
+      const previewWindow = window.open('', '_blank', 'noopener,noreferrer');
+      if (previewWindow) {
+        previewWindow.document.write(latestPreviewHtml);
+        previewWindow.document.close();
       }
     });
     const handleBlockDragStart = (event) => {
