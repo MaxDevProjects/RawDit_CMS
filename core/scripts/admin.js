@@ -536,8 +536,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewTitle = document.querySelector('[data-page-preview-title]');
     const previewDescription = document.querySelector('[data-page-preview-description]');
     const previewTags = document.querySelector('[data-page-preview-tags]');
-    const blockList = document.querySelector('[data-block-list]');
-    const blockCount = document.querySelector('[data-block-count]');
+    const previewBlocks = document.querySelector('[data-preview-blocks]');
+    const previewBlocksEmpty = document.querySelector('[data-preview-blocks-empty]');
+    const blockList = document.querySelector('[data-blocks-list]');
+    const blockListEmpty = document.querySelector('[data-blocks-empty]');
+    const blockCountBadge = document.querySelector('[data-block-count]');
+    const blockDetail = document.querySelector('[data-block-detail]');
+    const blockDetailEmpty = document.querySelector('[data-block-detail-empty]');
+    const blockDetailTitle = document.querySelector('[data-block-detail-title]');
+    const blockDetailType = document.querySelector('[data-block-detail-type]');
+    const blockDetailDescription = document.querySelector('[data-block-detail-description]');
+    const blockDetailProps = document.querySelector('[data-block-detail-props]');
+    const blockDetailStatus = document.querySelector('[data-block-detail-status]');
     const drawer = document.querySelector('[data-page-drawer]');
     const drawerBackdrop = document.querySelector('[data-page-drawer-backdrop]');
     const drawerOpenButtons = document.querySelectorAll('[data-page-drawer-open]');
@@ -554,6 +564,14 @@ document.addEventListener('DOMContentLoaded', () => {
       pages: `clower:pages:${siteKey}`,
       active: `clower:activePage:${siteKey}`,
     };
+    const createBlock = (id, label, type, status, description, props = []) => ({
+      id,
+      label,
+      type,
+      status,
+      description,
+      props,
+    });
     const defaultPages = [
       {
         id: 'home',
@@ -562,9 +580,18 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Hero immersif avec CTA, mise en avant des services et preuve sociale.',
         badges: ['Hero', 'Services', 'CTA'],
         blocks: [
-          { label: 'Hero principal', type: 'Hero', status: 'En ligne' },
-          { label: 'Services clés', type: 'Sections', status: 'En ligne' },
-          { label: 'Preuves clients', type: 'Logos', status: 'En ligne' },
+          createBlock('home-hero', 'Hero principal', 'Hero', 'En ligne', 'Section immersive avec visuel plein écran et CTA principal.', [
+            { label: 'CTA', value: 'Commencer' },
+            { label: 'Visuel', value: 'Photo plein écran' },
+          ]),
+          createBlock('home-services', 'Services clés', 'Sections', 'En ligne', 'Présentation synthétique des offres principales.', [
+            { label: 'Colonnes', value: '3' },
+            { label: 'Style', value: 'Cards' },
+          ]),
+          createBlock('home-social', 'Preuves clients', 'Logos', 'En ligne', 'Logos et témoignages courts pour rassurer.', [
+            { label: 'Logos', value: '8' },
+            { label: 'Notes', value: '4.9/5' },
+          ]),
         ],
       },
       {
@@ -574,9 +601,16 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Détail des offres avec mise en page éditoriale et appels à l’action.',
         badges: ['Offres', 'Storytelling', 'CTA'],
         blocks: [
-          { label: 'Introduction', type: 'Texte', status: 'En ligne' },
-          { label: 'Offres détaillées', type: 'Cards', status: 'En ligne' },
-          { label: 'Études de cas', type: 'Portfolio', status: 'Brouillon' },
+          createBlock('services-intro', 'Introduction', 'Texte', 'En ligne', 'Paragraphe d’ouverture qui pose la promesse.', [
+            { label: 'Longueur', value: '120 mots' },
+          ]),
+          createBlock('services-grid', 'Offres détaillées', 'Cards', 'En ligne', 'Cartes détaillées pour chaque service proposé.', [
+            { label: 'Cartes', value: '4' },
+            { label: 'CTA', value: 'Découvrir' },
+          ]),
+          createBlock('services-cases', 'Études de cas', 'Portfolio', 'Brouillon', 'Sélection de projets marquants.', [
+            { label: 'Projets', value: '3' },
+          ]),
         ],
       },
       {
@@ -586,9 +620,15 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Sélection de projets récents avec focus sur les résultats.',
         badges: ['Portfolio', 'Stats', 'Confiance'],
         blocks: [
-          { label: 'Projets vedettes', type: 'Grid', status: 'En ligne' },
-          { label: 'Chiffres clés', type: 'Stats', status: 'En ligne' },
-          { label: 'Avis clients', type: 'Quotes', status: 'Brouillon' },
+          createBlock('work-hero', 'Projets vedettes', 'Grid', 'En ligne', 'Mosaïque des réalisations à mettre en avant.', [
+            { label: 'Layouts', value: 'Masonry' },
+          ]),
+          createBlock('work-stats', 'Chiffres clés', 'Stats', 'En ligne', 'Bloc métriques pour parler résultats.', [
+            { label: 'KPI', value: '6' },
+          ]),
+          createBlock('work-reviews', 'Avis clients', 'Quotes', 'Brouillon', 'Citations extraites des entretiens clients.', [
+            { label: 'Avis', value: '2' },
+          ]),
         ],
       },
       {
@@ -598,9 +638,15 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Formulaire de prise de contact simple et accès aux coordonnées.',
         badges: ['Formulaire', 'CTA', 'Infos'],
         blocks: [
-          { label: 'Header court', type: 'Texte', status: 'En ligne' },
-          { label: 'Formulaire', type: 'Form', status: 'En ligne' },
-          { label: 'Coordonnées', type: 'Infos', status: 'En ligne' },
+          createBlock('contact-header', 'Header court', 'Texte', 'En ligne', 'Intro concise pour inciter à prendre contact.', [
+            { label: 'Ton', value: 'Direct' },
+          ]),
+          createBlock('contact-form', 'Formulaire', 'Form', 'En ligne', 'Formulaire de contact avec 4 champs.', [
+            { label: 'Champs', value: 'Nom, Email, Projet, Budget' },
+          ]),
+          createBlock('contact-infos', 'Coordonnées', 'Infos', 'En ligne', 'Bloc avec adresse, téléphone et réseaux.', [
+            { label: 'Fuseau', value: 'CET' },
+          ]),
         ],
       },
     ];
@@ -608,7 +654,10 @@ document.addEventListener('DOMContentLoaded', () => {
       pages.map((page) => ({
         ...page,
         badges: [...(page.badges || [])],
-        blocks: [...(page.blocks || [])],
+        blocks: (page.blocks || []).map((block) => ({
+          ...block,
+          props: (block.props || []).map((prop) => ({ ...prop })),
+        })),
       }));
     const getStoredPages = () => {
       try {
@@ -662,6 +711,26 @@ document.addEventListener('DOMContentLoaded', () => {
       const base = workspaceSlugify(value.replace(/^\//, ''));
       return base ? `/${base}` : '/';
     };
+    const generateBlockId = (pageId = 'page', key = 'block') =>
+      `${pageId}-${key}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1000)}`;
+    const createInitialBlocks = (pageId, title) => [
+      createBlock(
+        generateBlockId(pageId, 'intro'),
+        'Introduction',
+        'Texte',
+        'Brouillon',
+        `Paragraphe introductif pour "${title}".`,
+        [{ label: 'Longueur', value: '2 paragraphes' }],
+      ),
+      createBlock(
+        generateBlockId(pageId, 'content'),
+        'Zone de contenu',
+        'Section',
+        'Brouillon',
+        'Section principale à composer avec textes et visuels.',
+        [{ label: 'Colonnes', value: 'Auto' }],
+      ),
+    ];
     const setActiveLabels = (page) => {
       if (activeTitle) {
         activeTitle.textContent = page?.title || 'Page';
@@ -692,36 +761,137 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
     };
-    const renderBlocks = (page) => {
+    const renderPreviewBlocks = (page) => {
+      if (!previewBlocks) {
+        return;
+      }
+      previewBlocks.innerHTML = '';
+      const blocks = page?.blocks || [];
+      if (!blocks.length) {
+        previewBlocksEmpty?.classList.remove('hidden');
+        return;
+      }
+      previewBlocksEmpty?.classList.add('hidden');
+      blocks.forEach((block, index) => {
+        const isActive = block.id === activeBlockId;
+        const card = document.createElement('div');
+        card.dataset.previewBlockId = block.id;
+        card.className = [
+          'rounded-2xl border bg-white/80 px-4 py-3 shadow-sm transition',
+          isActive
+            ? 'border-[#9C6BFF]/50 ring-2 ring-[#9C6BFF]/40'
+            : 'border-slate-200 hover:border-[#9C6BFF]/40',
+        ].join(' ');
+        card.innerHTML = `
+          <p class="text-[11px] uppercase tracking-wide text-slate-400">Bloc ${index + 1}</p>
+          <p class="text-sm font-semibold text-slate-900">${block.label}</p>
+          <p class="text-xs text-slate-500">${block.type} • ${block.status}</p>
+        `;
+        previewBlocks.appendChild(card);
+      });
+    };
+    const getStatusBadgeClasses = (status) => {
+      switch ((status || '').toLowerCase()) {
+        case 'en ligne':
+          return 'bg-emerald-50 text-emerald-700';
+        case 'brouillon':
+          return 'bg-amber-50 text-amber-700';
+        default:
+          return 'bg-slate-100 text-slate-600';
+      }
+    };
+    const renderBlockDetails = (block) => {
+      if (!blockDetail || !blockDetailEmpty) {
+        return;
+      }
+      if (!block) {
+        blockDetail.classList.add('hidden');
+        blockDetailEmpty.classList.remove('hidden');
+        blockDetailStatus?.classList.add('hidden');
+        return;
+      }
+      blockDetail.classList.remove('hidden');
+      blockDetailEmpty.classList.add('hidden');
+      if (blockDetailTitle) {
+        blockDetailTitle.textContent = block.label;
+      }
+      if (blockDetailType) {
+        blockDetailType.textContent = block.type;
+      }
+      if (blockDetailDescription) {
+        blockDetailDescription.textContent =
+          block.description || 'Aucune description pour ce bloc.';
+      }
+      if (blockDetailProps) {
+        blockDetailProps.innerHTML = '';
+        if (block.props && block.props.length > 0) {
+          block.props.forEach((prop) => {
+            const propRow = document.createElement('div');
+            propRow.className =
+              'flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm';
+            propRow.innerHTML = `
+              <span class="text-xs uppercase tracking-wide text-slate-500">${prop.label}</span>
+              <span class="font-semibold text-slate-900">${prop.value}</span>
+            `;
+            blockDetailProps.appendChild(propRow);
+          });
+        } else {
+          const emptyProp = document.createElement('div');
+          emptyProp.className = 'rounded-xl border border-dashed border-slate-200 px-3 py-2 text-sm text-slate-500';
+          emptyProp.textContent = 'Aucune propriété déclarée.';
+          blockDetailProps.appendChild(emptyProp);
+        }
+      }
+      if (blockDetailStatus) {
+        blockDetailStatus.textContent = block.status;
+        blockDetailStatus.className = `rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(
+          block.status,
+        )}`;
+        blockDetailStatus.classList.remove('hidden');
+      }
+    };
+    const renderBlockList = (page) => {
       if (!blockList) {
         return;
       }
       blockList.innerHTML = '';
       const blocks = page?.blocks || [];
+      if (blockCountBadge) {
+        blockCountBadge.textContent = formatBlockCount(blocks.length);
+      }
       if (blocks.length === 0) {
-        const empty = document.createElement('p');
-        empty.className = 'text-sm text-slate-600';
-        empty.textContent = 'Aucun bloc pour cette page.';
-        blockList.appendChild(empty);
-      } else {
-        blocks.forEach((block) => {
-          const item = document.createElement('div');
-          item.className =
-            'flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm hover:border-[#9C6BFF]/50';
-          item.innerHTML = `
-            <div class="mt-1 h-2 w-2 rounded-full bg-[#9C6BFF]"></div>
-            <div class="flex-1">
-              <p class="text-sm font-semibold text-slate-900">${block.label}</p>
-              <p class="text-xs text-slate-500">${block.type}</p>
-            </div>
-            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">${block.status}</span>
-          `;
-          blockList.appendChild(item);
+        blockList.classList.add('hidden');
+        blockListEmpty?.classList.remove('hidden');
+        return;
+      }
+      blockList.classList.remove('hidden');
+      blockListEmpty?.classList.add('hidden');
+      blocks.forEach((block) => {
+        const isActive = block.id === activeBlockId;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.blockId = block.id;
+        button.setAttribute('role', 'option');
+        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        button.className = [
+          'relative w-full rounded-xl border px-4 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/40',
+          isActive
+            ? 'bg-slate-100 border-[#9C6BFF]/40 text-slate-900 shadow-sm'
+            : 'border-transparent text-slate-700 hover:bg-slate-50',
+        ].join(' ');
+        button.innerHTML = `
+          <span class="${isActive ? '' : 'hidden'} absolute inset-y-2 left-0 w-1 rounded-full bg-[#9C6BFF]"></span>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">${block.type}</span>
+            <span class="text-slate-400">${block.status}</span>
+          </div>
+          <p class="mt-1 text-sm font-semibold">${block.label}</p>
+        `;
+        button.addEventListener('click', () => {
+          setActiveBlock(block.id);
         });
-      }
-      if (blockCount) {
-        blockCount.textContent = formatBlockCount(blocks.length);
-      }
+        blockList.appendChild(button);
+      });
     };
     const renderPageLists = (pages, activeId) => {
       pageLists.forEach((list) => {
@@ -767,14 +937,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
     };
+    const getActiveBlock = () => {
+      if (!currentPage || !Array.isArray(currentPage.blocks)) {
+        return null;
+      }
+      return currentPage.blocks.find((block) => block.id === activeBlockId) || null;
+    };
+    const setActiveBlock = (blockId) => {
+      if (!currentPage) {
+        return;
+      }
+      const targetBlock =
+        currentPage.blocks.find((block) => block.id === blockId) || currentPage.blocks[0] || null;
+      activeBlockId = targetBlock?.id || null;
+      renderBlockList(currentPage);
+      renderBlockDetails(targetBlock);
+      renderPreviewBlocks(currentPage);
+    };
     const setActivePage = (pageId) => {
       const target = pages.find((page) => page.id === pageId) || pages[0];
+      currentPage = target || null;
       activePageId = target?.id || null;
+      activeBlockId = target?.blocks?.[0]?.id || null;
       persistActivePage(activePageId || '');
       renderPageLists(pages, activePageId);
       setActiveLabels(target);
       renderPreview(target);
-      renderBlocks(target);
+      renderBlockList(target);
+      renderBlockDetails(getActiveBlock());
+      renderPreviewBlocks(target);
     };
     const isDesktopDrawer = () => window.matchMedia('(min-width: 1024px)').matches;
     const syncDrawerState = () => {
@@ -844,6 +1035,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let pages = getStoredPages();
     let activePageId = getStoredActivePage(pages);
     let pageSlugManuallyEdited = false;
+    let currentPage = null;
+    let activeBlockId = null;
 
     renderPageLists(pages, activePageId);
     setActivePage(activePageId);
@@ -880,16 +1073,14 @@ document.addEventListener('DOMContentLoaded', () => {
         addPageError && (addPageError.textContent = 'Ce slug est déjà utilisé.');
         return;
       }
+      const newPageId = `page-${Date.now().toString(36)}`;
       const newPage = {
-        id: `${Date.now()}`,
+        id: newPageId,
         title,
         slug,
         description: `Nouvelle page "${title}" prête à être maquettée.`,
         badges: ['Layout', 'Texte'],
-        blocks: [
-          { label: 'Introduction', type: 'Texte', status: 'Brouillon' },
-          { label: 'Zone de contenu', type: 'Section', status: 'Brouillon' },
-        ],
+        blocks: createInitialBlocks(newPageId, title),
       };
       pages = [...pages, newPage];
       persistPages(pages);
