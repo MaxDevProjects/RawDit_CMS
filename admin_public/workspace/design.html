@@ -325,45 +325,38 @@
       <main class="space-y-4" id="workspace-main">
         
   <section class="space-y-4">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="space-y-1">
-          <p class="text-xs uppercase tracking-tight text-slate-500">Page active</p>
-          <h1 data-active-page-title class="text-xl font-semibold text-slate-900">Accueil</h1>
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div>
+        <p class="text-[11px] uppercase tracking-tight text-slate-500">Page active</p>
+        <div class="flex items-baseline gap-3 text-slate-900">
+          <h1 data-active-page-title class="text-lg font-semibold">Accueil</h1>
           <p data-active-page-slug class="text-sm text-slate-500">/</p>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-            Preview en direct
-          </span>
-          <button
-            type="button"
-            data-preview-open
-            class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
-          >
-            Ouvrir dans un nouvel onglet
-          </button>
-        </div>
       </div>
-      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4 text-sm text-slate-600">
-        <div class="flex items-center gap-4">
-          <span class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
-            Vue :
-            <button type="button" class="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white" disabled>Desktop</button>
-            <button type="button" class="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-500" disabled>Mobile</button>
-          </span>
-          <div class="hidden text-xs text-emerald-600" data-preview-status></div>
+      <div class="flex items-center gap-2 text-xs">
+        <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-600">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+          Preview en direct
         </div>
-        <div data-page-preview-tags class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span class="rounded-full bg-slate-100 px-3 py-1">Hero</span>
-          <span class="rounded-full bg-slate-100 px-3 py-1">Sections</span>
-          <span class="rounded-full bg-slate-100 px-3 py-1">CTA</span>
-        </div>
+        <button
+          type="button"
+          data-preview-open
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 font-semibold text-slate-700 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          Ouvrir la page
+        </button>
       </div>
     </div>
 
     <div class="rounded-3xl border border-slate-200 bg-slate-100 p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 text-xs font-semibold text-slate-500">
+        <div class="inline-flex items-center gap-3">
+          <span>Vue :</span>
+          <button type="button" class="rounded-full bg-slate-900 px-3 py-1 text-white" disabled>Desktop</button>
+          <button type="button" class="rounded-full bg-slate-200 px-3 py-1 text-slate-500" disabled>Mobile</button>
+        </div>
+        <div data-preview-status class="hidden text-emerald-600">À jour</div>
+      </div>
       <div class="relative rounded-[34px] bg-gradient-to-b from-slate-50 to-slate-100 shadow-lg border border-slate-200">
         <div class="absolute inset-x-1 top-1 mx-auto h-6 w-36 rounded-full bg-slate-200/70"></div>
         <div class="mt-7 rounded-[30px] border border-slate-200 bg-white overflow-hidden" data-page-preview-shell>
@@ -379,7 +372,14 @@
           class="pointer-events-none absolute inset-[38px] rounded-[24px] border-2 border-dashed border-transparent transition"
         ></div>
       </div>
-      <p class="mt-2 text-center text-xs text-slate-500">Prévisualisation temps réel du site public.</p>
+      <p class="mt-2 text-center text-xs text-slate-500">
+        Prévisualisation temps réel du site public.
+        <span data-page-preview-tags class="ml-2 inline-flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+          <span class="rounded-full bg-slate-200 px-3 py-0.5">Hero</span>
+          <span class="rounded-full bg-slate-200 px-3 py-0.5">Sections</span>
+          <span class="rounded-full bg-slate-200 px-3 py-0.5">CTA</span>
+        </span>
+      </p>
     </div>
   </section>
 
