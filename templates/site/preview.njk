@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prévisualisation – {{ page.title or 'Page' }}</title>
+    <link rel="stylesheet" href="/assets/site.css" />
+    <style>
+      body {
+        min-height: 100vh;
+        background-color: #f1f5f9;
+      }
+      .preview-block-active {
+        outline: 2px dashed rgba(156, 107, 255, 0.7);
+        background-color: rgba(156, 107, 255, 0.05);
+      }
+    </style>
+  </head>
+  <body class="font-['Inter'] text-slate-900">
+    <header class="bg-white shadow-sm border-b border-slate-100">
+      <div class="max-w-5xl mx-auto px-6 py-8 space-y-2">
+        <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Preview responsive</p>
+        <h1 class="text-3xl font-bold">{{ site.title or 'Site' }}</h1>
+        <p class="text-sm text-slate-500">{{ page.slug or '/' }}</p>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-10 space-y-6">
+      {% for block in page.blocks or [] %}
+        {% set type = (block.type or '') | lower %}
+        {% set settings = block.settings or {} %}
+        {% if type == 'hero' %}
+          {% set align = settings.align or 'center' %}
+          {% if align == 'left' %}
+            {% set align_class = 'text-left items-start' %}
+          {% elif align == 'right' %}
+            {% set align_class = 'text-right items-end' %}
+          {% else %}
+            {% set align_class = 'text-center items-center' %}
+          {% endif %}
+          <section
+            data-preview-block="{{ block.id }}"
+            class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-50 to-white px-10 py-16 flex flex-col gap-4 {{ align_class }}"
+          >
+            <p class="text-xs uppercase tracking-[0.3em] text-violet-400">
+              {{ block.status or 'Brouillon' }}
+            </p>
+            <h2 class="text-4xl font-bold">
+              {{ settings.title or block.label or 'Titre du hero' }}
+            </h2>
+            <p class="text-lg text-slate-600 max-w-2xl">
+              {{ settings.subtitle or block.description or 'Ajoutez un sous-titre inspirant pour ce hero.' }}
+            </p>
+            {% if settings.ctaLabel %}
+              <a
+                href="{{ settings.ctaUrl or '#' }}"
+                class="inline-flex w-fit items-center justify-center rounded-full bg-violet-600 px-5 py-2 text-white text-sm font-semibold hover:bg-violet-500"
+              >
+                {{ settings.ctaLabel }}
+              </a>
+            {% endif %}
+          </section>
+        {% elif type == 'paragraphe' or type == 'texte' %}
+          {% set align = settings.align or 'left' %}
+          {% if align == 'left' %}
+            {% set text_class = 'text-left' %}
+          {% elif align == 'center' %}
+            {% set text_class = 'text-center' %}
+          {% else %}
+            {% set text_class = 'text-right' %}
+          {% endif %}
+          <section
+            data-preview-block="{{ block.id }}"
+            class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 {{ text_class }}"
+          >
+            <h3 class="text-2xl font-semibold mb-2">
+              {{ settings.title or block.label or 'Titre du paragraphe' }}
+            </h3>
+            <p class="text-slate-600">
+              {{ settings.content or block.description or 'Ajoutez votre texte éditorial ici.' }}
+            </p>
+          </section>
+        {% elif type == 'image' %}
+          {% set src = settings.src or '' %}
+          <figure
+            data-preview-block="{{ block.id }}"
+            class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3"
+          >
+            <div
+              class="h-64 w-full rounded-2xl bg-slate-200 bg-cover bg-center"
+              style="{{ src and ('background-image:url(' ~ src ~ ');') or '' }}"
+            ></div>
+            <div>
+              <h3 class="text-xl font-semibold">{{ block.label or 'Bloc image' }}</h3>
+              <p class="text-sm text-slate-500">{{ block.description or 'Illustration' }}</p>
+            </div>
+            {% if settings.showCaption and settings.caption %}
+              <figcaption class="text-xs text-slate-500">{{ settings.caption }}</figcaption>
+            {% endif %}
+          </figure>
+        {% elif type == 'groupe' or type == 'sections' or type == 'grid' %}
+          {% set mobile = (settings.columnsMobile or '1') | string %}
+          {% set desktop = (settings.columnsDesktop or '3') | string %}
+          {% if mobile == '2' %}
+            {% set mobile_class = 'grid-cols-2' %}
+          {% else %}
+            {% set mobile_class = 'grid-cols-1' %}
+          {% endif %}
+          {% if desktop == '1' %}
+            {% set desktop_class = 'md:grid-cols-1' %}
+          {% elif desktop == '2' %}
+            {% set desktop_class = 'md:grid-cols-2' %}
+          {% elif desktop == '4' %}
+            {% set desktop_class = 'md:grid-cols-4' %}
+          {% else %}
+            {% set desktop_class = 'md:grid-cols-3' %}
+          {% endif %}
+          <section
+            data-preview-block="{{ block.id }}"
+            class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-3"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-semibold">{{ block.label or 'Bloc groupe' }}</h3>
+                <p class="text-sm text-slate-500">
+                  {{ block.description or 'Disposition responsive' }}
+                </p>
+              </div>
+              <span class="text-xs text-slate-400">
+                Mobile {{ mobile }} · Desktop {{ desktop }}
+              </span>
+            </div>
+            <div class="grid gap-4 {{ mobile_class }} {{ desktop_class }}">
+              <div class="h-24 rounded-2xl bg-slate-50 border border-slate-100"></div>
+              <div class="h-24 rounded-2xl bg-slate-50 border border-slate-100"></div>
+              <div class="h-24 rounded-2xl bg-slate-50 border border-slate-100"></div>
+              <div class="h-24 rounded-2xl bg-slate-50 border border-slate-100"></div>
+            </div>
+          </section>
+        {% else %}
+          <section
+            data-preview-block="{{ block.id }}"
+            class="bg-white rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500"
+          >
+            Ce type de bloc (“{{ block.type or 'Bloc' }}”) n’a pas encore de preview dédiée.
+          </section>
+        {% endif %}
+      {% else %}
+        <section class="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
+          Ajoutez vos premiers blocs pour visualiser la page.
+        </section>
+      {% endfor %}
+    </main>
+  </body>
+</html>

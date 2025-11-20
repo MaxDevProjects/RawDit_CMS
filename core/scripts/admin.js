@@ -566,6 +566,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ? Array.from(blockForm.querySelectorAll('[data-editor-section]'))
       : [];
     const blockFormCancel = document.querySelector('[data-block-form-cancel]');
+    const groupPreviewMobile = blockForm?.querySelector('[data-group-preview-mobile]');
+    const groupPreviewDesktop = blockForm?.querySelector('[data-group-preview-desktop]');
     const blockTypeForms = {
       hero: {
         section: 'hero',
@@ -619,6 +621,17 @@ document.addEventListener('DOMContentLoaded', () => {
       image: 'image',
       groupe: 'groupe',
       group: 'groupe',
+    };
+    const updateGroupMiniPreview = (mobileValue, desktopValue) => {
+      if (!groupPreviewMobile || !groupPreviewDesktop) {
+        return;
+      }
+      const renderBoxes = (count) =>
+        Array.from({ length: Number(count) || 1 })
+          .map(() => '<span class="block h-2 w-full rounded-full bg-slate-300"></span>')
+          .join('');
+      groupPreviewMobile.innerHTML = renderBoxes(mobileValue);
+      groupPreviewDesktop.innerHTML = renderBoxes(desktopValue);
     };
     const normalizeType = (value) =>
       (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -676,6 +689,13 @@ document.addEventListener('DOMContentLoaded', () => {
           input.value = value ?? '';
         }
       });
+      if (config.section === 'group') {
+        const mobileValue =
+          blockForm.querySelector('[name="group-columns-mobile"]')?.value || '1';
+        const desktopValue =
+          blockForm.querySelector('[name="group-columns-desktop"]')?.value || '3';
+        updateGroupMiniPreview(mobileValue, desktopValue);
+      }
     };
     const collectFormValues = (config) => {
       if (!blockForm || !config) {
@@ -698,6 +718,99 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       return values;
+    };
+    const updatePreviewStatus = (text) => {
+      if (!previewStatus) {
+        return;
+      }
+      if (!text) {
+        previewStatus.classList.add('hidden');
+        return;
+      }
+      previewStatus.classList.remove('hidden');
+      previewStatus.textContent = text;
+    };
+    const serializePageForPreview = (page) => {
+      if (!page) {
+        return null;
+      }
+      return {
+        id: page.id,
+        title: page.title,
+        slug: page.slug,
+        badges: [...(page.badges || [])],
+        blocks: (page.blocks || []).map((block) => ({
+          id: block.id,
+          type: block.type,
+          label: block.label,
+          status: block.status,
+          description: block.description,
+          props: block.props || [],
+          settings: block.settings || {},
+        })),
+      };
+    };
+    const getLoadingPreviewHtml = () =>
+      '<!DOCTYPE html><html><body style="font-family:Inter,sans-serif;padding:40px;color:#475569;background:#fff;">Préparation de la prévisualisation…</body></html>';
+    const refreshPreview = (page) => {
+      if (!previewFrame || !page) {
+        return;
+      }
+      const payload = {
+        page: serializePageForPreview(page),
+        site: {
+          title: storedSite.name || 'Site',
+          slug: storedSite.slug || '',
+        },
+      };
+      previewReady = false;
+      updatePreviewStatus('Actualisation…');
+      previewFrame.srcdoc = getLoadingPreviewHtml();
+      if (previewRequestController) {
+        previewRequestController.abort();
+      }
+      const controller = new AbortController();
+      previewRequestController = controller;
+      fetch('/api/preview', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Preview error');
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (controller.signal.aborted) {
+            return;
+          }
+          latestPreviewHtml = data.html || '';
+          previewFrame.setAttribute(
+            'title',
+            `Prévisualisation de la page ${page.title || ''}`.trim(),
+          );
+          previewFrame.srcdoc = latestPreviewHtml || getLoadingPreviewHtml();
+          updatePreviewStatus('À jour');
+        })
+        .catch((error) => {
+          if (controller.signal.aborted) {
+            return;
+          }
+          console.error('[preview] Impossible de rendre la page', error);
+          updatePreviewStatus('Erreur preview');
+          previewFrame.srcdoc =
+            '<!DOCTYPE html><html><body style="font-family:Inter,sans-serif;padding:40px;color:#be123c;background:#fff;">Erreur lors du rendu de la prévisualisation.</body></html>';
+        })
+        .finally(() => {
+          if (previewRequestController === controller) {
+            previewRequestController = null;
+          }
+        });
     };
     const handleBlockFormSubmit = (event) => {
       event.preventDefault();
@@ -1178,263 +1291,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       populateBlockForm(block);
     };
-    const renderPreviewBlockMarkup = (block, index) => {
-      const base = (block.type || '').toLowerCase();
-      const settings = block.settings || {};
-      const safeLabel =
-        settings.title || block.label || `Bloc ${index + 1}`;
-      const description =
-        settings.subtitle || settings.content || block.description || '';
-      const propsList =
-        block.props && block.props.length > 0
-          ? block.props.map((prop) => `<li>${prop.label}: <strong>${prop.value}</strong></li>`).join('')
-          : '';
-      const shared = `
-        <div class="preview-block__header">
-          <span class="preview-type">${block.type || 'Bloc'}</span>
-          <span class="preview-status">${block.status || ''}</span>
-        </div>
-        <h3>${safeLabel}</h3>
-        <p class="preview-desc">${description}</p>
-        ${
-          propsList
-            ? `<ul class="preview-props">
-            ${propsList}
-          </ul>`
-            : ''
-        }
-      `;
-      switch (base) {
-        case 'hero': {
-          const alignClass =
-            settings.align === 'left'
-              ? 'preview-hero align-left'
-              : settings.align === 'right'
-              ? 'preview-hero align-right'
-              : 'preview-hero';
-          return `<section class="preview-block ${alignClass}" data-preview-block="${block.id}">
-            ${shared}
-            <button class="preview-cta">${settings.ctaLabel || 'Découvrir'}</button>
-          </section>`;
-        }
-        case 'paragraphe':
-        case 'texte': {
-          const alignment = settings.align || 'left';
-          return `<section class="preview-block preview-text" data-preview-block="${block.id}" style="text-align:${alignment};">
-            ${shared}
-          </section>`;
-        }
-        case 'image': {
-          const mediaStyle = settings.src ? `style="background-image:url('${settings.src}');"` : '';
-          const caption =
-            settings.showCaption && settings.caption
-              ? `<figcaption>${settings.caption}</figcaption>`
-              : '';
-          return `<figure class="preview-block preview-image" data-preview-block="${block.id}">
-            <div class="preview-image__media" ${mediaStyle}></div>
-            ${shared}
-            ${caption}
-          </figure>`;
-        }
-        case 'groupe':
-        case 'sections':
-        case 'grid': {
-          const mobile = settings.columnsMobile || '1';
-          const desktop = settings.columnsDesktop || '3';
-          const mobileCols = Number(mobile);
-          const desktopCols = Number(desktop);
-          const makeColumns = (count) =>
-            Array.from({ length: count }).map(() => '<div></div>').join('');
-          return `<section class="preview-block preview-group" data-preview-block="${block.id}">
-            ${shared}
-            <div class="preview-group__rows mobile">${makeColumns(mobileCols)}</div>
-            <div class="preview-group__rows desktop">${makeColumns(desktopCols)}</div>
-            <p class="preview-layout">Mobile ${mobileCols} col. · Desktop ${desktopCols} col.</p>
-          </section>`;
-        }
-        default:
-          return `<section class="preview-block" data-preview-block="${block.id}">${shared}</section>`;
-      }
-    };
-    const buildPreviewHtml = (page) => {
-      const pageTitle = page?.title || 'Page';
-      const blocks = page?.blocks || [];
-      const blocksMarkup =
-        blocks.length > 0
-          ? blocks.map((block, index) => renderPreviewBlockMarkup(block, index)).join('')
-          : `<section class="preview-block preview-empty" data-preview-block="none">
-              <p>Ajoutez vos premiers blocs pour voir la preview se construire.</p>
-            </section>`;
-      return `<!DOCTYPE html>
-      <html lang="fr">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Prévisualisation – ${pageTitle}</title>
-          <style>
-            :root {
-              font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-              background-color: #f8fafc;
-              color: #0f172a;
-            }
-            body {
-              margin: 0;
-              padding: 48px 24px 80px;
-              background-color: #f8fafc;
-              color: #0f172a;
-            }
-            .preview-page {
-              max-width: 960px;
-              margin: 0 auto;
-              display: flex;
-              flex-direction: column;
-              gap: 24px;
-            }
-            .preview-block {
-              border-radius: 24px;
-              padding: 24px;
-              border: 1px solid rgba(15, 23, 42, 0.08);
-              background: white;
-              box-shadow: 0 20px 30px rgba(15, 23, 42, 0.04);
-              transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-            }
-            .preview-block h3 {
-              margin: 4px 0 6px;
-              font-size: 20px;
-            }
-            .preview-block p {
-              margin: 0;
-              font-size: 15px;
-              color: #475569;
-            }
-            .preview-block__header {
-              display: flex;
-              align-items: center;
-              gap: 12px;
-              font-size: 12px;
-              text-transform: uppercase;
-              letter-spacing: 0.06em;
-              color: #94a3b8;
-            }
-            .preview-type {
-              padding: 2px 8px;
-              border-radius: 999px;
-              background: #f1f5f9;
-              color: #475569;
-            }
-            .preview-status {
-              color: #94a3b8;
-            }
-            .preview-block-active {
-              border-color: rgba(156, 107, 255, 0.6) !important;
-              background: rgba(156, 107, 255, 0.05);
-              box-shadow: 0 0 0 1px rgba(156, 107, 255, 0.2);
-            }
-            .preview-hero {
-              padding: 48px;
-              text-align: center;
-              background: linear-gradient(120deg, #ede9fe, #f8fafc);
-            }
-            .preview-hero.align-left {
-              text-align: left;
-            }
-            .preview-hero.align-right {
-              text-align: right;
-            }
-            .preview-hero h3 {
-              font-size: 28px;
-            }
-            .preview-hero .preview-cta {
-              margin-top: 16px;
-              border: none;
-              background: #9c6bff;
-              color: white;
-              font-weight: 600;
-              padding: 12px 24px;
-              border-radius: 999px;
-            }
-            .preview-image__media {
-              width: 100%;
-              height: 220px;
-              border-radius: 20px;
-              background: linear-gradient(130deg, #c084fc, #a855f7);
-              margin-bottom: 16px;
-              opacity: 0.8;
-              background-size: cover;
-              background-position: center;
-            }
-            .preview-image figcaption {
-              margin-top: 12px;
-              font-size: 13px;
-              color: #64748b;
-            }
-            .preview-group__rows {
-              display: grid;
-              gap: 12px;
-              margin-top: 16px;
-            }
-            .preview-group__rows.mobile {
-              grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            }
-            .preview-group__rows.desktop {
-              grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            }
-            .preview-group__rows div {
-              height: 80px;
-              border-radius: 16px;
-              background: #f1f5f9;
-            }
-            .preview-layout {
-              margin-top: 12px;
-              font-size: 13px;
-              color: #475569;
-            }
-            .preview-props {
-              margin: 12px 0 0;
-              padding-left: 18px;
-              color: #475569;
-              font-size: 13px;
-            }
-            .preview-empty {
-              text-align: center;
-              border-style: dashed;
-              border-color: rgba(15, 23, 42, 0.2);
-              color: #64748b;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="preview-page">
-            ${blocksMarkup}
-          </div>
-        </body>
-      </html>`;
-    };
-    const updatePreviewStatus = (text) => {
-      if (!previewStatus) {
-        return;
-      }
-      if (!text) {
-        previewStatus.classList.add('hidden');
-        return;
-      }
-      previewStatus.classList.remove('hidden');
-      previewStatus.textContent = text;
-    };
-    const updatePreviewFrame = (page) => {
-      if (!previewFrame) {
-        return;
-      }
-      const html = buildPreviewHtml(page);
-      latestPreviewHtml = html;
-      updatePreviewStatus('Actualisation…');
-      previewFrame.setAttribute(
-        'title',
-        `Prévisualisation de la page ${page?.title || ''}`.trim(),
-      );
-      previewFrame.srcdoc = html;
-      previewReady = false;
-    };
     const applyPreviewHighlight = (blockId) => {
       if (!previewFrame) {
         return;
@@ -1796,7 +1652,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderPageLists(pages, activePageId);
       setActiveLabels(currentPage);
       renderPreviewMeta(currentPage);
-      updatePreviewFrame(currentPage);
+      refreshPreview(currentPage);
       renderBlockList(currentPage);
       renderBlockDetails(getActiveBlock());
       applyPreviewHighlight(activeBlockId);
@@ -1879,6 +1735,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let pendingDeleteBlockId = null;
     let latestPreviewHtml = '';
     let previewReady = false;
+    let previewRequestController = null;
 
     renderPageLists(pages, activePageId);
     setActivePage(activePageId);
@@ -1969,6 +1826,19 @@ document.addEventListener('DOMContentLoaded', () => {
         closeBlockDeleteModal();
       }
     });
+    blockForm?.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!target || !target.name) {
+        return;
+      }
+      if (target.name === 'group-columns-mobile' || target.name === 'group-columns-desktop') {
+        const mobileValue =
+          blockForm.querySelector('[name="group-columns-mobile"]')?.value || '1';
+        const desktopValue =
+          blockForm.querySelector('[name="group-columns-desktop"]')?.value || '3';
+        updateGroupMiniPreview(mobileValue, desktopValue);
+      }
+    });
     blockForm?.addEventListener('submit', handleBlockFormSubmit);
     blockFormCancel?.addEventListener('click', (event) => {
       event.preventDefault();
@@ -1983,9 +1853,6 @@ document.addEventListener('DOMContentLoaded', () => {
       applyPreviewHighlight(activeBlockId);
     });
     previewOpenButton?.addEventListener('click', () => {
-      if (!latestPreviewHtml) {
-        latestPreviewHtml = buildPreviewHtml(currentPage);
-      }
       const previewWindow = window.open('', '_blank');
       if (!previewWindow) {
         return;
@@ -1993,7 +1860,7 @@ document.addEventListener('DOMContentLoaded', () => {
       previewWindow.opener = null;
       const doc = previewWindow.document;
       doc.open();
-      doc.write(latestPreviewHtml);
+      doc.write(latestPreviewHtml || getLoadingPreviewHtml());
       doc.close();
     });
     const handleBlockDragStart = (event) => {

@@ -3,6 +3,7 @@ import { promises as fs } from 'node:fs';
 import { createServer } from 'node:net';
 import chokidar from 'chokidar';
 import express from 'express';
+import nunjucks from 'nunjucks';
 import { paths } from './lib/paths.js';
 import { buildAll } from './build.js';
 import { AuthService } from './lib/auth-service.js';
@@ -17,6 +18,8 @@ const WORKSPACE_SECTIONS = ['design', 'content', 'media', 'deploy', 'settings'];
 const WORKSPACE_FILES = Object.fromEntries(
   WORKSPACE_SECTIONS.map((section) => [section, path.join(paths.adminPublic, 'workspace', `${section}.html`)]),
 );
+const previewLoader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCache: true });
+const previewEnv = new nunjucks.Environment(previewLoader, { autoescape: true });
 
 process.env.NODE_ENV = 'development';
 
@@ -131,6 +134,23 @@ async function start() {
       return res.status(404).json({ message: 'Site introuvable.' });
     }
     res.json(site);
+  });
+
+  app.post('/api/preview', requireAuthJson, (req, res) => {
+    const { page, site } = req.body || {};
+    if (!page || !Array.isArray(page.blocks)) {
+      return res.status(400).json({ message: 'Page invalide.' });
+    }
+    try {
+      const html = previewEnv.render('preview.njk', {
+        page,
+        site: site || {},
+      });
+      res.json({ html });
+    } catch (err) {
+      console.error('[preview] Impossible de rendre la page', err);
+      res.status(500).json({ message: 'Impossible de générer la preview.' });
+    }
   });
 
   /**
