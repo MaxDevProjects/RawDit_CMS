@@ -19,24 +19,30 @@
   <body class="min-h-screen bg-[#F8FAFC] font-['Inter'] text-[#1E1E1E] antialiased">
     <header class="bg-white border-b border-slate-200">
       <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-        <a
-          href="/admin/sites"
-          data-workspace-back
-          class="inline-flex items-center gap-1 text-sm font-semibold text-[#1E1E1E] hover:text-[#9C6BFF]"
-        >
-          ← Retour à mes sites
-        </a>
+        <div class="flex items-center gap-3">
+          <a
+            href="/admin/sites"
+            data-workspace-back
+            class="inline-flex items-center gap-1 text-sm font-semibold text-[#1E1E1E] hover:text-[#9C6BFF]"
+          >
+            ← Retour à mes sites
+          </a>
+          {% block workspace_header_left %}{% endblock %}
+        </div>
         <div class="flex-1 text-center text-sm text-slate-600">
           Site :
           <span data-workspace-site-name class="font-semibold text-slate-900">Site actif</span>
         </div>
-        <button
-          type="button"
-          data-logout
-          class="text-sm text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg border border-slate-200"
-        >
-          Se déconnecter
-        </button>
+        <div class="flex items-center gap-3">
+          {% block workspace_header_actions %}{% endblock %}
+          <button
+            type="button"
+            data-logout
+            class="text-sm text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg border border-slate-200"
+          >
+            Se déconnecter
+          </button>
+        </div>
       </div>
       <nav class="border-t border-slate-200" aria-label="Navigation workspace">
         <ul class="max-w-6xl mx-auto flex items-center gap-6 overflow-x-auto px-4 py-2 text-sm">

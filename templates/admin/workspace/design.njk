@@ -2,25 +2,199 @@
 {% set pageTitle = "Design" %}
 {% set activeWorkspaceTab = "design" %}
 
+{% block workspace_header_actions %}
+  <button
+    type="button"
+    data-page-drawer-open
+    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#9C6BFF] hover:text-[#9C6BFF] lg:hidden"
+  >
+    <span class="text-lg leading-none">☰</span>
+    Pages
+  </button>
+{% endblock %}
+
+{% block head %}
+  <style>
+    [data-page-drawer].is-open {
+      transform: translateX(0);
+    }
+    @media (min-width: 1024px) {
+      [data-page-drawer] {
+        transform: none !important;
+      }
+    }
+  </style>
+{% endblock %}
+
 {% block sidebar_start %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Guides design</h2>
-    <p class="text-sm text-slate-600">Préparez les compositions de ce site actif.</p>
+  <div class="lg:hidden flex items-center justify-between gap-3 rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
+    <div>
+      <p class="text-xs uppercase tracking-wide text-slate-500">Pages</p>
+      <p class="text-sm text-slate-700">Choisissez la page à éditer</p>
+    </div>
+    <button
+      type="button"
+      data-page-drawer-open
+      class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+    >
+      <span class="text-lg leading-none">☰</span>
+      Pages
+    </button>
+  </div>
+
+  <div
+    data-page-drawer-backdrop
+    class="fixed inset-0 z-30 hidden bg-slate-900/30 backdrop-blur-sm lg:hidden"
+    aria-hidden="true"
+  ></div>
+
+  <section
+    data-page-drawer
+    class="fixed inset-y-0 left-0 z-40 w-[320px] max-w-[90vw] -translate-x-full transform transition-transform duration-300 lg:static lg:inset-auto lg:w-auto lg:max-w-full lg:transform-none"
+    aria-label="Panel des pages"
+  >
+    <div class="h-full overflow-y-auto bg-white shadow-2xl lg:h-auto lg:overflow-visible lg:rounded-2xl lg:border lg:border-slate-200 lg:shadow-sm">
+      <div class="flex items-start justify-between gap-3 border-b border-slate-200 p-4 lg:border-none lg:p-4">
+        <div>
+          <p class="text-xs uppercase tracking-tight text-slate-500">Pages du site</p>
+          <h2 class="text-lg font-semibold text-slate-900">Pages</h2>
+          <p class="text-sm text-slate-600">Sélectionnez une page pour mettre à jour la preview.</p>
+        </div>
+        <button
+          type="button"
+          data-page-drawer-close
+          class="lg:hidden rounded-full p-2 text-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+          aria-label="Fermer le panneau des pages"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-3 p-4 pt-2">
+        <button
+          type="button"
+          data-add-page-toggle
+          class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          <span class="text-lg leading-none">＋</span>
+          Ajouter une page
+        </button>
+
+        <form data-add-page-form class="hidden space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm font-semibold text-slate-800">Nouvelle page</p>
+            <button
+              type="button"
+              data-add-page-cancel
+              class="rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-white hover:text-slate-800"
+            >
+              Annuler
+            </button>
+          </div>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Titre</span>
+            <input
+              type="text"
+              data-add-page-title
+              class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#9C6BFF] focus:ring-1 focus:ring-[#9C6BFF]"
+              placeholder="Accueil, Services..."
+              required
+            />
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Slug</span>
+            <input
+              type="text"
+              data-add-page-slug
+              class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#9C6BFF] focus:ring-1 focus:ring-[#9C6BFF]"
+              placeholder="/services"
+              required
+            />
+            <p class="text-[11px] text-slate-500">Utiliser un slug unique par page.</p>
+          </label>
+          <button
+            type="submit"
+            class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#9C6BFF] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#8654f5]"
+          >
+            Créer la page
+          </button>
+          <p data-add-page-error class="text-xs text-rose-600"></p>
+        </form>
+
+        <ul data-page-list class="space-y-2" aria-label="Liste des pages"></ul>
+      </div>
+    </div>
   </section>
 {% endblock %}
 
 {% block content_main %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
-    <h1 class="text-xl font-semibold text-slate-900">Workspace Design</h1>
-    <p class="text-sm text-slate-600">
-      Cette zone accueillera les outils de conception (aperçus, thèmes, etc.) pour le site actif.
-    </p>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="space-y-1">
+        <p class="text-xs uppercase tracking-tight text-slate-500">Page active</p>
+        <h1 data-active-page-title class="text-xl font-semibold text-slate-900">Accueil</h1>
+        <p data-active-page-slug class="text-sm text-slate-500">/</p>
+      </div>
+      <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+        Preview en direct
+      </span>
+    </div>
+
+    <div
+      data-page-preview
+      class="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-inner"
+    >
+      <div class="absolute left-6 top-6 space-y-2 text-slate-500">
+        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide">
+          <span class="h-1.5 w-12 rounded-full bg-slate-200"></span>
+          Preview
+        </div>
+        <p class="text-[11px] text-slate-500">
+          Aperçu non interactif de la page sélectionnée.
+        </p>
+      </div>
+      <div class="aspect-[16/9] w-full bg-white/50 backdrop-blur-sm">
+        <div class="flex h-full flex-col items-center justify-center gap-4 text-center px-6">
+          <div class="flex items-center justify-center h-14 w-14 rounded-2xl bg-[#9C6BFF]/10 text-[#9C6BFF]">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 4.5h14a1 1 0 0 1 1 1v13.25a.75.75 0 0 1-1.2.6L16 16.5H5a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M8 9.5h8M8 12.5h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="space-y-2">
+            <p data-page-preview-title class="text-lg font-semibold text-slate-900">Aperçu de la page</p>
+            <p data-page-preview-description class="text-sm text-slate-500 max-w-xl">
+              Sélectionnez ou ajoutez une page pour voir sa composition se mettre à jour.
+            </p>
+          </div>
+          <div data-page-preview-tags class="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
+            <span class="rounded-full bg-slate-100 px-3 py-1">Hero</span>
+            <span class="rounded-full bg-slate-100 px-3 py-1">Sections</span>
+            <span class="rounded-full bg-slate-100 px-3 py-1">CTA</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 {% endblock %}
 
 {% block sidebar_end %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
+      <div>
+        <p class="text-xs uppercase tracking-tight text-slate-500">Blocs</p>
+        <h2 class="text-sm font-semibold text-slate-900">Composition de la page</h2>
+      </div>
+      <span data-block-count class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">0 bloc</span>
+    </div>
+    <div data-block-list class="p-4 space-y-2">
+      <p class="text-sm text-slate-600">Choisissez une page pour voir ses blocs.</p>
+    </div>
+  </section>
+
   <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Options rapides</h2>
-    <p class="text-sm text-slate-600">Activez ou désactivez les helpers de design ici.</p>
+    <h2 class="text-sm font-semibold mb-2">Guides design</h2>
+    <p class="text-sm text-slate-600">Préparez les compositions de ce site actif.</p>
   </section>
 {% endblock %}

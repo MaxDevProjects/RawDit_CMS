@@ -518,7 +518,383 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '/admin/sites';
   });
 
+  if (workspaceContext?.section === 'design') {
+    initDesignWorkspace();
+  }
+
   if (workspaceContext && storedSite.name) {
     updateSiteLabels(storedSite.name);
+  }
+
+  function initDesignWorkspace() {
+    const pageLists = document.querySelectorAll('[data-page-list]');
+    if (pageLists.length === 0) {
+      return;
+    }
+    const activeTitle = document.querySelector('[data-active-page-title]');
+    const activeSlug = document.querySelector('[data-active-page-slug]');
+    const previewTitle = document.querySelector('[data-page-preview-title]');
+    const previewDescription = document.querySelector('[data-page-preview-description]');
+    const previewTags = document.querySelector('[data-page-preview-tags]');
+    const blockList = document.querySelector('[data-block-list]');
+    const blockCount = document.querySelector('[data-block-count]');
+    const drawer = document.querySelector('[data-page-drawer]');
+    const drawerBackdrop = document.querySelector('[data-page-drawer-backdrop]');
+    const drawerOpenButtons = document.querySelectorAll('[data-page-drawer-open]');
+    const drawerCloseButtons = document.querySelectorAll('[data-page-drawer-close]');
+    const addPageToggle = document.querySelector('[data-add-page-toggle]');
+    const addPageForm = document.querySelector('[data-add-page-form]');
+    const addPageTitle = document.querySelector('[data-add-page-title]');
+    const addPageSlug = document.querySelector('[data-add-page-slug]');
+    const addPageCancel = document.querySelector('[data-add-page-cancel]');
+    const addPageError = document.querySelector('[data-add-page-error]');
+    const siteKey =
+      stripLeadingSlash(workspaceContext?.slugValue || storedSite.slug || 'default') || 'default';
+    const storageKeys = {
+      pages: `clower:pages:${siteKey}`,
+      active: `clower:activePage:${siteKey}`,
+    };
+    const defaultPages = [
+      {
+        id: 'home',
+        title: 'Accueil',
+        slug: '/',
+        description: 'Hero immersif avec CTA, mise en avant des services et preuve sociale.',
+        badges: ['Hero', 'Services', 'CTA'],
+        blocks: [
+          { label: 'Hero principal', type: 'Hero', status: 'En ligne' },
+          { label: 'Services clés', type: 'Sections', status: 'En ligne' },
+          { label: 'Preuves clients', type: 'Logos', status: 'En ligne' },
+        ],
+      },
+      {
+        id: 'services',
+        title: 'Services',
+        slug: '/services',
+        description: 'Détail des offres avec mise en page éditoriale et appels à l’action.',
+        badges: ['Offres', 'Storytelling', 'CTA'],
+        blocks: [
+          { label: 'Introduction', type: 'Texte', status: 'En ligne' },
+          { label: 'Offres détaillées', type: 'Cards', status: 'En ligne' },
+          { label: 'Études de cas', type: 'Portfolio', status: 'Brouillon' },
+        ],
+      },
+      {
+        id: 'realisations',
+        title: 'Réalisations',
+        slug: '/realisations',
+        description: 'Sélection de projets récents avec focus sur les résultats.',
+        badges: ['Portfolio', 'Stats', 'Confiance'],
+        blocks: [
+          { label: 'Projets vedettes', type: 'Grid', status: 'En ligne' },
+          { label: 'Chiffres clés', type: 'Stats', status: 'En ligne' },
+          { label: 'Avis clients', type: 'Quotes', status: 'Brouillon' },
+        ],
+      },
+      {
+        id: 'contact',
+        title: 'Contact',
+        slug: '/contact',
+        description: 'Formulaire de prise de contact simple et accès aux coordonnées.',
+        badges: ['Formulaire', 'CTA', 'Infos'],
+        blocks: [
+          { label: 'Header court', type: 'Texte', status: 'En ligne' },
+          { label: 'Formulaire', type: 'Form', status: 'En ligne' },
+          { label: 'Coordonnées', type: 'Infos', status: 'En ligne' },
+        ],
+      },
+    ];
+    const clonePages = (pages) =>
+      pages.map((page) => ({
+        ...page,
+        badges: [...(page.badges || [])],
+        blocks: [...(page.blocks || [])],
+      }));
+    const getStoredPages = () => {
+      try {
+        const raw = window.localStorage.getItem(storageKeys.pages);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            return clonePages(parsed);
+          }
+        }
+      } catch {
+        /* ignore storage errors */
+      }
+      return clonePages(defaultPages);
+    };
+    const persistPages = (pages) => {
+      try {
+        window.localStorage.setItem(storageKeys.pages, JSON.stringify(pages));
+      } catch {
+        /* ignore storage errors */
+      }
+    };
+    const persistActivePage = (pageId) => {
+      try {
+        window.localStorage.setItem(storageKeys.active, pageId);
+      } catch {
+        /* ignore storage errors */
+      }
+    };
+    const getStoredActivePage = (pages) => {
+      try {
+        const stored = window.localStorage.getItem(storageKeys.active);
+        if (stored && pages.some((page) => page.id === stored)) {
+          return stored;
+        }
+      } catch {
+        /* ignore storage errors */
+      }
+      return pages[0]?.id || null;
+    };
+    const formatBlockCount = (count) => {
+      if (!count || count <= 0) {
+        return '0 bloc';
+      }
+      return count === 1 ? '1 bloc' : `${count} blocs`;
+    };
+    const normalizePageSlug = (value) => {
+      if (!value || value === '/') {
+        return '/';
+      }
+      const base = workspaceSlugify(value.replace(/^\//, ''));
+      return base ? `/${base}` : '/';
+    };
+    const setActiveLabels = (page) => {
+      if (activeTitle) {
+        activeTitle.textContent = page?.title || 'Page';
+      }
+      if (activeSlug) {
+        activeSlug.textContent = page?.slug || '/';
+      }
+    };
+    const renderPreview = (page) => {
+      if (!page) {
+        return;
+      }
+      if (previewTitle) {
+        previewTitle.textContent = page.title;
+      }
+      if (previewDescription) {
+        previewDescription.textContent =
+          page.description || 'Sélectionnez une page pour afficher son aperçu.';
+      }
+      if (previewTags) {
+        previewTags.innerHTML = '';
+        const tags = page.badges && page.badges.length > 0 ? page.badges : ['Aucun bloc'];
+        tags.forEach((tag) => {
+          const badge = document.createElement('span');
+          badge.className = 'rounded-full bg-slate-100 px-3 py-1';
+          badge.textContent = tag;
+          previewTags.appendChild(badge);
+        });
+      }
+    };
+    const renderBlocks = (page) => {
+      if (!blockList) {
+        return;
+      }
+      blockList.innerHTML = '';
+      const blocks = page?.blocks || [];
+      if (blocks.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'text-sm text-slate-600';
+        empty.textContent = 'Aucun bloc pour cette page.';
+        blockList.appendChild(empty);
+      } else {
+        blocks.forEach((block) => {
+          const item = document.createElement('div');
+          item.className =
+            'flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm hover:border-[#9C6BFF]/50';
+          item.innerHTML = `
+            <div class="mt-1 h-2 w-2 rounded-full bg-[#9C6BFF]"></div>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-slate-900">${block.label}</p>
+              <p class="text-xs text-slate-500">${block.type}</p>
+            </div>
+            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">${block.status}</span>
+          `;
+          blockList.appendChild(item);
+        });
+      }
+      if (blockCount) {
+        blockCount.textContent = formatBlockCount(blocks.length);
+      }
+    };
+    const renderPageLists = (pages, activeId) => {
+      pageLists.forEach((list) => {
+        list.innerHTML = '';
+        pages.forEach((page) => {
+          const item = document.createElement('li');
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.dataset.pageId = page.id;
+          button.className = [
+            'w-full flex items-center justify-between gap-3 px-3 py-2 text-left transition',
+            activeId === page.id
+              ? 'bg-[#9C6BFF]/10 text-slate-900 border border-[#9C6BFF]/40 rounded-xl shadow-sm'
+              : 'text-slate-700 hover:bg-slate-50 rounded-xl',
+          ].join(' ');
+          if (activeId === page.id) {
+            button.setAttribute('aria-current', 'page');
+          } else {
+            button.removeAttribute('aria-current');
+          }
+          button.innerHTML = `
+            <div class="flex items-center gap-3">
+              <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6.5 4.5h7l4 4v11a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <path d="M13.5 4.5v4a1 1 0 0 0 1 1h3" stroke="currentColor" stroke-width="1.4"/>
+                </svg>
+              </span>
+              <div class="flex flex-col">
+                <span class="text-sm font-semibold">${page.title}</span>
+                <span class="text-xs text-slate-500">${page.slug}</span>
+              </div>
+            </div>
+          `;
+          button.addEventListener('click', () => {
+            setActivePage(page.id);
+            if (!isDesktopDrawer()) {
+              closeDrawer();
+            }
+          });
+          item.appendChild(button);
+          list.appendChild(item);
+        });
+      });
+    };
+    const setActivePage = (pageId) => {
+      const target = pages.find((page) => page.id === pageId) || pages[0];
+      activePageId = target?.id || null;
+      persistActivePage(activePageId || '');
+      renderPageLists(pages, activePageId);
+      setActiveLabels(target);
+      renderPreview(target);
+      renderBlocks(target);
+    };
+    const isDesktopDrawer = () => window.matchMedia('(min-width: 1024px)').matches;
+    const syncDrawerState = () => {
+      if (!drawer) {
+        return;
+      }
+      if (isDesktopDrawer()) {
+        drawer.classList.add('is-open');
+        drawerBackdrop?.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      } else {
+        drawer.classList.remove('is-open');
+      }
+    };
+    const openDrawer = () => {
+      if (!drawer || isDesktopDrawer()) {
+        return;
+      }
+      drawer.classList.add('is-open');
+      drawerBackdrop?.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    };
+    const closeDrawer = () => {
+      if (!drawer) {
+        return;
+      }
+      drawer.classList.remove('is-open');
+      drawerBackdrop?.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    };
+    const openAddPageForm = () => {
+      if (!addPageForm || !addPageToggle) {
+        return;
+      }
+      addPageForm.classList.remove('hidden');
+      addPageToggle.classList.add('hidden');
+      addPageError && (addPageError.textContent = '');
+      pageSlugManuallyEdited = false;
+      if (addPageTitle) {
+        addPageTitle.value = '';
+        addPageTitle.focus();
+      }
+      if (addPageSlug) {
+        addPageSlug.value = '';
+      }
+    };
+    const closeAddPageForm = () => {
+      if (!addPageForm || !addPageToggle) {
+        return;
+      }
+      addPageForm.classList.add('hidden');
+      addPageToggle.classList.remove('hidden');
+      addPageError && (addPageError.textContent = '');
+      pageSlugManuallyEdited = false;
+      addPageForm.reset();
+    };
+    const syncSlugFromTitle = () => {
+      if (!addPageTitle || !addPageSlug) {
+        return;
+      }
+      if (pageSlugManuallyEdited && addPageSlug.value.trim().length > 0) {
+        return;
+      }
+      addPageSlug.value = normalizePageSlug(addPageTitle.value);
+    };
+
+    let pages = getStoredPages();
+    let activePageId = getStoredActivePage(pages);
+    let pageSlugManuallyEdited = false;
+
+    renderPageLists(pages, activePageId);
+    setActivePage(activePageId);
+    syncDrawerState();
+
+    drawerOpenButtons.forEach((button) => {
+      button.addEventListener('click', openDrawer);
+    });
+    drawerCloseButtons.forEach((button) => {
+      button.addEventListener('click', closeDrawer);
+    });
+    drawerBackdrop?.addEventListener('click', closeDrawer);
+    window.addEventListener('resize', syncDrawerState);
+
+    addPageToggle?.addEventListener('click', openAddPageForm);
+    addPageCancel?.addEventListener('click', closeAddPageForm);
+    addPageTitle?.addEventListener('input', syncSlugFromTitle);
+    addPageSlug?.addEventListener('input', () => {
+      addPageError && (addPageError.textContent = '');
+      pageSlugManuallyEdited = true;
+    });
+    addPageForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!addPageTitle || !addPageSlug) {
+        return;
+      }
+      const title = addPageTitle.value.trim();
+      const slug = normalizePageSlug(addPageSlug.value.trim() || title);
+      if (!title || !slug) {
+        addPageError && (addPageError.textContent = 'Titre et slug sont requis.');
+        return;
+      }
+      if (pages.some((page) => page.slug === slug)) {
+        addPageError && (addPageError.textContent = 'Ce slug est déjà utilisé.');
+        return;
+      }
+      const newPage = {
+        id: `${Date.now()}`,
+        title,
+        slug,
+        description: `Nouvelle page "${title}" prête à être maquettée.`,
+        badges: ['Layout', 'Texte'],
+        blocks: [
+          { label: 'Introduction', type: 'Texte', status: 'Brouillon' },
+          { label: 'Zone de contenu', type: 'Section', status: 'Brouillon' },
+        ],
+      };
+      pages = [...pages, newPage];
+      persistPages(pages);
+      closeAddPageForm();
+      setActivePage(newPage.id);
+    });
   }
 });
