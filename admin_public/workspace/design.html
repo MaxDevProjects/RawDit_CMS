@@ -390,8 +390,8 @@
   <section class="bg-white rounded-2xl border border-slate-200 shadow-sm">
     <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
       <div>
-        <p class="text-xs uppercase tracking-tight text-slate-500">Bloc sélectionné</p>
-        <h2 class="text-sm font-semibold text-slate-900">Propriétés</h2>
+        <p class="text-xs uppercase tracking-tight text-slate-500">Propriétés du bloc</p>
+        <h2 class="text-sm font-semibold text-slate-900">Éditeur</h2>
       </div>
       <span
         data-block-detail-status
@@ -400,22 +400,153 @@
     </div>
     <div class="p-4 space-y-4">
       <div data-block-detail-empty class="text-sm text-slate-500">
-        Sélectionnez un bloc dans la liste pour afficher ses propriétés.
+        Sélectionnez un bloc dans la liste pour modifier ses propriétés.
       </div>
-      <div data-block-detail class="hidden space-y-4">
+      <div data-block-editor class="hidden space-y-4">
         <div class="space-y-1">
-          <span data-block-detail-type class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600">Type</span>
-          <p data-block-detail-title class="text-lg font-semibold text-slate-900">Titre du bloc</p>
-          <p data-block-detail-description class="text-sm text-slate-600">Description du bloc.</p>
+          <p class="text-xs uppercase tracking-tight text-slate-500">Bloc sélectionné</p>
+          <p class="text-base font-semibold text-slate-900" data-block-editor-block-name>—</p>
+          <p class="text-xs text-slate-500">Type : <span data-block-editor-block-type>—</span></p>
+          <p data-block-editor-unsupported class="hidden text-sm text-slate-500">Ce type de bloc n’est pas encore éditable.</p>
         </div>
-        <div class="space-y-2">
-          <p class="text-xs uppercase tracking-tight text-slate-500">Propriétés</p>
-          <div data-block-detail-props class="space-y-2">
-            <div class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700">
-              <p>--</p>
+
+        <form data-block-form class="hidden space-y-5">
+          <div data-editor-section="paragraph" class="hidden space-y-4">
+            <div>
+              <p class="text-xs uppercase tracking-tight text-slate-500">Contenu</p>
+              <div class="space-y-2">
+                <label class="space-y-1 block">
+                  <span class="text-xs font-medium text-slate-600">Titre</span>
+                  <input type="text" name="paragraph-title" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+                </label>
+                <label class="space-y-1 block">
+                  <span class="text-xs font-medium text-slate-600">Contenu</span>
+                  <textarea name="paragraph-content" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
+                </label>
+              </div>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-tight text-slate-500">Apparence</p>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Alignement</span>
+                <select name="paragraph-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="left">Gauche</option>
+                  <option value="center">Centre</option>
+                  <option value="right">Droite</option>
+                </select>
+              </label>
             </div>
           </div>
-        </div>
+
+          <div data-editor-section="hero" class="hidden space-y-4">
+            <div>
+              <p class="text-xs uppercase tracking-tight text-slate-500">Contenu</p>
+              <div class="space-y-2">
+                <label class="space-y-1 block">
+                  <span class="text-xs font-medium text-slate-600">Titre principal</span>
+                  <input type="text" name="hero-title" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+                </label>
+                <label class="space-y-1 block">
+                  <span class="text-xs font-medium text-slate-600">Sous-titre</span>
+                  <textarea name="hero-subtitle" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
+                </label>
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Label du CTA</span>
+                    <input type="text" name="hero-cta-label" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+                  </label>
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Lien du CTA</span>
+                    <input type="url" name="hero-cta-url" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <p class="text-xs uppercase tracking-tight text-slate-500">Médias & Layout</p>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Image</span>
+                <input type="text" name="hero-image" placeholder="URL ou média" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Position de l’image</span>
+                <select name="hero-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="center">Centrée</option>
+                  <option value="left">Image à gauche</option>
+                  <option value="right">Image à droite</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div data-editor-section="image" class="hidden space-y-4">
+            <div class="space-y-2">
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Source de l’image</span>
+                <input type="text" name="image-src" placeholder="https://..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Texte alternatif</span>
+                <input type="text" name="image-alt" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+              </label>
+              <label class="flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" name="image-caption-toggle" class="rounded border-slate-300 text-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+                Afficher une légende
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Légende</span>
+                <input type="text" name="image-caption" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+              </label>
+            </div>
+          </div>
+
+          <div data-editor-section="group" class="hidden space-y-4">
+            <div class="space-y-2">
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Disposition</span>
+                <select name="group-layout" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="grid">Grille</option>
+                  <option value="flex">Flex</option>
+                  <option value="stack">Pile</option>
+                </select>
+              </label>
+              <div class="grid gap-2 sm:grid-cols-2">
+                <label class="space-y-1 block">
+                  <span class="text-xs font-medium text-slate-600">Colonnes mobile</span>
+                  <select name="group-columns-mobile" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                  </select>
+                </label>
+                <label class="space-y-1 block">
+                  <span class="text-xs font-medium text-slate-600">Colonnes desktop</span>
+                  <select name="group-columns-desktop" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              data-block-form-cancel
+              class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              data-block-form-save
+              class="rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+            >
+              Enregistrer
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </section>

@@ -555,13 +555,182 @@ document.addEventListener('DOMContentLoaded', () => {
     const blockDeleteModal = document.querySelector('[data-block-delete-modal]');
     const blockDeleteConfirm = document.querySelector('[data-block-delete-confirm]');
     const blockDeleteCancel = document.querySelector('[data-block-delete-cancel]');
-    const blockDetail = document.querySelector('[data-block-detail]');
     const blockDetailEmpty = document.querySelector('[data-block-detail-empty]');
-    const blockDetailTitle = document.querySelector('[data-block-detail-title]');
-    const blockDetailType = document.querySelector('[data-block-detail-type]');
-    const blockDetailDescription = document.querySelector('[data-block-detail-description]');
-    const blockDetailProps = document.querySelector('[data-block-detail-props]');
     const blockDetailStatus = document.querySelector('[data-block-detail-status]');
+    const blockEditor = document.querySelector('[data-block-editor]');
+    const blockEditorTitle = document.querySelector('[data-block-editor-block-name]');
+    const blockEditorType = document.querySelector('[data-block-editor-block-type]');
+    const blockEditorUnsupported = document.querySelector('[data-block-editor-unsupported]');
+    const blockForm = document.querySelector('[data-block-form]');
+    const blockFormSections = blockForm
+      ? Array.from(blockForm.querySelectorAll('[data-editor-section]'))
+      : [];
+    const blockFormCancel = document.querySelector('[data-block-form-cancel]');
+    const blockTypeForms = {
+      hero: {
+        section: 'hero',
+        labelField: 'title',
+        descriptionField: 'subtitle',
+        fields: {
+          title: 'hero-title',
+          subtitle: 'hero-subtitle',
+          ctaLabel: 'hero-cta-label',
+          ctaUrl: 'hero-cta-url',
+          image: 'hero-image',
+          align: 'hero-align',
+        },
+      },
+      paragraphe: {
+        section: 'paragraph',
+        labelField: 'title',
+        descriptionField: 'content',
+        fields: {
+          title: 'paragraph-title',
+          content: 'paragraph-content',
+          align: 'paragraph-align',
+        },
+      },
+      image: {
+        section: 'image',
+        labelField: 'alt',
+        fields: {
+          src: 'image-src',
+          alt: 'image-alt',
+          showCaption: 'image-caption-toggle',
+          caption: 'image-caption',
+        },
+      },
+      groupe: {
+        section: 'group',
+        fields: {
+          layout: 'group-layout',
+          columnsMobile: 'group-columns-mobile',
+          columnsDesktop: 'group-columns-desktop',
+        },
+      },
+    };
+    const blockTypeAliases = {
+      texte: 'paragraphe',
+      paragraph: 'paragraphe',
+      paragraphs: 'paragraphe',
+      paragraphes: 'paragraphe',
+      text: 'paragraphe',
+      hero: 'hero',
+      image: 'image',
+      groupe: 'groupe',
+      group: 'groupe',
+    };
+    const normalizeType = (value) =>
+      (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const getBlockFormConfig = (block) => {
+      if (!block) {
+        return null;
+      }
+      const typeKey = normalizeType(block.type);
+      const alias = blockTypeAliases[typeKey] || typeKey;
+      return blockTypeForms[alias] || null;
+    };
+    const populateBlockForm = (block) => {
+      if (!blockForm || !blockEditor) {
+        return;
+      }
+      if (block && !block.settings) {
+        block.settings = {};
+      }
+      const config = getBlockFormConfig(block);
+      if (blockEditorTitle) {
+        blockEditorTitle.textContent = block?.label || 'Bloc';
+      }
+      if (blockEditorType) {
+        blockEditorType.textContent = block?.type || 'Bloc';
+      }
+      if (!config) {
+        blockForm.classList.add('hidden');
+        blockEditorUnsupported?.classList.remove('hidden');
+        blockForm.dataset.blockId = '';
+        return;
+      }
+      blockEditorUnsupported?.classList.add('hidden');
+      blockForm.classList.remove('hidden');
+      blockForm.reset();
+      blockForm.dataset.blockId = block.id;
+      blockFormSections.forEach((section) => {
+        const sectionId = section.dataset.editorSection;
+        if (sectionId === config.section) {
+          section.classList.remove('hidden');
+        } else {
+          section.classList.add('hidden');
+        }
+      });
+      Object.entries(config.fields).forEach(([settingKey, fieldName]) => {
+        const input = blockForm.querySelector(`[name="${fieldName}"]`);
+        if (!input) {
+          return;
+        }
+        const value = block.settings?.[settingKey];
+        if (input.type === 'checkbox') {
+          input.checked = Boolean(value);
+        } else if (input.tagName === 'TEXTAREA') {
+          input.value = value ?? '';
+        } else {
+          input.value = value ?? '';
+        }
+      });
+    };
+    const collectFormValues = (config) => {
+      if (!blockForm || !config) {
+        return {};
+      }
+      const values = {};
+      Object.entries(config.fields).forEach(([settingKey, fieldName]) => {
+        const input = blockForm.querySelector(`[name="${fieldName}"]`);
+        if (!input) {
+          return;
+        }
+        if (input.type === 'checkbox') {
+          values[settingKey] = input.checked;
+        } else if (input.tagName === 'TEXTAREA') {
+          values[settingKey] = input.value || '';
+        } else if (input.type === 'select-one') {
+          values[settingKey] = input.value;
+        } else {
+          values[settingKey] = input.value || '';
+        }
+      });
+      return values;
+    };
+    const handleBlockFormSubmit = (event) => {
+      event.preventDefault();
+      if (!currentPage || !activeBlockId) {
+        return;
+      }
+      const block = getActiveBlock();
+      const config = getBlockFormConfig(block);
+      if (!block || !config) {
+        return;
+      }
+      const values = collectFormValues(config);
+      const updatedBlocks = (currentPage.blocks || []).map((entry) => {
+        if (entry.id !== block.id) {
+          return entry;
+        }
+        const updatedSettings = { ...(entry.settings || {}), ...values };
+        const updatedBlock = {
+          ...entry,
+          settings: updatedSettings,
+        };
+        if (config.labelField && values[config.labelField]) {
+          updatedBlock.label = values[config.labelField];
+        }
+        if (config.descriptionField && values[config.descriptionField]) {
+          updatedBlock.description = values[config.descriptionField];
+        }
+        return updatedBlock;
+      });
+      updateCurrentPageBlocks(updatedBlocks);
+      showToast('Bloc mis à jour');
+      setActivePage(currentPage.id, { preserveBlock: true });
+    };
     const drawer = document.querySelector('[data-page-drawer]');
     const drawerBackdrop = document.querySelector('[data-page-drawer-backdrop]');
     const drawerOpenButtons = document.querySelectorAll('[data-page-drawer-open]');
@@ -578,13 +747,14 @@ document.addEventListener('DOMContentLoaded', () => {
       pages: `clower:pages:${siteKey}`,
       active: `clower:activePage:${siteKey}`,
     };
-    const createBlock = (id, label, type, status, description, props = []) => ({
+    const createBlock = (id, label, type, status, description, props = [], settings = {}) => ({
       id,
       label,
       type,
       status,
       description,
       props,
+      settings: { ...settings },
     });
     const defaultPages = [
       {
@@ -594,18 +764,52 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Hero immersif avec CTA, mise en avant des services et preuve sociale.',
         badges: ['Hero', 'Services', 'CTA'],
         blocks: [
-          createBlock('home-hero', 'Hero principal', 'Hero', 'En ligne', 'Section immersive avec visuel plein écran et CTA principal.', [
-            { label: 'CTA', value: 'Commencer' },
-            { label: 'Visuel', value: 'Photo plein écran' },
-          ]),
-          createBlock('home-services', 'Services clés', 'Sections', 'En ligne', 'Présentation synthétique des offres principales.', [
-            { label: 'Colonnes', value: '3' },
-            { label: 'Style', value: 'Cards' },
-          ]),
-          createBlock('home-social', 'Preuves clients', 'Logos', 'En ligne', 'Logos et témoignages courts pour rassurer.', [
-            { label: 'Logos', value: '8' },
-            { label: 'Notes', value: '4.9/5' },
-          ]),
+          createBlock(
+            'home-hero',
+            'Hero principal',
+            'Hero',
+            'En ligne',
+            'Section immersive avec visuel plein écran et CTA principal.',
+            [
+              { label: 'CTA', value: 'Commencer' },
+              { label: 'Visuel', value: 'Photo plein écran' },
+            ],
+            {
+              title: 'Créez des expériences mémorables',
+              subtitle: 'Une équipe de designers pour construire vos pages en quelques minutes.',
+              ctaLabel: 'Commencer',
+              ctaUrl: '#contact',
+              image: '',
+              align: 'center',
+            },
+          ),
+          createBlock(
+            'home-paragraph',
+            'Texte éditorial',
+            'Paragraphe',
+            'En ligne',
+            'Paragraphe d’introduction.',
+            [],
+            {
+              title: 'Pitch éditorial',
+              content:
+                'Nous aidons les studios à créer des expériences immersives alignées sur leur identité de marque.',
+              align: 'left',
+            },
+          ),
+          createBlock(
+            'home-group',
+            'Section services',
+            'Groupe',
+            'En ligne',
+            'Présentation synthétique des offres principales.',
+            [],
+            {
+              layout: 'grid',
+              columnsMobile: '1',
+              columnsDesktop: '3',
+            },
+          ),
         ],
       },
       {
@@ -615,16 +819,50 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Détail des offres avec mise en page éditoriale et appels à l’action.',
         badges: ['Offres', 'Storytelling', 'CTA'],
         blocks: [
-          createBlock('services-intro', 'Introduction', 'Texte', 'En ligne', 'Paragraphe d’ouverture qui pose la promesse.', [
-            { label: 'Longueur', value: '120 mots' },
-          ]),
-          createBlock('services-grid', 'Offres détaillées', 'Cards', 'En ligne', 'Cartes détaillées pour chaque service proposé.', [
-            { label: 'Cartes', value: '4' },
-            { label: 'CTA', value: 'Découvrir' },
-          ]),
-          createBlock('services-cases', 'Études de cas', 'Portfolio', 'Brouillon', 'Sélection de projets marquants.', [
-            { label: 'Projets', value: '3' },
-          ]),
+          createBlock(
+            'services-hero',
+            'Accroche services',
+            'Hero',
+            'En ligne',
+            'Section introductive dédiée aux offres.',
+            [],
+            {
+              title: 'Des offres taillées pour vos équipes',
+              subtitle:
+                'Workshop de démarrage, design system personnalisé, accompagnement éditorial continu.',
+              ctaLabel: 'Parler à un expert',
+              ctaUrl: '#demo',
+              image: '',
+              align: 'left',
+            },
+          ),
+          createBlock(
+            'services-description',
+            'Description',
+            'Paragraphe',
+            'En ligne',
+            'Paragraphe détaillant la promesse.',
+            [],
+            {
+              title: 'Notre approche',
+              content:
+                'Chaque pack inclut un lead designer dédié, des cycles courts et des revues en direct.',
+              align: 'left',
+            },
+          ),
+          createBlock(
+            'services-layout',
+            'Layouts dynamiques',
+            'Groupe',
+            'En ligne',
+            'Cartes détaillées pour chaque service proposé.',
+            [],
+            {
+              layout: 'grid',
+              columnsMobile: '1',
+              columnsDesktop: '2',
+            },
+          ),
         ],
       },
       {
@@ -634,15 +872,46 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Sélection de projets récents avec focus sur les résultats.',
         badges: ['Portfolio', 'Stats', 'Confiance'],
         blocks: [
-          createBlock('work-hero', 'Projets vedettes', 'Grid', 'En ligne', 'Mosaïque des réalisations à mettre en avant.', [
-            { label: 'Layouts', value: 'Masonry' },
-          ]),
-          createBlock('work-stats', 'Chiffres clés', 'Stats', 'En ligne', 'Bloc métriques pour parler résultats.', [
-            { label: 'KPI', value: '6' },
-          ]),
-          createBlock('work-reviews', 'Avis clients', 'Quotes', 'Brouillon', 'Citations extraites des entretiens clients.', [
-            { label: 'Avis', value: '2' },
-          ]),
+          createBlock(
+            'work-paragraph',
+            'Introduction portfolio',
+            'Paragraphe',
+            'En ligne',
+            'Intro du portfolio.',
+            [],
+            {
+              title: 'Nos réalisations',
+              content: 'Un aperçu des expériences livrées ces 12 derniers mois.',
+              align: 'center',
+            },
+          ),
+          createBlock(
+            'work-image',
+            'Visuel signature',
+            'Image',
+            'En ligne',
+            'Image clé d’un projet.',
+            [],
+            {
+              src: '',
+              alt: 'Visuel du projet phare',
+              showCaption: false,
+              caption: '',
+            },
+          ),
+          createBlock(
+            'work-group',
+            'Grille de projets',
+            'Groupe',
+            'En ligne',
+            'Grille des projets récents.',
+            [],
+            {
+              layout: 'grid',
+              columnsMobile: '1',
+              columnsDesktop: '3',
+            },
+          ),
         ],
       },
       {
@@ -652,15 +921,49 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Formulaire de prise de contact simple et accès aux coordonnées.',
         badges: ['Formulaire', 'CTA', 'Infos'],
         blocks: [
-          createBlock('contact-header', 'Header court', 'Texte', 'En ligne', 'Intro concise pour inciter à prendre contact.', [
-            { label: 'Ton', value: 'Direct' },
-          ]),
-          createBlock('contact-form', 'Formulaire', 'Form', 'En ligne', 'Formulaire de contact avec 4 champs.', [
-            { label: 'Champs', value: 'Nom, Email, Projet, Budget' },
-          ]),
-          createBlock('contact-infos', 'Coordonnées', 'Infos', 'En ligne', 'Bloc avec adresse, téléphone et réseaux.', [
-            { label: 'Fuseau', value: 'CET' },
-          ]),
+          createBlock(
+            'contact-hero',
+            'Hero contact',
+            'Hero',
+            'En ligne',
+            'Intro pour inciter à prendre contact.',
+            [],
+            {
+              title: 'Discutons de votre prochain projet',
+              subtitle: 'Partagez vos objectifs, nous proposons une approche personnalisée.',
+              ctaLabel: 'Planifier un call',
+              ctaUrl: '#call',
+              image: '',
+              align: 'center',
+            },
+          ),
+          createBlock(
+            'contact-text',
+            'Informations pratiques',
+            'Paragraphe',
+            'En ligne',
+            'Texte practical.',
+            [],
+            {
+              title: 'Nous écrire',
+              content: 'hello@clower.studio · +33 1 84 25 12 00 · Fuseau CET',
+              align: 'left',
+            },
+          ),
+          createBlock(
+            'contact-image',
+            'Illustration',
+            'Image',
+            'En ligne',
+            'Illustration inspirante.',
+            [],
+            {
+              src: '',
+              alt: 'Illustration équipe',
+              showCaption: true,
+              caption: 'Studio Clower, Paris',
+            },
+          ),
         ],
       },
     ];
@@ -674,6 +977,14 @@ document.addEventListener('DOMContentLoaded', () => {
           { label: 'CTA', value: 'Découvrir' },
           { label: 'Hauteur', value: '80vh' },
         ],
+        settings: {
+          title: 'Titre du hero',
+          subtitle: '',
+          ctaLabel: 'Découvrir',
+          ctaUrl: '#',
+          image: '',
+          align: 'center',
+        },
       },
       paragraph: {
         type: 'Paragraphe',
@@ -681,6 +992,11 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Paragraphe libre pour raconter votre histoire.',
         status: 'Brouillon',
         props: [{ label: 'Longueur', value: '150 mots' }],
+        settings: {
+          title: 'Titre du paragraphe',
+          content: '',
+          align: 'left',
+        },
       },
       image: {
         type: 'Image',
@@ -691,6 +1007,12 @@ document.addEventListener('DOMContentLoaded', () => {
           { label: 'Ratio', value: '16:9' },
           { label: 'Légende', value: 'Inactive' },
         ],
+        settings: {
+          src: '',
+          alt: '',
+          showCaption: false,
+          caption: '',
+        },
       },
       group: {
         type: 'Groupe',
@@ -698,6 +1020,11 @@ document.addEventListener('DOMContentLoaded', () => {
         description: 'Conteneur pour imbriquer plusieurs sous-blocs.',
         status: 'Brouillon',
         props: [{ label: 'Disposition', value: 'Verticale' }],
+        settings: {
+          layout: 'grid',
+          columnsMobile: '1',
+          columnsDesktop: '3',
+        },
       },
     };
     const clonePages = (pages) =>
@@ -707,6 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
         blocks: (page.blocks || []).map((block) => ({
           ...block,
           props: (block.props || []).map((prop) => ({ ...prop })),
+          settings: { ...(block.settings || {}) },
         })),
       }));
     const getStoredPages = () => {
@@ -767,18 +1095,28 @@ document.addEventListener('DOMContentLoaded', () => {
       createBlock(
         generateBlockId(pageId, 'intro'),
         'Introduction',
-        'Texte',
+        'Paragraphe',
         'Brouillon',
         `Paragraphe introductif pour "${title}".`,
         [{ label: 'Longueur', value: '2 paragraphes' }],
+        {
+          title: `Introduction à ${title}`,
+          content: 'Ajoutez votre premier paragraphe de présentation.',
+          align: 'left',
+        },
       ),
       createBlock(
         generateBlockId(pageId, 'content'),
         'Zone de contenu',
-        'Section',
+        'Groupe',
         'Brouillon',
         'Section principale à composer avec textes et visuels.',
         [{ label: 'Colonnes', value: 'Auto' }],
+        {
+          layout: 'grid',
+          columnsMobile: '1',
+          columnsDesktop: '2',
+        },
       ),
     ];
     const setActiveLabels = (page) => {
@@ -814,59 +1152,39 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
     const renderBlockDetails = (block) => {
-      if (!blockDetail || !blockDetailEmpty) {
+      if (!blockDetailEmpty || !blockEditor) {
         return;
       }
       if (!block) {
-        blockDetail.classList.add('hidden');
         blockDetailEmpty.classList.remove('hidden');
+        blockEditor.classList.add('hidden');
+        blockEditorUnsupported?.classList.add('hidden');
+        blockForm?.classList.add('hidden');
         blockDetailStatus?.classList.add('hidden');
         return;
       }
-      blockDetail.classList.remove('hidden');
       blockDetailEmpty.classList.add('hidden');
-      if (blockDetailTitle) {
-        blockDetailTitle.textContent = block.label;
-      }
-      if (blockDetailType) {
-        blockDetailType.textContent = block.type;
-      }
-      if (blockDetailDescription) {
-        blockDetailDescription.textContent =
-          block.description || 'Aucune description pour ce bloc.';
-      }
-      if (blockDetailProps) {
-        blockDetailProps.innerHTML = '';
-        if (block.props && block.props.length > 0) {
-          block.props.forEach((prop) => {
-            const propRow = document.createElement('div');
-            propRow.className =
-              'flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm';
-            propRow.innerHTML = `
-              <span class="text-xs uppercase tracking-wide text-slate-500">${prop.label}</span>
-              <span class="font-semibold text-slate-900">${prop.value}</span>
-            `;
-            blockDetailProps.appendChild(propRow);
-          });
+      blockEditor.classList.remove('hidden');
+      if (blockDetailStatus) {
+        if (block.status) {
+          blockDetailStatus.textContent = block.status;
+          blockDetailStatus.className = `rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(
+            block.status,
+          )}`;
+          blockDetailStatus.classList.remove('hidden');
         } else {
-          const emptyProp = document.createElement('div');
-          emptyProp.className = 'rounded-xl border border-dashed border-slate-200 px-3 py-2 text-sm text-slate-500';
-          emptyProp.textContent = 'Aucune propriété déclarée.';
-          blockDetailProps.appendChild(emptyProp);
+          blockDetailStatus.classList.add('hidden');
         }
       }
-      if (blockDetailStatus) {
-        blockDetailStatus.textContent = block.status;
-        blockDetailStatus.className = `rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(
-          block.status,
-        )}`;
-        blockDetailStatus.classList.remove('hidden');
-      }
+      populateBlockForm(block);
     };
     const renderPreviewBlockMarkup = (block, index) => {
       const base = (block.type || '').toLowerCase();
-      const safeLabel = block.label || `Bloc ${index + 1}`;
-      const description = block.description || '';
+      const settings = block.settings || {};
+      const safeLabel =
+        settings.title || block.label || `Bloc ${index + 1}`;
+      const description =
+        settings.subtitle || settings.content || block.description || '';
       const propsList =
         block.props && block.props.length > 0
           ? block.props.map((prop) => `<li>${prop.label}: <strong>${prop.value}</strong></li>`).join('')
@@ -887,22 +1205,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       `;
       switch (base) {
-        case 'hero':
-          return `<section class="preview-block preview-hero" data-preview-block="${block.id}">
+        case 'hero': {
+          const alignClass =
+            settings.align === 'left'
+              ? 'preview-hero align-left'
+              : settings.align === 'right'
+              ? 'preview-hero align-right'
+              : 'preview-hero';
+          return `<section class="preview-block ${alignClass}" data-preview-block="${block.id}">
             ${shared}
-            <button class="preview-cta">Appeler à l'action</button>
+            <button class="preview-cta">${settings.ctaLabel || 'Découvrir'}</button>
           </section>`;
+        }
         case 'paragraphe':
-        case 'texte':
-          return `<section class="preview-block preview-text" data-preview-block="${block.id}">${shared}</section>`;
-        case 'image':
-          return `<figure class="preview-block preview-image" data-preview-block="${block.id}">
-            <div class="preview-image__media"></div>
+        case 'texte': {
+          const alignment = settings.align || 'left';
+          return `<section class="preview-block preview-text" data-preview-block="${block.id}" style="text-align:${alignment};">
             ${shared}
+          </section>`;
+        }
+        case 'image': {
+          const mediaStyle = settings.src ? `style="background-image:url('${settings.src}');"` : '';
+          const caption =
+            settings.showCaption && settings.caption
+              ? `<figcaption>${settings.caption}</figcaption>`
+              : '';
+          return `<figure class="preview-block preview-image" data-preview-block="${block.id}">
+            <div class="preview-image__media" ${mediaStyle}></div>
+            ${shared}
+            ${caption}
           </figure>`;
+        }
         case 'groupe':
         case 'sections':
-        case 'grid':
+        case 'grid': {
           return `<section class="preview-block preview-group" data-preview-block="${block.id}">
             ${shared}
             <div class="preview-group__rows">
@@ -910,7 +1246,9 @@ document.addEventListener('DOMContentLoaded', () => {
               <div></div>
               <div></div>
             </div>
+            <p class="preview-layout">Layout : ${settings.layout || 'grid'} · Colonnes mobiles ${settings.columnsMobile || '1'} / desktop ${settings.columnsDesktop || '3'}</p>
           </section>`;
+        }
         default:
           return `<section class="preview-block" data-preview-block="${block.id}">${shared}</section>`;
       }
@@ -994,6 +1332,12 @@ document.addEventListener('DOMContentLoaded', () => {
               text-align: center;
               background: linear-gradient(120deg, #ede9fe, #f8fafc);
             }
+            .preview-hero.align-left {
+              text-align: left;
+            }
+            .preview-hero.align-right {
+              text-align: right;
+            }
             .preview-hero h3 {
               font-size: 28px;
             }
@@ -1013,6 +1357,13 @@ document.addEventListener('DOMContentLoaded', () => {
               background: linear-gradient(130deg, #c084fc, #a855f7);
               margin-bottom: 16px;
               opacity: 0.8;
+              background-size: cover;
+              background-position: center;
+            }
+            .preview-image figcaption {
+              margin-top: 12px;
+              font-size: 13px;
+              color: #64748b;
             }
             .preview-group__rows {
               display: grid;
@@ -1024,6 +1375,11 @@ document.addEventListener('DOMContentLoaded', () => {
               height: 80px;
               border-radius: 16px;
               background: #f1f5f9;
+            }
+            .preview-layout {
+              margin-top: 12px;
+              font-size: 13px;
+              color: #475569;
             }
             .preview-props {
               margin: 12px 0 0;
@@ -1153,7 +1509,9 @@ document.addEventListener('DOMContentLoaded', () => {
         meta.appendChild(statusBadge);
         const title = document.createElement('p');
         title.className = 'mt-1 text-sm font-semibold text-slate-900';
-        title.textContent = block.label;
+        const displayLabel =
+          (block.settings && block.settings.title) || block.label || 'Bloc sans titre';
+        title.textContent = displayLabel;
         textWrapper.appendChild(meta);
         textWrapper.appendChild(title);
         content.appendChild(textWrapper);
@@ -1365,6 +1723,7 @@ document.addEventListener('DOMContentLoaded', () => {
         definition.status,
         definition.description,
         definition.props,
+        definition.settings || {},
       );
       const nextBlocks = [...(currentPage.blocks || []), newBlock];
       updateCurrentPageBlocks(nextBlocks);
@@ -1600,6 +1959,14 @@ document.addEventListener('DOMContentLoaded', () => {
     blockDeleteModal?.addEventListener('click', (event) => {
       if (event.target === blockDeleteModal) {
         closeBlockDeleteModal();
+      }
+    });
+    blockForm?.addEventListener('submit', handleBlockFormSubmit);
+    blockFormCancel?.addEventListener('click', (event) => {
+      event.preventDefault();
+      const block = getActiveBlock();
+      if (block) {
+        populateBlockForm(block);
       }
     });
     previewFrame?.addEventListener('load', () => {
