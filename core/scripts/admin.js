@@ -1611,10 +1611,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!latestPreviewHtml) {
         latestPreviewHtml = buildPreviewHtml(currentPage);
       }
-      const previewWindow = window.open('', '_blank', 'noopener,noreferrer');
+      const previewWindow = window.open('', '_blank');
       if (!previewWindow) {
         return;
       }
+      previewWindow.opener = null;
       const doc = previewWindow.document;
       doc.open();
       doc.write(latestPreviewHtml);
