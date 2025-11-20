@@ -1091,7 +1091,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateCurrentPageState(nextPage);
     };
     const isDesktopReorder = () => window.matchMedia('(min-width: 1024px)').matches;
-    const moveBlockByOffset = (blockId, offset) => {
+    function moveBlockByOffset(blockId, offset) {
       if (!currentPage || !blockId || !offset) {
         return;
       }
@@ -1109,8 +1109,8 @@ document.addEventListener('DOMContentLoaded', () => {
       updateCurrentPageBlocks(blocks);
       setActivePage(currentPage.id, { preserveBlock: true });
       setActiveBlock(moved.id);
-    };
-    const reorderBlocks = (sourceId, targetId) => {
+    }
+    function reorderBlocks(sourceId, targetId) {
       if (!currentPage || !sourceId || !targetId || sourceId === targetId) {
         return;
       }
@@ -1125,8 +1125,8 @@ document.addEventListener('DOMContentLoaded', () => {
       updateCurrentPageBlocks(blocks);
       setActivePage(currentPage.id, { preserveBlock: true });
       setActiveBlock(moved.id);
-    };
-    const updateDraggableState = () => {
+    }
+    function updateDraggableState() {
       if (!blockList) {
         return;
       }
@@ -1134,25 +1134,25 @@ document.addEventListener('DOMContentLoaded', () => {
       blockList.querySelectorAll('[data-block-item]').forEach((item) => {
         item.setAttribute('draggable', draggable ? 'true' : 'false');
       });
-    };
-    const closeBlockLibrary = () => {
+    }
+    function closeBlockLibrary() {
       if (!blockLibrary) {
         return;
       }
       blockLibrary.classList.add('hidden');
       blockLibraryOpen = false;
-    };
-    const openBlockLibrary = () => {
+    }
+    function openBlockLibrary() {
       if (!blockLibrary) {
         return;
       }
       blockLibrary.classList.remove('hidden');
       blockLibraryOpen = true;
-    };
-    const toggleBlockLibrary = () => {
+    }
+    function toggleBlockLibrary() {
       blockLibraryOpen ? closeBlockLibrary() : openBlockLibrary();
-    };
-    const addBlockFromLibrary = (type) => {
+    }
+    function addBlockFromLibrary(type) {
       if (!currentPage || !type) {
         return;
       }
@@ -1176,8 +1176,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setActiveBlock(newBlock.id);
       closeBlockLibrary();
       showToast('Bloc ajouté');
-    };
-    const deleteBlockById = (blockId) => {
+    }
+    function deleteBlockById(blockId) {
       if (!currentPage) {
         return;
       }
@@ -1194,16 +1194,16 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPreviewBlocks(currentPage);
       }
       showToast('Bloc supprimé');
-    };
-    const closeBlockDeleteModal = () => {
+    }
+    function closeBlockDeleteModal() {
       if (!blockDeleteModal) {
         return;
       }
       blockDeleteModal.classList.add('hidden');
       blockDeleteModal.classList.remove('flex');
       pendingDeleteBlockId = null;
-    };
-    const openBlockDeleteModal = (blockId) => {
+    }
+    function openBlockDeleteModal(blockId) {
       if (!blockDeleteModal) {
         deleteBlockById(blockId);
         return;
@@ -1211,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', () => {
       pendingDeleteBlockId = blockId;
       blockDeleteModal.classList.remove('hidden');
       blockDeleteModal.classList.add('flex');
-    };
+    }
     const updateCurrentPageState = (nextPage) => {
       if (!nextPage) {
         return;
