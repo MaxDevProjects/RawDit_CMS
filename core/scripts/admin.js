@@ -1239,14 +1239,17 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'groupe':
         case 'sections':
         case 'grid': {
+          const mobile = settings.columnsMobile || '1';
+          const desktop = settings.columnsDesktop || '3';
+          const mobileCols = Number(mobile);
+          const desktopCols = Number(desktop);
+          const makeColumns = (count) =>
+            Array.from({ length: count }).map(() => '<div></div>').join('');
           return `<section class="preview-block preview-group" data-preview-block="${block.id}">
             ${shared}
-            <div class="preview-group__rows">
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-            <p class="preview-layout">Layout : ${settings.layout || 'grid'} · Colonnes mobiles ${settings.columnsMobile || '1'} / desktop ${settings.columnsDesktop || '3'}</p>
+            <div class="preview-group__rows mobile">${makeColumns(mobileCols)}</div>
+            <div class="preview-group__rows desktop">${makeColumns(desktopCols)}</div>
+            <p class="preview-layout">Mobile ${mobileCols} col. · Desktop ${desktopCols} col.</p>
           </section>`;
         }
         default:
@@ -1367,9 +1370,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             .preview-group__rows {
               display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
               gap: 12px;
               margin-top: 16px;
+            }
+            .preview-group__rows.mobile {
+              grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+            .preview-group__rows.desktop {
+              grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             }
             .preview-group__rows div {
               height: 80px;

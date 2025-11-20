@@ -502,30 +502,40 @@
 
           <div data-editor-section="group" class="hidden space-y-4">
             <div class="space-y-2">
-              <label class="space-y-1 block">
-                <span class="text-xs font-medium text-slate-600">Disposition</span>
-                <select name="group-layout" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-                  <option value="grid">Grille</option>
-                  <option value="flex">Flex</option>
-                  <option value="stack">Pile</option>
-                </select>
-              </label>
+              <p class="text-xs uppercase tracking-tight text-slate-500">Disposition responsive</p>
+              <p class="text-[11px] text-slate-500">Ex&nbsp;: 1 colonne sur mobile, 3 sur desktop.</p>
               <div class="grid gap-2 sm:grid-cols-2">
                 <label class="space-y-1 block">
                   <span class="text-xs font-medium text-slate-600">Colonnes mobile</span>
                   <select name="group-columns-mobile" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
+                    <option value="1">1 colonne</option>
+                    <option value="2">2 colonnes</option>
                   </select>
                 </label>
                 <label class="space-y-1 block">
                   <span class="text-xs font-medium text-slate-600">Colonnes desktop</span>
                   <select name="group-columns-desktop" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
+                    <option value="1">1 colonne</option>
+                    <option value="2">2 colonnes</option>
+                    <option value="3">3 colonnes</option>
+                    <option value="4">4 colonnes</option>
                   </select>
                 </label>
+              </div>
+              <div class="rounded-xl border border-dashed border-slate-200 px-3 py-2">
+                <div class="flex justify-between text-[11px] text-slate-500 mb-1">
+                  <span>Mobile</span>
+                  <span>Desktop</span>
+                </div>
+                <div class="flex items-center gap-4 text-slate-400">
+                  <div class="flex-1">
+                    <div data-group-preview-mobile class="flex gap-1"></div>
+                  </div>
+                  <svg class="h-4 w-4 text-slate-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 16.56a.75.75 0 01-1.06 0A.75.75 0 016.21 15.5l5.47-5.5-5.47-5.5a.75.75 0 111.06-1.06l6 6a.75.75 0 010 1.06l-6 6z" clip-rule="evenodd"/></svg>
+                  <div class="flex-1">
+                    <div data-group-preview-desktop class="flex gap-1"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
