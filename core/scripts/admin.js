@@ -154,14 +154,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2500);
   };
 
-  const ensureLeadingSlash = (slug) => {
+  function ensureLeadingSlash(slug) {
     if (!slug) {
       return '';
     }
     return slug.startsWith('/') ? slug : `/${slug}`;
-  };
+  }
 
-  const stripLeadingSlash = (slug) => slug?.replace(/^\//, '') || '';
+  function stripLeadingSlash(slug) {
+    return slug?.replace(/^\//, '') || '';
+  }
 
   const persistSiteState = (slug, name) => {
     const normalizedSlug = slug ? ensureLeadingSlash(slug) : null;
