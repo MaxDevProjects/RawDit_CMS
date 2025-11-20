@@ -238,14 +238,78 @@
     </div>
   </section>
 
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4">
     <div class="flex items-center justify-between gap-2">
       <div>
         <p class="text-xs uppercase tracking-tight text-slate-500">Blocs de la page</p>
         <h2 class="text-sm font-semibold text-slate-900">Structure</h2>
       </div>
-      <span data-block-count class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600">0 bloc</span>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          data-block-library-toggle
+          class="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          + Ajouter un bloc
+        </button>
+        <span data-block-count class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600">0 bloc</span>
+      </div>
     </div>
+
+    <div
+      data-block-library
+      class="hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-lg"
+      role="menu"
+    >
+      <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Bibliothèque</p>
+      <div class="space-y-2">
+        <button
+          type="button"
+          data-block-add="hero"
+          class="w-full flex items-start gap-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          <span class="text-lg">🌅</span>
+          <span>
+            Hero de page
+            <span class="block text-xs font-normal text-slate-500">Section immersive avec CTA</span>
+          </span>
+        </button>
+        <button
+          type="button"
+          data-block-add="paragraph"
+          class="w-full flex items-start gap-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          <span class="text-lg">✏️</span>
+          <span>
+            Paragraphe
+            <span class="block text-xs font-normal text-slate-500">Bloc éditorial libre</span>
+          </span>
+        </button>
+        <button
+          type="button"
+          data-block-add="image"
+          class="w-full flex items-start gap-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          <span class="text-lg">🖼️</span>
+          <span>
+            Image
+            <span class="block text-xs font-normal text-slate-500">Visuel plein largeur</span>
+          </span>
+        </button>
+        <button
+          type="button"
+          data-block-add="group"
+          class="w-full flex items-start gap-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          <span class="text-lg">📦</span>
+          <span>
+            Groupe
+            <span class="block text-xs font-normal text-slate-500">Conteneur de sections</span>
+          </span>
+        </button>
+      </div>
+    </div>
+
     <div data-blocks-empty class="text-sm text-slate-500">Choisissez une page pour visualiser ses blocs.</div>
     <div
       data-blocks-list

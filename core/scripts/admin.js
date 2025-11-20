@@ -476,6 +476,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (workspaceBackModal && !workspaceBackModal.classList.contains('hidden')) {
         closeWorkspaceBackModal();
       }
+      if (blockDeleteModal && !blockDeleteModal.classList.contains('hidden')) {
+        closeBlockDeleteModal();
+      }
+      if (blockLibraryOpen) {
+        closeBlockLibrary();
+      }
     }
   });
 
@@ -541,6 +547,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const blockList = document.querySelector('[data-blocks-list]');
     const blockListEmpty = document.querySelector('[data-blocks-empty]');
     const blockCountBadge = document.querySelector('[data-block-count]');
+    const blockLibraryToggle = document.querySelector('[data-block-library-toggle]');
+    const blockLibrary = document.querySelector('[data-block-library]');
+    const blockAddButtons = document.querySelectorAll('[data-block-add]');
+    const blockDeleteModal = document.querySelector('[data-block-delete-modal]');
+    const blockDeleteConfirm = document.querySelector('[data-block-delete-confirm]');
+    const blockDeleteCancel = document.querySelector('[data-block-delete-cancel]');
     const blockDetail = document.querySelector('[data-block-detail]');
     const blockDetailEmpty = document.querySelector('[data-block-detail-empty]');
     const blockDetailTitle = document.querySelector('[data-block-detail-title]');
@@ -650,6 +662,42 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
       },
     ];
+    const blockLibraryDefinitions = {
+      hero: {
+        type: 'Hero',
+        label: 'Hero de page',
+        description: 'Section pleine largeur avec CTA principal.',
+        status: 'Brouillon',
+        props: [
+          { label: 'CTA', value: 'Découvrir' },
+          { label: 'Hauteur', value: '80vh' },
+        ],
+      },
+      paragraph: {
+        type: 'Paragraphe',
+        label: 'Bloc éditorial',
+        description: 'Paragraphe libre pour raconter votre histoire.',
+        status: 'Brouillon',
+        props: [{ label: 'Longueur', value: '150 mots' }],
+      },
+      image: {
+        type: 'Image',
+        label: 'Bloc image',
+        description: 'Visuel seul avec légende optionnelle.',
+        status: 'Brouillon',
+        props: [
+          { label: 'Ratio', value: '16:9' },
+          { label: 'Légende', value: 'Inactive' },
+        ],
+      },
+      group: {
+        type: 'Groupe',
+        label: 'Groupe de sections',
+        description: 'Conteneur pour imbriquer plusieurs sous-blocs.',
+        status: 'Brouillon',
+        props: [{ label: 'Disposition', value: 'Verticale' }],
+      },
+    };
     const clonePages = (pages) =>
       pages.map((page) => ({
         ...page,
@@ -868,29 +916,103 @@ document.addEventListener('DOMContentLoaded', () => {
       blockListEmpty?.classList.add('hidden');
       blocks.forEach((block) => {
         const isActive = block.id === activeBlockId;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.dataset.blockId = block.id;
-        button.setAttribute('role', 'option');
-        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        button.className = [
-          'relative w-full rounded-xl border px-4 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/40',
+        const item = document.createElement('div');
+        item.dataset.blockItem = 'true';
+        item.dataset.blockId = block.id;
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        item.tabIndex = 0;
+        item.className = [
+          'relative flex items-center gap-3 rounded-2xl border px-3 py-2 text-left transition',
           isActive
-            ? 'bg-slate-100 border-[#9C6BFF]/40 text-slate-900 shadow-sm'
-            : 'border-transparent text-slate-700 hover:bg-slate-50',
+            ? 'bg-slate-100 border-[#9C6BFF]/40 shadow-sm'
+            : 'border-slate-200 hover:border-[#9C6BFF]/40',
         ].join(' ');
-        button.innerHTML = `
-          <span class="${isActive ? '' : 'hidden'} absolute inset-y-2 left-0 w-1 rounded-full bg-[#9C6BFF]"></span>
-          <div class="flex items-center gap-2 text-xs">
-            <span class="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">${block.type}</span>
-            <span class="text-slate-400">${block.status}</span>
-          </div>
-          <p class="mt-1 text-sm font-semibold">${block.label}</p>
-        `;
-        button.addEventListener('click', () => {
+        const accent = document.createElement('span');
+        accent.className = `absolute inset-y-2 left-0 w-1 rounded-full bg-[#9C6BFF] ${
+          isActive ? '' : 'hidden'
+        }`;
+        item.appendChild(accent);
+
+        const content = document.createElement('div');
+        content.className = 'flex flex-1 items-center gap-3';
+        const handle = document.createElement('div');
+        handle.className =
+          'hidden lg:flex cursor-grab flex-shrink-0 items-center text-lg text-slate-400';
+        handle.innerHTML = '&#8801;';
+        content.appendChild(handle);
+
+        const textWrapper = document.createElement('div');
+        textWrapper.className = 'flex-1';
+        const meta = document.createElement('div');
+        meta.className = 'flex items-center gap-2 text-[11px] uppercase tracking-wide text-slate-500';
+        const typeBadge = document.createElement('span');
+        typeBadge.className =
+          'rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600';
+        typeBadge.textContent = block.type;
+        const statusBadge = document.createElement('span');
+        statusBadge.className = 'text-slate-400';
+        statusBadge.textContent = block.status;
+        meta.appendChild(typeBadge);
+        meta.appendChild(statusBadge);
+        const title = document.createElement('p');
+        title.className = 'mt-1 text-sm font-semibold text-slate-900';
+        title.textContent = block.label;
+        textWrapper.appendChild(meta);
+        textWrapper.appendChild(title);
+        content.appendChild(textWrapper);
+        item.appendChild(content);
+
+        const actions = document.createElement('div');
+        actions.className = 'flex flex-col gap-1 text-xs text-slate-400';
+
+        const moveButtons = document.createElement('div');
+        moveButtons.className = 'flex items-center gap-1 lg:hidden';
+        const moveUp = document.createElement('button');
+        moveUp.type = 'button';
+        moveUp.className =
+          'rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-500';
+        moveUp.textContent = '↑';
+        moveUp.addEventListener('click', (event) => {
+          event.stopPropagation();
+          moveBlockByOffset(block.id, -1);
+        });
+        const moveDown = document.createElement('button');
+        moveDown.type = 'button';
+        moveDown.className =
+          'rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-500';
+        moveDown.textContent = '↓';
+        moveDown.addEventListener('click', (event) => {
+          event.stopPropagation();
+          moveBlockByOffset(block.id, 1);
+        });
+        moveButtons.appendChild(moveUp);
+        moveButtons.appendChild(moveDown);
+        actions.appendChild(moveButtons);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className =
+          'inline-flex items-center justify-center rounded-lg border border-transparent px-2 py-1 text-[12px] text-rose-500 hover:text-rose-700';
+        deleteButton.innerHTML = '🗑️';
+        deleteButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          openBlockDeleteModal(block.id);
+        });
+
+        actions.appendChild(deleteButton);
+        item.appendChild(actions);
+
+        item.addEventListener('click', () => {
           setActiveBlock(block.id);
         });
-        blockList.appendChild(button);
+        item.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setActiveBlock(block.id);
+          }
+        });
+        blockList.appendChild(item);
       });
     };
     const renderPageLists = (pages, activeId) => {
@@ -947,6 +1069,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!currentPage) {
         return;
       }
+      if (!blockId) {
+        activeBlockId = null;
+        renderBlockList(currentPage);
+        renderBlockDetails(null);
+        renderPreviewBlocks(currentPage);
+        return;
+      }
       const targetBlock =
         currentPage.blocks.find((block) => block.id === blockId) || currentPage.blocks[0] || null;
       activeBlockId = targetBlock?.id || null;
@@ -954,18 +1083,163 @@ document.addEventListener('DOMContentLoaded', () => {
       renderBlockDetails(targetBlock);
       renderPreviewBlocks(currentPage);
     };
-    const setActivePage = (pageId) => {
-      const target = pages.find((page) => page.id === pageId) || pages[0];
-      currentPage = target || null;
+    const updateCurrentPageBlocks = (newBlocks) => {
+      if (!currentPage) {
+        return;
+      }
+      const nextPage = { ...currentPage, blocks: newBlocks };
+      updateCurrentPageState(nextPage);
+    };
+    const isDesktopReorder = () => window.matchMedia('(min-width: 1024px)').matches;
+    const moveBlockByOffset = (blockId, offset) => {
+      if (!currentPage || !blockId || !offset) {
+        return;
+      }
+      const blocks = [...(currentPage.blocks || [])];
+      const index = blocks.findIndex((block) => block.id === blockId);
+      if (index < 0) {
+        return;
+      }
+      const newIndex = index + offset;
+      if (newIndex < 0 || newIndex >= blocks.length) {
+        return;
+      }
+      const [moved] = blocks.splice(index, 1);
+      blocks.splice(newIndex, 0, moved);
+      updateCurrentPageBlocks(blocks);
+      setActivePage(currentPage.id, { preserveBlock: true });
+      setActiveBlock(moved.id);
+    };
+    const reorderBlocks = (sourceId, targetId) => {
+      if (!currentPage || !sourceId || !targetId || sourceId === targetId) {
+        return;
+      }
+      const blocks = [...(currentPage.blocks || [])];
+      const fromIndex = blocks.findIndex((block) => block.id === sourceId);
+      const toIndex = blocks.findIndex((block) => block.id === targetId);
+      if (fromIndex < 0 || toIndex < 0) {
+        return;
+      }
+      const [moved] = blocks.splice(fromIndex, 1);
+      blocks.splice(toIndex, 0, moved);
+      updateCurrentPageBlocks(blocks);
+      setActivePage(currentPage.id, { preserveBlock: true });
+      setActiveBlock(moved.id);
+    };
+    const updateDraggableState = () => {
+      if (!blockList) {
+        return;
+      }
+      const draggable = isDesktopReorder();
+      blockList.querySelectorAll('[data-block-item]').forEach((item) => {
+        item.setAttribute('draggable', draggable ? 'true' : 'false');
+      });
+    };
+    const closeBlockLibrary = () => {
+      if (!blockLibrary) {
+        return;
+      }
+      blockLibrary.classList.add('hidden');
+      blockLibraryOpen = false;
+    };
+    const openBlockLibrary = () => {
+      if (!blockLibrary) {
+        return;
+      }
+      blockLibrary.classList.remove('hidden');
+      blockLibraryOpen = true;
+    };
+    const toggleBlockLibrary = () => {
+      blockLibraryOpen ? closeBlockLibrary() : openBlockLibrary();
+    };
+    const addBlockFromLibrary = (type) => {
+      if (!currentPage || !type) {
+        return;
+      }
+      const definition = blockLibraryDefinitions[type];
+      if (!definition) {
+        return;
+      }
+      const count =
+        (currentPage.blocks || []).filter((block) => block.type === definition.type).length + 1;
+      const newBlock = createBlock(
+        generateBlockId(currentPage.id, type),
+        `${definition.label} ${count}`,
+        definition.type,
+        definition.status,
+        definition.description,
+        definition.props,
+      );
+      const nextBlocks = [...(currentPage.blocks || []), newBlock];
+      updateCurrentPageBlocks(nextBlocks);
+      setActivePage(currentPage.id, { preserveBlock: true });
+      setActiveBlock(newBlock.id);
+      closeBlockLibrary();
+      showToast('Bloc ajouté');
+    };
+    const deleteBlockById = (blockId) => {
+      if (!currentPage) {
+        return;
+      }
+      const blocks = (currentPage.blocks || []).filter((block) => block.id !== blockId);
+      const nextActive =
+        blockId === activeBlockId ? blocks[0]?.id || null : activeBlockId || blocks[0]?.id || null;
+      updateCurrentPageBlocks(blocks);
+      activeBlockId = nextActive;
+      setActivePage(currentPage.id, { preserveBlock: true });
+      if (activeBlockId) {
+        setActiveBlock(activeBlockId);
+      } else {
+        renderBlockDetails(null);
+        renderPreviewBlocks(currentPage);
+      }
+      showToast('Bloc supprimé');
+    };
+    const closeBlockDeleteModal = () => {
+      if (!blockDeleteModal) {
+        return;
+      }
+      blockDeleteModal.classList.add('hidden');
+      blockDeleteModal.classList.remove('flex');
+      pendingDeleteBlockId = null;
+    };
+    const openBlockDeleteModal = (blockId) => {
+      if (!blockDeleteModal) {
+        deleteBlockById(blockId);
+        return;
+      }
+      pendingDeleteBlockId = blockId;
+      blockDeleteModal.classList.remove('hidden');
+      blockDeleteModal.classList.add('flex');
+    };
+    const updateCurrentPageState = (nextPage) => {
+      if (!nextPage) {
+        return;
+      }
+      pages = pages.map((page) => (page.id === nextPage.id ? nextPage : page));
+      currentPage = nextPage;
+      persistPages(pages);
+    };
+    const setActivePage = (pageId, options = {}) => {
+      const target = pages.find((page) => page.id === pageId) || pages[0] || null;
+      currentPage = target;
       activePageId = target?.id || null;
-      activeBlockId = target?.blocks?.[0]?.id || null;
-      persistActivePage(activePageId || '');
+      if (!options.preserveBlock || !currentPage || !currentPage.blocks.some((block) => block.id === activeBlockId)) {
+        activeBlockId = currentPage?.blocks?.[0]?.id || null;
+      }
+      if (activePageId) {
+        persistActivePage(activePageId);
+      }
       renderPageLists(pages, activePageId);
-      setActiveLabels(target);
-      renderPreview(target);
-      renderBlockList(target);
+      setActiveLabels(currentPage);
+      renderPreview(currentPage);
+      renderBlockList(currentPage);
       renderBlockDetails(getActiveBlock());
-      renderPreviewBlocks(target);
+      renderPreviewBlocks(currentPage);
+      updateDraggableState();
+      if (blockLibraryOpen) {
+        closeBlockLibrary();
+      }
     };
     const isDesktopDrawer = () => window.matchMedia('(min-width: 1024px)').matches;
     const syncDrawerState = () => {
@@ -1037,6 +1311,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let pageSlugManuallyEdited = false;
     let currentPage = null;
     let activeBlockId = null;
+    let blockLibraryOpen = false;
+    let pendingDeleteBlockId = null;
 
     renderPageLists(pages, activePageId);
     setActivePage(activePageId);
@@ -1049,7 +1325,10 @@ document.addEventListener('DOMContentLoaded', () => {
       button.addEventListener('click', closeDrawer);
     });
     drawerBackdrop?.addEventListener('click', closeDrawer);
-    window.addEventListener('resize', syncDrawerState);
+    window.addEventListener('resize', () => {
+      syncDrawerState();
+      updateDraggableState();
+    });
 
     addPageToggle?.addEventListener('click', openAddPageForm);
     addPageCancel?.addEventListener('click', closeAddPageForm);
@@ -1087,5 +1366,103 @@ document.addEventListener('DOMContentLoaded', () => {
       closeAddPageForm();
       setActivePage(newPage.id);
     });
+    blockLibraryToggle?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleBlockLibrary();
+    });
+    document.addEventListener('click', (event) => {
+      if (!blockLibraryOpen) {
+        return;
+      }
+      if (
+        blockLibrary?.contains(event.target) ||
+        blockLibraryToggle?.contains(event.target)
+      ) {
+        return;
+      }
+      closeBlockLibrary();
+    });
+    blockAddButtons.forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const type = button.dataset.blockAdd;
+        addBlockFromLibrary(type);
+      });
+    });
+    blockDeleteCancel?.addEventListener('click', () => {
+      closeBlockDeleteModal();
+    });
+    blockDeleteConfirm?.addEventListener('click', () => {
+      if (pendingDeleteBlockId) {
+        deleteBlockById(pendingDeleteBlockId);
+      }
+      closeBlockDeleteModal();
+    });
+    blockDeleteModal?.addEventListener('click', (event) => {
+      if (event.target === blockDeleteModal) {
+        closeBlockDeleteModal();
+      }
+    });
+    const handleBlockDragStart = (event) => {
+      const item = event.target.closest('[data-block-item]');
+      if (!item || !isDesktopReorder()) {
+        return;
+      }
+      dragSourceId = item.dataset.blockId || null;
+      if (!dragSourceId) {
+        return;
+      }
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', dragSourceId);
+      item.classList.add('opacity-50');
+    };
+    const clearDragIndicators = () => {
+      blockList
+        ?.querySelectorAll('[data-block-item]')
+        .forEach((node) => node.classList.remove('opacity-50', 'ring-2', 'ring-[#9C6BFF]/50'));
+    };
+    const handleBlockDragEnd = () => {
+      dragSourceId = null;
+      clearDragIndicators();
+    };
+    const handleBlockDragOver = (event) => {
+      if (!dragSourceId || !isDesktopReorder()) {
+        return;
+      }
+      const target = event.target.closest('[data-block-item]');
+      if (!target || target.dataset.blockId === dragSourceId) {
+        return;
+      }
+      event.preventDefault();
+      target.classList.add('ring-2', 'ring-[#9C6BFF]/50');
+    };
+    const handleBlockDragLeave = (event) => {
+      const target = event.target.closest('[data-block-item]');
+      if (!target) {
+        return;
+      }
+      target.classList.remove('ring-2', 'ring-[#9C6BFF]/50');
+    };
+    const handleBlockDrop = (event) => {
+      if (!dragSourceId || !isDesktopReorder()) {
+        return;
+      }
+      event.preventDefault();
+      const target = event.target.closest('[data-block-item]');
+      const source = dragSourceId;
+      dragSourceId = null;
+      clearDragIndicators();
+      const targetId = target?.dataset.blockId || null;
+      if (!targetId) {
+        return;
+      }
+      reorderBlocks(source, targetId);
+    };
+    let dragSourceId = null;
+    blockList?.addEventListener('dragstart', handleBlockDragStart);
+    blockList?.addEventListener('dragend', handleBlockDragEnd);
+    blockList?.addEventListener('dragover', handleBlockDragOver);
+    blockList?.addEventListener('dragleave', handleBlockDragLeave);
+    blockList?.addEventListener('drop', handleBlockDrop);
   }
 });
