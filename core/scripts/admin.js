@@ -1612,10 +1612,13 @@ document.addEventListener('DOMContentLoaded', () => {
         latestPreviewHtml = buildPreviewHtml(currentPage);
       }
       const previewWindow = window.open('', '_blank', 'noopener,noreferrer');
-      if (previewWindow) {
-        previewWindow.document.write(latestPreviewHtml);
-        previewWindow.document.close();
+      if (!previewWindow) {
+        return;
       }
+      const doc = previewWindow.document;
+      doc.open();
+      doc.write(latestPreviewHtml);
+      doc.close();
     });
     const handleBlockDragStart = (event) => {
       const item = event.target.closest('[data-block-item]');
