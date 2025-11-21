@@ -14,7 +14,8 @@ import { ensureDir } from './lib/fs-utils.js';
 
 const COOKIE_NAME = 'admin_session';
 const authService = new AuthService();
-const sessionStore = new SessionStore();
+const SESSION_STORE_FILE = path.join(paths.data, 'sessions.json');
+const sessionStore = new SessionStore(SESSION_STORE_FILE);
 const SITES_FILE = path.join(paths.data, 'sites.json');
 const WORKSPACE_SECTIONS = ['design', 'content', 'media', 'deploy', 'settings'];
 const WORKSPACE_FILES = Object.fromEntries(
