@@ -10,7 +10,7 @@
       "label": "Titre du hero",
       "type": "Hero",
       "status": "Brouillon",
-      "description": "Section pleine largeur avec CTA principal.",
+      "description": "Ceci est un sous titre",
       "props": [
         {
           "label": "CTA",
@@ -23,12 +23,43 @@
       ],
       "settings": {
         "title": "Titre du hero",
-        "subtitle": "",
+        "subtitle": "Ceci est un sous titre",
         "ctaLabel": "Découvrir",
         "ctaUrl": "services",
-        "image": "",
-        "align": "center"
+        "image": "https://picsum.photos/200/300",
+        "align": "left"
       }
+    },
+    {
+      "id": "home-paragraph-mi8q7ynv-918",
+      "label": "Titre du paragraphe",
+      "type": "Paragraphe",
+      "status": "Brouillon",
+      "description": "Paragraphe libre pour raconter votre histoire.",
+      "props": [
+        {
+          "label": "Longueur",
+          "value": "150 mots"
+        }
+      ],
+      "settings": {
+        "title": "Titre du paragraphe",
+        "content": "",
+        "align": "left"
+      }
+    },
+    {
+      "id": "home-collectiongrid-mi8siug0-716",
+      "label": "Grille de contenus 1",
+      "type": "CollectionGrid",
+      "status": "Brouillon",
+      "description": "Affiche automatiquement les items d’une collection.",
+      "props": [],
+      "settings": {
+        "collectionId": "testimonials",
+        "limit": 6
+      },
+      "collectionId": "testimonials"
     }
   ]
 }

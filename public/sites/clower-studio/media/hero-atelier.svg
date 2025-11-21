@@ -1,0 +1,7 @@
+<svg width="320" height="200" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="200" rx="32" fill="#F7F0FF"/>
+  <path d="M40 150C60 80 120 40 180 60C240 80 260 40 280 20" stroke="#9C6BFF" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <circle cx="90" cy="110" r="28" fill="#A78BFA" opacity="0.65"/>
+  <circle cx="210" cy="80" r="22" fill="#C084FC" opacity="0.6"/>
+  <text x="40" y="180" fill="#334155" font-family="Inter, sans-serif" font-size="20" font-weight="600">Hero Atelier</text>
+</svg>

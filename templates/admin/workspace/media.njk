@@ -3,24 +3,94 @@
 {% set activeWorkspaceTab = "media" %}
 
 {% block sidebar_start %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Bibliothèque</h2>
-    <p class="text-sm text-slate-600">Filtres, tags et droits des assets du site.</p>
-  </section>
-{% endblock %}
-
-{% block content_main %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
-    <h1 class="text-xl font-semibold text-slate-900">Workspace Médias</h1>
-    <p class="text-sm text-slate-600">
-      Ici vous gérerez les uploads, conversions et métadonnées des fichiers du site actif.
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+    <div>
+      <p class="text-xs uppercase tracking-tight text-slate-500">Filtres</p>
+      <h2 class="text-sm font-semibold text-slate-900">Bibliothèque médias</h2>
+    </div>
+    <label class="space-y-1 block">
+      <span class="text-xs font-medium text-slate-600">Type</span>
+      <select
+        data-media-filter-type
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+      >
+        <option value="all">Tous</option>
+        <option value="image">Images</option>
+        <option value="document">Documents</option>
+        <option value="video">Vidéos</option>
+      </select>
+    </label>
+    <p class="text-xs text-slate-500">
+      Filtrez rapidement vos visuels, PDF et assets pour retrouver ce qui sera injecté dans les blocs.
     </p>
   </section>
 {% endblock %}
 
+{% block content_main %}
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
+      <div>
+        <p class="text-xs uppercase tracking-tight text-slate-500">Bibliothèque</p>
+        <h1 class="text-xl font-semibold text-slate-900">Médias du site actif</h1>
+        <p class="text-sm text-slate-600">
+          Chaque fichier est stocké dans
+          <code class="font-mono text-xs bg-slate-100 px-1 rounded">/sites/{{ workspaceContext.slugPart or 'site' }}/media</code>.
+        </p>
+      </div>
+      <span data-media-count class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+        0 média
+      </span>
+    </div>
+    <div class="p-6 space-y-5">
+      <div
+        data-media-empty
+        class="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500"
+      >
+        Aucun média pour le moment. Ajoutez vos premières images ou documents.
+      </div>
+      <div
+        data-media-grid
+        class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+      ></div>
+    </div>
+  </section>
+{% endblock %}
+
 {% block sidebar_end %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Règles</h2>
-    <p class="text-sm text-slate-600">Formats, tailles et CDN configurés apparaîtront ici.</p>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+    <div>
+      <p class="text-xs uppercase tracking-tight text-slate-500">Détails</p>
+      <h2 class="text-sm font-semibold text-slate-900">Média sélectionné</h2>
+    </div>
+    <div data-media-detail-empty class="text-sm text-slate-500">
+      Sélectionnez un média pour afficher ses métadonnées.
+    </div>
+    <div data-media-detail class="hidden space-y-4">
+      <div
+        data-media-detail-preview
+        class="flex h-48 w-full items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-400"
+      >
+        Aperçu
+      </div>
+      <div class="space-y-1">
+        <p class="text-sm font-semibold text-slate-900" data-media-detail-name></p>
+        <p class="text-xs text-slate-500">
+          <span data-media-detail-type></span> ·
+          <span data-media-detail-size></span>
+        </p>
+      </div>
+      <div class="space-y-1">
+        <p class="text-xs font-semibold text-slate-500">Chemin</p>
+        <p class="text-sm font-mono text-slate-700 break-all" data-media-detail-path></p>
+      </div>
+      <div class="space-y-1">
+        <p class="text-xs font-semibold text-slate-500">Texte alternatif</p>
+        <p class="text-sm text-slate-700" data-media-detail-alt></p>
+      </div>
+      <div class="space-y-1">
+        <p class="text-xs font-semibold text-slate-500">Utilisé dans</p>
+        <ul data-media-detail-used class="text-sm text-slate-700 space-y-1"></ul>
+      </div>
+    </div>
   </section>
 {% endblock %}

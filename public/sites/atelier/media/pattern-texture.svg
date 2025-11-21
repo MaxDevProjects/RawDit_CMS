@@ -1,0 +1,10 @@
+<svg width="320" height="320" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="320" rx="24" fill="#ECFCCB"/>
+  <g opacity="0.5" stroke="#84CC16" stroke-width="4">
+    <circle cx="80" cy="80" r="40" fill="none"/>
+    <circle cx="240" cy="80" r="40" fill="none"/>
+    <circle cx="80" cy="240" r="40" fill="none"/>
+    <circle cx="240" cy="240" r="40" fill="none"/>
+  </g>
+  <text x="50" y="300" fill="#365314" font-family="Inter, sans-serif" font-size="22" font-weight="600">Texture Atelier</text>
+</svg>

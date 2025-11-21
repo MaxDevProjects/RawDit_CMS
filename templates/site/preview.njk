@@ -17,7 +17,8 @@
 
     <main class="max-w-5xl mx-auto px-6 py-10 space-y-6">
       {% for block in page.blocks or [] %}
-        {% set type = (block.type or '') | lower %}
+        {% set raw_type = (block.type or '') %}
+        {% set type = raw_type | lower %}
         {% set settings = block.settings or {} %}
         {% if type == 'hero' %}
           {% set align = settings.align or 'center' %}
@@ -28,27 +29,48 @@
           {% else %}
             {% set align_class = 'text-center items-center' %}
           {% endif %}
+          {% set has_image = settings.image %}
+          {% set hero_grid_class = 'grid gap-10 lg:items-center' %}
+          {% if has_image %}
+            {% set hero_grid_class = hero_grid_class ~ ' lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]' %}
+          {% endif %}
           <section
             data-preview-block="{{ block.id }}"
-            class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-50 to-white px-10 py-16 flex flex-col gap-4 {{ align_class }}"
+            class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-50 to-white px-10 py-16"
           >
-            <p class="text-xs uppercase tracking-[0.3em] text-violet-400">
-              {{ block.status or 'Brouillon' }}
-            </p>
-            <h2 class="text-4xl font-bold">
-              {{ settings.title or block.label or 'Titre du hero' }}
-            </h2>
-            <p class="text-lg text-slate-600 max-w-2xl">
-              {{ settings.subtitle or block.description or 'Ajoutez un sous-titre inspirant pour ce hero.' }}
-            </p>
-            {% if settings.ctaLabel %}
-              <a
-                href="{{ settings.ctaUrl or '#' }}"
-                class="inline-flex w-fit items-center justify-center rounded-full bg-violet-600 px-5 py-2 text-white text-sm font-semibold hover:bg-violet-500"
-              >
-                {{ settings.ctaLabel }}
-              </a>
-            {% endif %}
+            <div class="{{ hero_grid_class }}">
+              <div class="flex flex-col gap-4 {{ align_class }}">
+                <p class="text-xs uppercase tracking-[0.3em] text-violet-400">
+                  {{ block.status or 'Brouillon' }}
+                </p>
+                <h2 class="text-4xl font-bold leading-tight">
+                  {{ settings.title or block.label or 'Titre du hero' }}
+                </h2>
+                <p class="text-lg text-slate-600 max-w-2xl">
+                  {{ settings.subtitle or block.description or 'Ajoutez un sous-titre inspirant pour ce hero.' }}
+                </p>
+                {% if settings.ctaLabel %}
+                  <a
+                    href="{{ settings.ctaUrl or '#' }}"
+                    class="inline-flex w-fit items-center justify-center rounded-full bg-violet-600 px-5 py-2 text-white text-sm font-semibold hover:bg-violet-500"
+                  >
+                    {{ settings.ctaLabel }}
+                  </a>
+                {% endif %}
+              </div>
+              {% if has_image %}
+                <div class="flex justify-center lg:justify-end">
+                  <div class="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/60 shadow-2xl ring-1 ring-violet-100/80">
+                    <div
+                      class="h-64 w-full bg-slate-200 bg-cover bg-center"
+                      style="{{ settings.image and ('background-image:url(' ~ settings.image ~ ');') or '' }}"
+                      aria-label="Illustration du hero"
+                    ></div>
+                    <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
           </section>
         {% elif type == 'paragraphe' or type == 'texte' %}
           {% set align = settings.align or 'left' %}
@@ -127,10 +149,11 @@
             <div class="h-24 rounded-2xl bg-slate-50 border border-slate-100"></div>
           </div>
         </section>
-        {% elif type == 'collectiongrid' %}
+        {% elif type == 'collectiongrid' or type == 'collection grid' or raw_type == 'CollectionGrid' %}
           {% set cid = block.collectionId or settings.collectionId %}
           {% set limit = settings.limit or 6 %}
-          {% set items = (collectionMap[cid] or []) | slice(0, limit) %}
+          {% set allItems = collectionMap[cid] or [] %}
+          {% set itemCount = allItems | length %}
           <section
             data-preview-block="{{ block.id }}"
             class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-3"
@@ -142,18 +165,20 @@
                   {{ block.description or 'Items issus de la collection sélectionnée.' }}
                 </p>
               </div>
-              <span class="text-xs text-slate-400">{{ items|length }} item(s)</span>
+              <span class="text-xs text-slate-400">{{ itemCount }} item(s)</span>
             </div>
-            {% if items|length == 0 %}
+            {% if itemCount == 0 %}
               <p class="text-sm text-slate-500">Aucun item disponible dans cette collection.</p>
             {% else %}
               <div class="grid gap-3 md:grid-cols-2">
-                {% for item in items %}
+                {% for item in allItems %}
+                  {% if loop.index0 < limit %}
                   <article class="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-2">
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-400">{{ item.status or '' }}</p>
                     <h4 class="text-lg font-semibold text-slate-900">{{ item.title or 'Item' }}</h4>
                     <p class="text-sm text-slate-600">{{ item.summary or item.excerpt or '' }}</p>
                   </article>
+                  {% endif %}
                 {% endfor %}
               </div>
             {% endif %}

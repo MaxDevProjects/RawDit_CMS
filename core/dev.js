@@ -24,6 +24,30 @@ const WORKSPACE_FILES = Object.fromEntries(
 const previewLoader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCache: true });
 const previewEnv = new nunjucks.Environment(previewLoader, { autoescape: true });
 const SITES_DATA_ROOT = path.join(paths.data, 'sites');
+const PUBLIC_SITES_ROOT = path.join(paths.public, 'sites');
+const DEFAULT_COLLECTIONS = [
+  {
+    id: 'projects',
+    name: 'Projets',
+    type: 'collection',
+    description: 'Référentiel des projets phares.',
+    path: 'projects.json',
+  },
+  {
+    id: 'articles',
+    name: 'Articles',
+    type: 'collection',
+    description: 'Actualités et billets publiés.',
+    path: 'articles.json',
+  },
+  {
+    id: 'testimonials',
+    name: 'Témoignages',
+    type: 'collection',
+    description: 'Avis clients structurés.',
+    path: 'testimonials.json',
+  },
+];
 
 const stripLeadingSlash = (value) => value?.replace(/^\//, '') || '';
 
@@ -59,6 +83,8 @@ function normalizePageSlugValue(value) {
   const cleaned = slugify(raw);
   return cleaned ? `/${cleaned}` : '';
 }
+
+const normalizeItemSlugValue = normalizePageSlugValue;
 
 function generatePageIdFromSlug(slugValue, fallbackTitle = '') {
   if (slugValue === '/') {
@@ -114,25 +140,110 @@ async function readCollectionsIndex(siteSlug) {
     return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     if (err.code === 'ENOENT') {
-      return [];
+      const defaults = DEFAULT_COLLECTIONS.map((entry) => ({ ...entry }));
+      await ensureDir(dir);
+      await fs.writeFile(indexPath, JSON.stringify(defaults, null, 2), 'utf8');
+      await Promise.all(
+        defaults.map(async (entry) => {
+          const fileName = entry.path || `${entry.id}.json`;
+          const targetPath = path.join(dir, fileName);
+          try {
+            await fs.access(targetPath);
+          } catch {
+            await fs.writeFile(targetPath, JSON.stringify({ items: [] }, null, 2), 'utf8');
+          }
+        }),
+      );
+      return defaults;
     }
     console.warn(`[collections] Impossible de lire ${indexPath}: ${err.message}`);
     return [];
   }
 }
 
-async function readCollectionItems(siteSlug, collectionId) {
+async function getCollectionFilePath(siteSlug, collectionId) {
   const dir = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'collections');
-  const filePath = path.join(dir, `${collectionId}.json`);
+  const entries = await readCollectionsIndex(siteSlug);
+  const entry = entries.find((collection) => collection.id === collectionId);
+  const fileName = entry?.path || `${collectionId}.json`;
+  return path.join(dir, fileName);
+}
+
+async function readCollectionFile(siteSlug, collectionId) {
+  const filePath = await getCollectionFilePath(siteSlug, collectionId);
   try {
     const raw = await fs.readFile(filePath, 'utf8');
     const parsed = JSON.parse(raw || '{}');
-    return Array.isArray(parsed.items) ? parsed.items : [];
+    return {
+      items: Array.isArray(parsed.items) ? parsed.items : [],
+      filePath,
+    };
   } catch (err) {
     if (err.code === 'ENOENT') {
-      return [];
+      await ensureDir(path.dirname(filePath));
+      await fs.writeFile(filePath, JSON.stringify({ items: [] }, null, 2), 'utf8');
+      return { items: [], filePath };
     }
     console.warn(`[collections] Impossible de lire ${filePath}: ${err.message}`);
+    return { items: [], filePath };
+  }
+}
+
+async function writeCollectionItems(siteSlug, collectionId, items) {
+  const filePath = await getCollectionFilePath(siteSlug, collectionId);
+  await ensureDir(path.dirname(filePath));
+  await fs.writeFile(filePath, JSON.stringify({ items }, null, 2), 'utf8');
+  return items;
+}
+
+async function readCollectionItems(siteSlug, collectionId) {
+  const file = await readCollectionFile(siteSlug, collectionId);
+  return file.items;
+}
+
+function getSiteMediaJsonPath(siteSlug) {
+  return path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'media.json');
+}
+
+function getSitePublicMediaDir(siteSlug) {
+  return path.join(PUBLIC_SITES_ROOT, sanitizeSiteSlug(siteSlug), 'media');
+}
+
+async function ensureSiteMediaStructure(siteSlug) {
+  await ensureDir(path.dirname(getSiteMediaJsonPath(siteSlug)));
+  await ensureDir(getSitePublicMediaDir(siteSlug));
+}
+
+function normalizeMediaItem(item = {}) {
+  const inferredFilename =
+    item.filename ||
+    (item.path ? path.basename(item.path) : `media-${Date.now().toString(36)}`);
+  return {
+    id: item.id || `media-${Date.now().toString(36)}`,
+    filename: inferredFilename,
+    path: item.path || '',
+    type: item.type || 'file',
+    size: Number(item.size) || 0,
+    alt: item.alt || '',
+    usedIn: Array.isArray(item.usedIn) ? item.usedIn : [],
+    uploadedAt: item.uploadedAt || null,
+  };
+}
+
+async function readMediaLibrary(siteSlug) {
+  const mediaPath = getSiteMediaJsonPath(siteSlug);
+  try {
+    const raw = await fs.readFile(mediaPath, 'utf8');
+    const parsed = JSON.parse(raw || '{}');
+    const items = Array.isArray(parsed.items) ? parsed.items : [];
+    return items.map((item) => normalizeMediaItem(item));
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      await ensureSiteMediaStructure(siteSlug);
+      await fs.writeFile(mediaPath, JSON.stringify({ items: [] }, null, 2), 'utf8');
+      return [];
+    }
+    console.warn(`[media] Impossible de lire ${mediaPath}: ${err.message}`);
     return [];
   }
 }
@@ -423,6 +534,128 @@ async function start() {
     } catch (err) {
       console.error('[collections] items failed', err);
       res.status(500).json({ message: 'Impossible de charger les items.' });
+    }
+  });
+
+  app.post('/api/sites/:slug/collections/:collectionId/items', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const collectionId = slugify(req.params.collectionId || '');
+    if (!collectionId) {
+      return res.status(400).json({ message: 'Collection invalide.' });
+    }
+    const payload = req.body || {};
+    const title = typeof payload.title === 'string' ? payload.title.trim() : '';
+    if (!title) {
+      return res.status(400).json({ message: 'Titre requis.' });
+    }
+    const slugValue = normalizeItemSlugValue(payload.slug || title);
+    const summary = payload.summary || payload.excerpt || '';
+    const content = payload.content || payload.body || '';
+    const image = payload.image || payload.imageId || '';
+    const status = payload.status || 'Brouillon';
+    try {
+      const file = await readCollectionFile(siteSlug, collectionId);
+      const items = file.items || [];
+      const now = new Date().toISOString();
+      const baseId = slugify(title) || slugify(slugValue) || `item-${Date.now().toString(36)}`;
+      let newId = baseId || `item-${Date.now().toString(36)}`;
+      let suffix = 1;
+      while (items.some((item) => item.id === newId)) {
+        newId = `${baseId}-${suffix++}`;
+      }
+      const newItem = {
+        id: newId,
+        title,
+        slug: slugValue,
+        summary,
+        content,
+        image,
+        status,
+        createdAt: now,
+        updatedAt: now,
+      };
+      items.push(newItem);
+      await writeCollectionItems(siteSlug, collectionId, items);
+      res.status(201).json(newItem);
+    } catch (err) {
+      console.error('[collections] create item failed', err);
+      res.status(500).json({ message: 'Impossible de créer cet item.' });
+    }
+  });
+
+  app.put('/api/sites/:slug/collections/:collectionId/items/:itemId', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const collectionId = slugify(req.params.collectionId || '');
+    const itemId = slugify(req.params.itemId || '');
+    if (!collectionId || !itemId) {
+      return res.status(400).json({ message: 'Paramètres invalides.' });
+    }
+    const payload = req.body || {};
+    try {
+      const file = await readCollectionFile(siteSlug, collectionId);
+      const items = file.items || [];
+      const index = items.findIndex((item) => item.id === itemId);
+      if (index === -1) {
+        return res.status(404).json({ message: 'Item introuvable.' });
+      }
+      const current = items[index];
+      const title =
+        typeof payload.title === 'string' && payload.title.trim()
+          ? payload.title.trim()
+          : current.title;
+      const slugValue = normalizeItemSlugValue(payload.slug || current.slug || title);
+      const updated = {
+        ...current,
+        title,
+        slug: slugValue,
+        summary: payload.summary ?? payload.excerpt ?? current.summary ?? '',
+        content: payload.content ?? payload.body ?? current.content ?? '',
+        image: payload.image ?? payload.imageId ?? current.image ?? '',
+        status: payload.status || current.status || 'Brouillon',
+        updatedAt: new Date().toISOString(),
+      };
+      items[index] = updated;
+      await writeCollectionItems(siteSlug, collectionId, items);
+      res.json(updated);
+    } catch (err) {
+      console.error('[collections] update item failed', err);
+      res.status(500).json({ message: 'Impossible de mettre à jour cet item.' });
+    }
+  });
+
+  app.delete('/api/sites/:slug/collections/:collectionId/items/:itemId', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const collectionId = slugify(req.params.collectionId || '');
+    const itemId = slugify(req.params.itemId || '');
+    if (!collectionId || !itemId) {
+      return res.status(400).json({ message: 'Paramètres invalides.' });
+    }
+    try {
+      const file = await readCollectionFile(siteSlug, collectionId);
+      const items = file.items || [];
+      const filtered = items.filter((item) => item.id !== itemId);
+      if (filtered.length === items.length) {
+        return res.status(404).json({ message: 'Item introuvable.' });
+      }
+      await writeCollectionItems(siteSlug, collectionId, filtered);
+      res.status(204).end();
+    } catch (err) {
+      console.error('[collections] delete item failed', err);
+      res.status(500).json({ message: 'Impossible de supprimer cet item.' });
+    }
+  });
+
+  app.get('/api/sites/:slug/media', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    try {
+      const items = await readMediaLibrary(siteSlug);
+      res.json({ items });
+    } catch (err) {
+      console.error('[media] list failed', err);
+      res.status(500).json({ message: 'Impossible de charger les médias.' });
     }
   });
 

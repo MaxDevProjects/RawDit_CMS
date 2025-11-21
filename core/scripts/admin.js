@@ -532,6 +532,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (workspaceContext?.section === 'content') {
     initContentWorkspace();
   }
+  if (workspaceContext?.section === 'media') {
+    initMediaWorkspace();
+  }
 
   if (workspaceContext && storedSite.name) {
     updateSiteLabels(storedSite.name);
@@ -568,6 +571,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const blockFormSections = blockForm
       ? Array.from(blockForm.querySelectorAll('[data-editor-section]'))
       : [];
+    const collectionSelect = blockForm?.querySelector('[name="collection-grid-collection"]');
+    const collectionSelectionInfo = blockForm?.querySelector(
+      '[data-collection-selection-info]',
+    );
     const blockFormCancel = document.querySelector('[data-block-form-cancel]');
     const groupPreviewMobile = blockForm?.querySelector('[data-group-preview-mobile]');
     const groupPreviewDesktop = blockForm?.querySelector('[data-group-preview-desktop]');
@@ -871,11 +878,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!previewFrame || !page) {
         return;
       }
+      const previewSiteSlug = workspaceContext?.slugValue || storedSite.slug || '';
       const payload = {
         page: serializePageForPreview(page),
         site: {
           title: storedSite.name || 'Site',
-          slug: storedSite.slug || '',
+          slug: previewSiteSlug,
         },
       };
       previewReady = false;
@@ -1701,8 +1709,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const payload = await response.json().catch(() => []);
         designCollections = Array.isArray(payload) ? payload : [];
-        const currentValue =
-          blockForm?.querySelector('[name="collection-grid-collection"]')?.value || '';
+        const currentValue = collectionSelect?.value || '';
         updateCollectionSelectOptions(currentValue);
       } catch (err) {
         console.error('[design] collections load', err);
@@ -1712,39 +1719,65 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
+    const syncCollectionSelectionInfo = (collectionId) => {
+      if (!collectionSelectionInfo) {
+        return;
+      }
+      if (!collectionId) {
+        collectionSelectionInfo.textContent = designCollections.length
+          ? 'Sélectionnez une collection pour afficher ses informations.'
+          : 'Aucune collection disponible. Ajoutez-en depuis l’onglet Contenus.';
+        return;
+      }
+      const entry = designCollections.find((collection) => collection.id === collectionId);
+      if (!entry) {
+        collectionSelectionInfo.textContent = `Collection ${collectionId}`;
+        return;
+      }
+      const details = [];
+      if (entry.description) {
+        details.push(entry.description);
+      }
+      if (entry.type) {
+        details.push(`Type : ${entry.type}`);
+      }
+      collectionSelectionInfo.textContent =
+        details.join(' · ') || `Collection ${entry.name || entry.id}`;
+    };
+
     const updateCollectionSelectOptions = (selectedValue = '') => {
-      if (!blockForm) {
+      if (!collectionSelect) {
         return;
       }
-      const select = blockForm.querySelector('[name="collection-grid-collection"]');
-      if (!select) {
-        return;
-      }
-      select.innerHTML = '';
+      collectionSelect.innerHTML = '';
       if (!designCollections.length) {
-        select.disabled = true;
+        collectionSelect.disabled = true;
         const option = document.createElement('option');
         option.value = '';
         option.textContent = 'Aucune collection disponible';
-        select.appendChild(option);
+        collectionSelect.appendChild(option);
+        syncCollectionSelectionInfo('');
         return;
       }
-      select.disabled = false;
+      collectionSelect.disabled = false;
       if (selectedValue && !designCollections.some((entry) => entry.id === selectedValue)) {
         const fallbackOption = document.createElement('option');
         fallbackOption.value = selectedValue;
         fallbackOption.textContent = selectedValue;
-        select.appendChild(fallbackOption);
+        collectionSelect.appendChild(fallbackOption);
       }
       designCollections.forEach((collection) => {
         const option = document.createElement('option');
         option.value = collection.id;
-        option.textContent = collection.name || collection.id;
-        select.appendChild(option);
+        const label = collection.name || collection.id;
+        option.textContent = collection.type ? `${label} · ${collection.type}` : label;
+        option.dataset.description = collection.description || '';
+        collectionSelect.appendChild(option);
       });
       if (selectedValue) {
-        select.value = selectedValue;
+        collectionSelect.value = selectedValue;
       }
+      syncCollectionSelectionInfo(collectionSelect.value || '');
     };
 
     loadDesignCollections();
@@ -1858,6 +1891,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGroupMiniPreview(mobileValue, desktopValue);
       }
     });
+    collectionSelect?.addEventListener('change', (event) => {
+      const target = event.target;
+      syncCollectionSelectionInfo(target?.value || '');
+    });
     blockForm?.addEventListener('submit', handleBlockFormSubmit);
     blockFormCancel?.addEventListener('click', (event) => {
       event.preventDefault();
@@ -1953,13 +1990,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const collectionEmptyState = document.querySelector('[data-collection-empty]');
     const collectionItemsEmpty = document.querySelector('[data-collection-items-empty]');
-    const collectionItems = document.querySelector('[data-collection-items]');
+    const itemTableWrapper = document.querySelector('[data-item-table-wrapper]');
+    const itemTableBody = document.querySelector('[data-item-table-body]');
     const collectionTitle = document.querySelector('[data-collection-title]');
     const collectionDescription = document.querySelector('[data-collection-description]');
     const collectionDrawer = document.querySelector('[data-collection-drawer]');
     const collectionDrawerBackdrop = document.querySelector('[data-collection-drawer-backdrop]');
     const collectionDrawerOpenButtons = document.querySelectorAll('[data-collection-drawer-open]');
     const collectionDrawerCloseButtons = document.querySelectorAll('[data-collection-drawer-close]');
+    const itemAddButton = document.querySelector('[data-item-add]');
+    const itemDetailEmpty = document.querySelector('[data-item-detail-empty]');
+    const itemForm = document.querySelector('[data-item-form]');
+    const itemFormFields = itemForm
+      ? {
+          title: itemForm.querySelector('[name="item-title"]'),
+          slug: itemForm.querySelector('[name="item-slug"]'),
+          excerpt: itemForm.querySelector('[name="item-excerpt"]'),
+          content: itemForm.querySelector('[name="item-content"]'),
+          image: itemForm.querySelector('[name="item-image"]'),
+          status: itemForm.querySelector('[name="item-status"]'),
+        }
+      : {};
+    const itemStatusBadge = document.querySelector('[data-item-status-badge]');
+    const itemDeleteButton = document.querySelector('[data-item-delete]');
+    const itemDeleteModal = document.querySelector('[data-item-delete-modal]');
+    const itemDeleteCancel = document.querySelector('[data-item-delete-cancel]');
+    const itemDeleteConfirm = document.querySelector('[data-item-delete-confirm]');
+    const itemFormCancel = document.querySelector('[data-item-cancel]');
+    const itemFormSave = document.querySelector('[data-item-save]');
+    const statusBadgeBaseClass = 'rounded-full px-3 py-1 text-xs font-semibold';
 
     const safeSiteSlugValue = stripLeadingSlash(
       workspaceContext?.slugValue || storedSite.slug || '',
@@ -1969,7 +2028,12 @@ document.addEventListener('DOMContentLoaded', () => {
       : null;
 
     let collections = [];
+    let collectionItems = [];
     let activeCollectionId = null;
+    let activeItemId = null;
+    let isCreatingItem = false;
+    let itemSlugManuallyEdited = false;
+    let pendingDeleteItemId = null;
 
     const openCollectionDrawer = () => {
       if (!collectionDrawer) {
@@ -1998,6 +2062,111 @@ document.addEventListener('DOMContentLoaded', () => {
       button.addEventListener('click', closeCollectionDrawer);
     });
     collectionDrawerBackdrop?.addEventListener('click', closeCollectionDrawer);
+
+    const normalizeItemSlugInput = (value) => {
+      const raw = (value || '').trim();
+      if (!raw) {
+        return '';
+      }
+      if (raw === '/') {
+        return '/';
+      }
+      const segments = raw.replace(/^\//, '').split('/');
+      const cleanedSegments = segments
+        .map((segment) => workspaceSlugify(segment || ''))
+        .filter((segment) => segment.length > 0);
+      if (!cleanedSegments.length) {
+        return '';
+      }
+      return `/${cleanedSegments.join('/')}`;
+    };
+
+    const formatItemDate = (value) => {
+      if (!value) {
+        return '—';
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return '—';
+      }
+      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    };
+
+    const updateCollectionHeader = () => {
+      const collection = collections.find((entry) => entry.id === activeCollectionId);
+      if (collectionTitle) {
+        collectionTitle.textContent = collection?.name || 'Sélectionnez une collection';
+      }
+      if (collectionDescription) {
+        collectionDescription.textContent = collection?.description || '';
+      }
+    };
+
+    const updateItemsEmptyMessage = (message) => {
+      if (!collectionItemsEmpty) {
+        return;
+      }
+      collectionItemsEmpty.textContent =
+        message ||
+        (activeCollectionId
+          ? 'Aucun item dans cette collection pour le moment.'
+          : 'Choisissez une collection dans le panneau de gauche.');
+    };
+
+    const hideItemForm = () => {
+      if (itemForm) {
+        itemForm.classList.add('hidden');
+        itemForm.dataset.itemId = '';
+      }
+      itemDetailEmpty?.classList.remove('hidden');
+      if (itemStatusBadge) {
+        itemStatusBadge.className = `hidden ${statusBadgeBaseClass}`;
+        itemStatusBadge.textContent = '';
+      }
+      if (itemDeleteButton) {
+        itemDeleteButton.disabled = true;
+      }
+    };
+
+    const showItemForm = () => {
+      if (!itemForm) {
+        return;
+      }
+      itemForm.classList.remove('hidden');
+      itemDetailEmpty?.classList.add('hidden');
+    };
+
+    const syncAddButtonState = () => {
+      if (!itemAddButton) {
+        return;
+      }
+      itemAddButton.disabled = !activeCollectionId;
+      if (itemAddButton.disabled) {
+        itemAddButton.classList.add('opacity-60', 'pointer-events-none');
+      } else {
+        itemAddButton.classList.remove('opacity-60', 'pointer-events-none');
+      }
+    };
+
+    const syncItemStatusBadge = (status) => {
+      if (!itemStatusBadge) {
+        return;
+      }
+      if (!status) {
+        itemStatusBadge.className = `hidden ${statusBadgeBaseClass}`;
+        itemStatusBadge.textContent = '';
+        return;
+      }
+      const normalized = status.toLowerCase();
+      let colorClass = 'bg-slate-100 text-slate-600 border border-slate-200';
+      if (normalized === 'publié' || normalized === 'publie') {
+        colorClass = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+      } else if (normalized === 'brouillon') {
+        colorClass = 'bg-amber-50 text-amber-700 border border-amber-100';
+      }
+      itemStatusBadge.className = `${statusBadgeBaseClass} ${colorClass}`;
+      itemStatusBadge.textContent = status;
+    };
 
     const renderCollectionList = () => {
       collectionList.innerHTML = '';
@@ -2042,74 +2211,275 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     };
 
-    const renderCollectionItems = (items) => {
-      if (!collectionItems) {
+    const renderItemTable = () => {
+      if (!itemTableBody) {
         return;
       }
-      collectionItems.innerHTML = '';
-      if (!items || items.length === 0) {
+      itemTableBody.innerHTML = '';
+      if (!collectionItems.length || !activeCollectionId) {
         collectionItemsEmpty?.classList.remove('hidden');
+        updateItemsEmptyMessage();
+        itemTableWrapper?.classList.add('hidden');
         return;
       }
       collectionItemsEmpty?.classList.add('hidden');
-      items.forEach((item) => {
-        const card = document.createElement('article');
-        card.className =
-          'rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm hover:border-[#9C6BFF]/40';
-        card.innerHTML = `
-          <div class="flex items-center justify-between gap-2">
-            <div>
-              <p class="text-sm font-semibold text-slate-900">${item.title || 'Item'}</p>
-              <p class="text-xs text-slate-500">${item.summary || ''}</p>
+      itemTableWrapper?.classList.remove('hidden');
+      collectionItems.forEach((item) => {
+        const row = document.createElement('tr');
+        row.dataset.itemId = item.id;
+        const isActive = item.id === activeItemId && !isCreatingItem;
+        row.className = [
+          'cursor-pointer transition focus-within:bg-[#F7F0FF]/70 focus:outline-none',
+          isActive ? 'bg-[#F7F0FF]/70' : 'hover:bg-slate-50',
+        ].join(' ');
+        row.tabIndex = 0;
+        row.setAttribute('role', 'button');
+        if (isActive) {
+          row.setAttribute('aria-current', 'true');
+        } else {
+          row.removeAttribute('aria-current');
+        }
+        const status = item.status || 'Brouillon';
+        const normalized = status.toLowerCase();
+        const statusClasses =
+          normalized === 'publié' || normalized === 'publie'
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+            : 'bg-amber-50 text-amber-700 border border-amber-100';
+        row.innerHTML = `
+          <td class="px-4 py-3 align-top">
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-slate-900">${item.title || 'Sans titre'}</span>
+              <span class="text-xs text-slate-500">${item.summary || item.excerpt || ''}</span>
             </div>
-            <span class="text-[11px] uppercase tracking-wide ${
-              (item.status || '').toLowerCase() === 'publié'
-                ? 'text-emerald-600'
-                : 'text-amber-600'
-            }">${item.status || ''}</span>
-          </div>
+          </td>
+          <td class="px-4 py-3 align-top text-sm text-slate-600">${item.slug || ''}</td>
+          <td class="px-4 py-3 align-top">
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusClasses}">
+              ${status}
+            </span>
+          </td>
+          <td class="px-4 py-3 align-top text-sm text-slate-500">${formatItemDate(
+            item.updatedAt || item.createdAt,
+          )}</td>
         `;
-        collectionItems.appendChild(card);
+        const handleSelect = () => {
+          selectItem(item.id);
+        };
+        row.addEventListener('click', handleSelect);
+        row.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleSelect();
+          }
+        });
+        itemTableBody.appendChild(row);
       });
     };
 
+    const selectItem = (itemId) => {
+      const item = collectionItems.find((entry) => entry.id === itemId);
+      if (!item) {
+        return;
+      }
+      activeItemId = item.id;
+      isCreatingItem = false;
+      itemSlugManuallyEdited = true;
+      populateItemForm(item);
+      renderItemTable();
+    };
+
+    const populateItemForm = (item) => {
+      if (!itemForm || !item) {
+        hideItemForm();
+        return;
+      }
+      showItemForm();
+      itemForm.dataset.itemId = item.id;
+      if (itemFormFields.title) {
+        itemFormFields.title.value = item.title || '';
+      }
+      if (itemFormFields.slug) {
+        itemFormFields.slug.value = item.slug || '';
+      }
+      if (itemFormFields.excerpt) {
+        itemFormFields.excerpt.value = item.summary || item.excerpt || '';
+      }
+      if (itemFormFields.content) {
+        itemFormFields.content.value = item.content || '';
+      }
+      if (itemFormFields.image) {
+        itemFormFields.image.value = item.image || '';
+      }
+      if (itemFormFields.status) {
+        itemFormFields.status.value = item.status || 'Brouillon';
+      }
+      syncItemStatusBadge(item.status || 'Brouillon');
+      if (itemDeleteButton) {
+        itemDeleteButton.disabled = false;
+      }
+    };
+
+    const prepareNewItemForm = () => {
+      if (!itemForm) {
+        return;
+      }
+      isCreatingItem = true;
+      activeItemId = null;
+      itemSlugManuallyEdited = false;
+      itemForm.dataset.itemId = '';
+      itemForm.reset();
+      if (itemFormFields.status) {
+        itemFormFields.status.value = 'Brouillon';
+      }
+      if (itemFormFields.slug) {
+        itemFormFields.slug.value = '';
+      }
+      syncItemStatusBadge('Brouillon');
+      showItemForm();
+      if (itemDeleteButton) {
+        itemDeleteButton.disabled = true;
+      }
+      itemFormFields.title?.focus();
+    };
+
+    const collectItemFormValues = () => {
+      const title = (itemFormFields.title?.value || '').trim();
+      const slugInput = (itemFormFields.slug?.value || '').trim();
+      const summary = (itemFormFields.excerpt?.value || '').trim();
+      const content = (itemFormFields.content?.value || '').trim();
+      const image = (itemFormFields.image?.value || '').trim();
+      const status = itemFormFields.status?.value || 'Brouillon';
+      return {
+        title,
+        slug: slugInput ? normalizeItemSlugInput(slugInput) : normalizeItemSlugInput(title),
+        summary,
+        excerpt: summary,
+        content,
+        image,
+        status,
+      };
+    };
+
+    const setFormSavingState = (isSaving) => {
+      if (itemFormSave) {
+        itemFormSave.disabled = isSaving;
+        itemFormSave.textContent = isSaving ? 'Enregistrement…' : 'Enregistrer';
+      }
+      if (itemDeleteButton && !isCreatingItem && activeItemId) {
+        itemDeleteButton.disabled = isSaving;
+      }
+    };
+
+    const fetchCollectionItems = async (collectionId) => {
+      if (!collectionsApiBase) {
+        return [];
+      }
+      const response = await fetch(
+        `${collectionsApiBase}/${encodeURIComponent(collectionId)}/items`,
+        { headers: { Accept: 'application/json' } },
+      );
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.message || 'Impossible de charger les items.');
+      }
+      const data = await response.json().catch(() => ({}));
+      return Array.isArray(data.items) ? data.items : [];
+    };
+
     const setActiveCollection = async (collectionId) => {
-      if (!collectionId || activeCollectionId === collectionId) {
+      if (!collectionId) {
         return;
       }
       activeCollectionId = collectionId;
-      const collection = collections.find((entry) => entry.id === collectionId);
-      if (collectionTitle) {
-        collectionTitle.textContent = collection?.name || 'Collection';
-      }
-      if (collectionDescription) {
-        collectionDescription.textContent = collection?.description || '';
-      }
+      activeItemId = null;
+      isCreatingItem = false;
+      itemSlugManuallyEdited = false;
+      updateCollectionHeader();
+      syncAddButtonState();
       renderCollectionList();
+      hideItemForm();
+      collectionItems = [];
+      renderItemTable();
+      updateItemsEmptyMessage('Chargement des items…');
+      collectionItemsEmpty?.classList.remove('hidden');
+      itemTableWrapper?.classList.add('hidden');
       if (!collectionsApiBase) {
-        renderCollectionItems([]);
         return;
       }
       try {
-        const response = await fetch(
-          `${collectionsApiBase}/${encodeURIComponent(collectionId)}/items`,
-          { headers: { Accept: 'application/json' } },
-        );
-        if (!response.ok) {
-          throw new Error('Impossible de charger les items.');
+        collectionItems = await fetchCollectionItems(collectionId);
+        renderItemTable();
+        if (!collectionItems.length) {
+          updateItemsEmptyMessage();
         }
-        const payload = await response.json().catch(() => ({ items: [] }));
-        renderCollectionItems(payload.items || []);
       } catch (err) {
         console.error('[content] items failed', err);
         showToast(err.message || 'Impossible de charger les items.');
-        renderCollectionItems([]);
+        collectionItems = [];
+        renderItemTable();
+      }
+    };
+
+    const createCollectionItem = async (collectionId, payload) => {
+      if (!collectionsApiBase) {
+        throw new Error('Site inconnu.');
+      }
+      const response = await fetch(
+        `${collectionsApiBase}/${encodeURIComponent(collectionId)}/items`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        },
+      );
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Impossible de créer cet item.');
+      }
+      return response.json();
+    };
+
+    const updateCollectionItem = async (collectionId, itemId, payload) => {
+      if (!collectionsApiBase) {
+        throw new Error('Site inconnu.');
+      }
+      const response = await fetch(
+        `${collectionsApiBase}/${encodeURIComponent(collectionId)}/items/${encodeURIComponent(itemId)}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        },
+      );
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Impossible de sauvegarder cet item.');
+      }
+      return response.json();
+    };
+
+    const deleteCollectionItem = async (collectionId, itemId) => {
+      if (!collectionsApiBase) {
+        throw new Error('Site inconnu.');
+      }
+      const response = await fetch(
+        `${collectionsApiBase}/${encodeURIComponent(collectionId)}/items/${encodeURIComponent(itemId)}`,
+        { method: 'DELETE' },
+      );
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Impossible de supprimer cet item.');
       }
     };
 
     const loadCollections = async () => {
       if (!collectionsApiBase) {
         collectionEmptyState?.classList.remove('hidden');
+        activeCollectionId = null;
+        collectionItems = [];
+        renderItemTable();
+        updateCollectionHeader();
+        syncAddButtonState();
         return;
       }
       try {
@@ -2121,13 +2491,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const payload = await response.json().catch(() => []);
         collections = Array.isArray(payload) ? payload : [];
+        renderCollectionList();
         if (collections.length > 0) {
-          activeCollectionId = collections[0].id;
-          renderCollectionList();
-          setActiveCollection(activeCollectionId);
+          const defaultId = collections.find((entry) => entry.id === activeCollectionId)?.id
+            || collections[0].id;
+          setActiveCollection(defaultId);
         } else {
-          renderCollectionList();
-          renderCollectionItems([]);
+          activeCollectionId = null;
+          collectionItems = [];
+          updateCollectionHeader();
+          syncAddButtonState();
+          renderItemTable();
         }
       } catch (err) {
         console.error('[content] load collections', err);
@@ -2135,6 +2509,383 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
+    itemAddButton?.addEventListener('click', () => {
+      if (!activeCollectionId) {
+        showToast('Sélectionnez d’abord une collection.');
+        return;
+      }
+      prepareNewItemForm();
+      renderItemTable();
+    });
+
+    itemFormCancel?.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (isCreatingItem) {
+        isCreatingItem = false;
+        activeItemId = null;
+        hideItemForm();
+        renderItemTable();
+        return;
+      }
+      if (activeItemId) {
+        const item = collectionItems.find((entry) => entry.id === activeItemId);
+        populateItemForm(item);
+      } else {
+        hideItemForm();
+      }
+    });
+
+    itemFormFields.status?.addEventListener('change', () => {
+      syncItemStatusBadge(itemFormFields.status.value);
+    });
+
+    itemFormFields.title?.addEventListener('input', () => {
+      if (!isCreatingItem || !itemFormFields.slug || itemSlugManuallyEdited) {
+        return;
+      }
+      itemFormFields.slug.value = normalizeItemSlugInput(itemFormFields.title.value);
+    });
+
+    itemFormFields.slug?.addEventListener('input', () => {
+      if (!isCreatingItem) {
+        return;
+      }
+      itemSlugManuallyEdited = true;
+    });
+
+    itemForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!activeCollectionId) {
+        showToast('Sélectionnez une collection.');
+        return;
+      }
+      const values = collectItemFormValues();
+      if (!values.title) {
+        showToast('Le titre est requis.');
+        itemFormFields.title?.focus();
+        return;
+      }
+      setFormSavingState(true);
+      try {
+        let savedItem;
+        if (isCreatingItem || !activeItemId) {
+          savedItem = await createCollectionItem(activeCollectionId, values);
+          collectionItems = [...collectionItems, savedItem];
+          showToast('Item créé');
+        } else {
+          savedItem = await updateCollectionItem(activeCollectionId, activeItemId, values);
+          collectionItems = collectionItems.map((item) =>
+            item.id === savedItem.id ? savedItem : item,
+          );
+          showToast('Item mis à jour');
+        }
+        isCreatingItem = false;
+        activeItemId = savedItem.id;
+        populateItemForm(savedItem);
+        renderItemTable();
+      } catch (err) {
+        console.error('[content] save item failed', err);
+        showToast(err.message || 'Impossible de sauvegarder cet item.');
+      } finally {
+        setFormSavingState(false);
+      }
+    });
+
+    const closeDeleteModal = () => {
+      if (!itemDeleteModal) {
+        return;
+      }
+      itemDeleteModal.classList.add('hidden');
+      itemDeleteModal.classList.remove('flex');
+      pendingDeleteItemId = null;
+    };
+
+    const openDeleteModal = () => {
+      if (!itemDeleteModal || !activeItemId) {
+        return;
+      }
+      pendingDeleteItemId = activeItemId;
+      itemDeleteModal.classList.remove('hidden');
+      itemDeleteModal.classList.add('flex');
+    };
+
+    itemDeleteButton?.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (!activeItemId) {
+        return;
+      }
+      openDeleteModal();
+    });
+
+    itemDeleteCancel?.addEventListener('click', () => {
+      closeDeleteModal();
+    });
+
+    itemDeleteModal?.addEventListener('click', (event) => {
+      if (event.target === itemDeleteModal) {
+        closeDeleteModal();
+      }
+    });
+
+    itemDeleteConfirm?.addEventListener('click', async () => {
+      if (!pendingDeleteItemId || !activeCollectionId) {
+        closeDeleteModal();
+        return;
+      }
+      itemDeleteConfirm.disabled = true;
+      itemDeleteConfirm.textContent = 'Suppression…';
+      try {
+        await deleteCollectionItem(activeCollectionId, pendingDeleteItemId);
+        collectionItems = collectionItems.filter((item) => item.id !== pendingDeleteItemId);
+        if (activeItemId === pendingDeleteItemId) {
+          activeItemId = null;
+          hideItemForm();
+        }
+        showToast('Item supprimé');
+        renderItemTable();
+      } catch (err) {
+        console.error('[content] delete item failed', err);
+        showToast(err.message || 'Impossible de supprimer cet item.');
+      } finally {
+        itemDeleteConfirm.disabled = false;
+        itemDeleteConfirm.textContent = 'Supprimer';
+        closeDeleteModal();
+      }
+    });
+
+    updateCollectionHeader();
+    syncAddButtonState();
     loadCollections();
+  }
+
+  function initMediaWorkspace() {
+    const grid = document.querySelector('[data-media-grid]');
+    if (!grid) {
+      return;
+    }
+    const emptyState = document.querySelector('[data-media-empty]');
+    const countBadge = document.querySelector('[data-media-count]');
+    const filterType = document.querySelector('[data-media-filter-type]');
+    const detailEmpty = document.querySelector('[data-media-detail-empty]');
+    const detailPanel = document.querySelector('[data-media-detail]');
+    const detailPreview = document.querySelector('[data-media-detail-preview]');
+    const detailName = document.querySelector('[data-media-detail-name]');
+    const detailType = document.querySelector('[data-media-detail-type]');
+    const detailSize = document.querySelector('[data-media-detail-size]');
+    const detailAlt = document.querySelector('[data-media-detail-alt]');
+    const detailPath = document.querySelector('[data-media-detail-path]');
+    const detailUsed = document.querySelector('[data-media-detail-used]');
+
+    const safeSiteSlugValue = stripLeadingSlash(
+      workspaceContext?.slugValue || storedSite.slug || '',
+    );
+    const mediaApiBase = safeSiteSlugValue
+      ? `/api/sites/${encodeURIComponent(safeSiteSlugValue)}/media`
+      : null;
+
+    let mediaItems = [];
+    let filteredItems = [];
+    let activeMediaId = null;
+
+    const deriveGroupType = (item) => {
+      const type = (item.type || '').toLowerCase();
+      const filename = (item.filename || '').toLowerCase();
+      if (type.includes('image') || /\.(png|jpe?g|webp|svg|gif)$/i.test(filename)) {
+        return 'image';
+      }
+      if (type.includes('pdf') || type.includes('doc') || /\.(pdf|docx?)$/i.test(filename)) {
+        return 'document';
+      }
+      if (type.includes('video') || /\.(mp4|mov|webm)$/i.test(filename)) {
+        return 'video';
+      }
+      return 'other';
+    };
+
+    const isImageType = (item) => deriveGroupType(item) === 'image';
+
+    const formatTypeLabel = (item) => {
+      if (item.type) {
+        return item.type.toUpperCase();
+      }
+      const ext = (item.filename || '').split('.').pop();
+      return ext ? ext.toUpperCase() : 'FILE';
+    };
+
+    const formatFileSize = (size) => {
+      if (!size || size <= 0) {
+        return '—';
+      }
+      if (size < 1024) {
+        return `${size} o`;
+      }
+      if (size < 1024 * 1024) {
+        return `${(size / 1024).toFixed(1)} ko`;
+      }
+      return `${(size / (1024 * 1024)).toFixed(1)} Mo`;
+    };
+
+    const resetDetailPanel = () => {
+      detailPanel?.classList.add('hidden');
+      detailEmpty?.classList.remove('hidden');
+      activeMediaId = null;
+      if (detailPreview) {
+        detailPreview.innerHTML =
+          '<span class="text-slate-400 text-sm">Aucun média sélectionné</span>';
+      }
+      if (detailName) {
+        detailName.textContent = '';
+      }
+      detailType && (detailType.textContent = '');
+      detailSize && (detailSize.textContent = '');
+      detailAlt && (detailAlt.textContent = '');
+      detailPath && (detailPath.textContent = '');
+      if (detailUsed) {
+        detailUsed.innerHTML = '';
+      }
+    };
+
+    const updateCountBadge = () => {
+      if (!countBadge) {
+        return;
+      }
+      if (!filteredItems.length) {
+        countBadge.textContent = '0 média';
+      } else if (filteredItems.length === 1) {
+        countBadge.textContent = '1 média';
+      } else {
+        countBadge.textContent = `${filteredItems.length} médias`;
+      }
+    };
+
+    const renderGrid = () => {
+      grid.innerHTML = '';
+      if (!filteredItems.length) {
+        emptyState?.classList.remove('hidden');
+        resetDetailPanel();
+        return;
+      }
+      emptyState?.classList.add('hidden');
+      filteredItems.forEach((item) => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.dataset.mediaId = item.id;
+        const isActive = item.id === activeMediaId;
+        card.className = [
+          'group relative flex flex-col rounded-2xl border px-3 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9C6BFF]',
+          isActive
+            ? 'border-[#9C6BFF] bg-[#F7F0FF]/60 shadow-sm'
+            : 'border-slate-200 hover:border-[#9C6BFF]/40',
+        ].join(' ');
+        const preview = isImageType(item)
+          ? `<img src="${item.path}" alt="${item.alt || item.filename}" class="h-full w-full object-cover" />`
+          : `<div class="flex h-full w-full items-center justify-center text-3xl text-slate-400">📄</div>`;
+        card.innerHTML = `
+          <div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100">
+            ${preview}
+          </div>
+          <div class="mt-2 space-y-1">
+            <p class="text-sm font-semibold text-slate-900 truncate">${item.filename}</p>
+            <p class="text-xs text-slate-500">
+              ${formatTypeLabel(item)} · ${formatFileSize(item.size)}
+            </p>
+          </div>
+        `;
+        card.addEventListener('click', () => selectMedia(item.id));
+        grid.appendChild(card);
+      });
+    };
+
+    const renderUsedIn = (item) => {
+      if (!detailUsed) {
+        return;
+      }
+      detailUsed.innerHTML = '';
+      if (!item.usedIn || item.usedIn.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'Non utilisé';
+        li.className = 'text-xs text-slate-400';
+        detailUsed.appendChild(li);
+        return;
+      }
+      item.usedIn.forEach((entry) => {
+        const li = document.createElement('li');
+        li.textContent = entry;
+        li.className = 'text-xs text-slate-600';
+        detailUsed.appendChild(li);
+      });
+    };
+
+    const selectMedia = (mediaId) => {
+      const item = mediaItems.find((entry) => entry.id === mediaId);
+      if (!item) {
+        resetDetailPanel();
+        renderGrid();
+        return;
+      }
+      activeMediaId = item.id;
+      renderGrid();
+      detailEmpty?.classList.add('hidden');
+      detailPanel?.classList.remove('hidden');
+      if (detailPreview) {
+        if (isImageType(item)) {
+          detailPreview.innerHTML = `<img src="${item.path}" alt="${item.alt || item.filename}" class="h-full w-full rounded-2xl object-cover" />`;
+        } else {
+          detailPreview.innerHTML =
+            '<div class="flex h-full w-full flex-col items-center justify-center gap-1 text-slate-400"><span class="text-3xl">📄</span><span class="text-xs font-semibold">Document</span></div>';
+        }
+      }
+      detailName && (detailName.textContent = item.filename || 'Fichier');
+      detailType && (detailType.textContent = formatTypeLabel(item));
+      detailSize && (detailSize.textContent = formatFileSize(item.size));
+      detailAlt && (detailAlt.textContent = item.alt || '—');
+      detailPath && (detailPath.textContent = item.path || '—');
+      renderUsedIn(item);
+    };
+
+    const applyFilters = () => {
+      const typeFilter = filterType?.value || 'all';
+      if (typeFilter === 'all') {
+        filteredItems = [...mediaItems];
+      } else {
+        filteredItems = mediaItems.filter((item) => item.groupType === typeFilter);
+      }
+      if (!filteredItems.some((item) => item.id === activeMediaId)) {
+        resetDetailPanel();
+      }
+      updateCountBadge();
+      renderGrid();
+    };
+
+    const loadMedia = async () => {
+      if (!mediaApiBase) {
+        emptyState?.classList.remove('hidden');
+        return;
+      }
+      try {
+        const response = await fetch(mediaApiBase, {
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error('Impossible de charger les médias.');
+        }
+        const payload = await response.json().catch(() => ({ items: [] }));
+        mediaItems = Array.isArray(payload.items)
+          ? payload.items.map((item) => ({ ...item, groupType: deriveGroupType(item) }))
+          : [];
+        applyFilters();
+      } catch (err) {
+        console.error('[media] load failed', err);
+        showToast(err.message || 'Impossible de charger les médias.');
+        mediaItems = [];
+        applyFilters();
+      }
+    };
+
+    filterType?.addEventListener('change', () => {
+      applyFilters();
+    });
+
+    loadMedia();
   }
 });
