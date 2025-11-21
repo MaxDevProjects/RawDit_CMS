@@ -633,6 +633,94 @@ document.addEventListener('DOMContentLoaded', () => {
       groupPreviewMobile.innerHTML = renderBoxes(mobileValue);
       groupPreviewDesktop.innerHTML = renderBoxes(desktopValue);
     };
+    const fetchPagesFromServer = async () => {
+      if (!pagesApiBase) {
+        return [];
+      }
+      const response = await fetch(pagesApiBase, { headers: { Accept: 'application/json' } });
+      if (!response.ok) {
+        throw new Error('Impossible de charger les pages.');
+      }
+      const payload = await response.json().catch(() => []);
+      return Array.isArray(payload) ? payload : [];
+    };
+    const createPageOnServer = async ({ title, slug }) => {
+      if (!pagesApiBase) {
+        throw new Error('Site inconnu.');
+      }
+      const response = await fetch(pagesApiBase, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title, slug }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.message || 'Impossible de créer la page.');
+      }
+      return response.json().catch(() => ({}));
+    };
+    const savePageToServer = async (page) => {
+      if (!pagesApiBase || !page?.id) {
+        return;
+      }
+      try {
+        const response = await fetch(`${pagesApiBase}/${encodeURIComponent(page.id)}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(page),
+        });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.message || 'Impossible de sauvegarder la page.');
+        }
+        const saved = await response.json().catch(() => ({}));
+        if (saved?.id) {
+          pages = pages.map((entry) => (entry.id === saved.id ? saved : entry));
+          if (currentPage?.id === saved.id) {
+            currentPage = saved;
+          }
+        }
+        return saved;
+      } catch (err) {
+        console.error('[design] Save page failed', err);
+        showToast(err.message || 'Sauvegarde impossible.');
+      }
+    };
+    const loadPagesFromServer = async () => {
+      if (!pagesApiBase) {
+        pages = [];
+        activePageId = null;
+        currentPage = null;
+        renderPageLists(pages, activePageId);
+        renderBlockList(null);
+        blockDetailEmpty?.classList.remove('hidden');
+        blockEditor?.classList.add('hidden');
+        return;
+      }
+      try {
+        const loadedPages = await fetchPagesFromServer();
+        pages = Array.isArray(loadedPages) ? loadedPages : [];
+        if (pages.length === 0) {
+          activePageId = null;
+          currentPage = null;
+          renderPageLists(pages, activePageId);
+          renderBlockList(null);
+          blockDetailEmpty?.classList.remove('hidden');
+          blockEditor?.classList.add('hidden');
+          previewFrame && (previewFrame.srcdoc = getLoadingPreviewHtml());
+          return;
+        }
+        activePageId = getStoredActivePage(pages);
+        setActivePage(activePageId);
+      } catch (err) {
+        console.error('[design] Impossible de charger les pages', err);
+        showToast('Impossible de charger les pages.');
+      }
+    };
     const normalizeType = (value) =>
       (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const getBlockFormConfig = (block) => {
@@ -854,10 +942,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const addPageSlug = document.querySelector('[data-add-page-slug]');
     const addPageCancel = document.querySelector('[data-add-page-cancel]');
     const addPageError = document.querySelector('[data-add-page-error]');
+    const addPageSubmitButton = addPageForm?.querySelector('[type="submit"]');
     const siteKey =
       stripLeadingSlash(workspaceContext?.slugValue || storedSite.slug || 'default') || 'default';
+    const siteSlugValue = workspaceContext?.slugValue || storedSite.slug || '';
+    const safeSiteSlug = stripLeadingSlash(siteSlugValue) || '';
+    const pagesApiBase = safeSiteSlug
+      ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/pages`
+      : null;
     const storageKeys = {
-      pages: `clower:pages:${siteKey}`,
       active: `clower:activePage:${siteKey}`,
     };
     const createBlock = (id, label, type, status, description, props = [], settings = {}) => ({
@@ -869,217 +962,6 @@ document.addEventListener('DOMContentLoaded', () => {
       props,
       settings: { ...settings },
     });
-    const defaultPages = [
-      {
-        id: 'home',
-        title: 'Accueil',
-        slug: '/',
-        description: 'Hero immersif avec CTA, mise en avant des services et preuve sociale.',
-        badges: ['Hero', 'Services', 'CTA'],
-        blocks: [
-          createBlock(
-            'home-hero',
-            'Hero principal',
-            'Hero',
-            'En ligne',
-            'Section immersive avec visuel plein écran et CTA principal.',
-            [
-              { label: 'CTA', value: 'Commencer' },
-              { label: 'Visuel', value: 'Photo plein écran' },
-            ],
-            {
-              title: 'Créez des expériences mémorables',
-              subtitle: 'Une équipe de designers pour construire vos pages en quelques minutes.',
-              ctaLabel: 'Commencer',
-              ctaUrl: '#contact',
-              image: '',
-              align: 'center',
-            },
-          ),
-          createBlock(
-            'home-paragraph',
-            'Texte éditorial',
-            'Paragraphe',
-            'En ligne',
-            'Paragraphe d’introduction.',
-            [],
-            {
-              title: 'Pitch éditorial',
-              content:
-                'Nous aidons les studios à créer des expériences immersives alignées sur leur identité de marque.',
-              align: 'left',
-            },
-          ),
-          createBlock(
-            'home-group',
-            'Section services',
-            'Groupe',
-            'En ligne',
-            'Présentation synthétique des offres principales.',
-            [],
-            {
-              layout: 'grid',
-              columnsMobile: '1',
-              columnsDesktop: '3',
-            },
-          ),
-        ],
-      },
-      {
-        id: 'services',
-        title: 'Services',
-        slug: '/services',
-        description: 'Détail des offres avec mise en page éditoriale et appels à l’action.',
-        badges: ['Offres', 'Storytelling', 'CTA'],
-        blocks: [
-          createBlock(
-            'services-hero',
-            'Accroche services',
-            'Hero',
-            'En ligne',
-            'Section introductive dédiée aux offres.',
-            [],
-            {
-              title: 'Des offres taillées pour vos équipes',
-              subtitle:
-                'Workshop de démarrage, design system personnalisé, accompagnement éditorial continu.',
-              ctaLabel: 'Parler à un expert',
-              ctaUrl: '#demo',
-              image: '',
-              align: 'left',
-            },
-          ),
-          createBlock(
-            'services-description',
-            'Description',
-            'Paragraphe',
-            'En ligne',
-            'Paragraphe détaillant la promesse.',
-            [],
-            {
-              title: 'Notre approche',
-              content:
-                'Chaque pack inclut un lead designer dédié, des cycles courts et des revues en direct.',
-              align: 'left',
-            },
-          ),
-          createBlock(
-            'services-layout',
-            'Layouts dynamiques',
-            'Groupe',
-            'En ligne',
-            'Cartes détaillées pour chaque service proposé.',
-            [],
-            {
-              layout: 'grid',
-              columnsMobile: '1',
-              columnsDesktop: '2',
-            },
-          ),
-        ],
-      },
-      {
-        id: 'realisations',
-        title: 'Réalisations',
-        slug: '/realisations',
-        description: 'Sélection de projets récents avec focus sur les résultats.',
-        badges: ['Portfolio', 'Stats', 'Confiance'],
-        blocks: [
-          createBlock(
-            'work-paragraph',
-            'Introduction portfolio',
-            'Paragraphe',
-            'En ligne',
-            'Intro du portfolio.',
-            [],
-            {
-              title: 'Nos réalisations',
-              content: 'Un aperçu des expériences livrées ces 12 derniers mois.',
-              align: 'center',
-            },
-          ),
-          createBlock(
-            'work-image',
-            'Visuel signature',
-            'Image',
-            'En ligne',
-            'Image clé d’un projet.',
-            [],
-            {
-              src: '',
-              alt: 'Visuel du projet phare',
-              showCaption: false,
-              caption: '',
-            },
-          ),
-          createBlock(
-            'work-group',
-            'Grille de projets',
-            'Groupe',
-            'En ligne',
-            'Grille des projets récents.',
-            [],
-            {
-              layout: 'grid',
-              columnsMobile: '1',
-              columnsDesktop: '3',
-            },
-          ),
-        ],
-      },
-      {
-        id: 'contact',
-        title: 'Contact',
-        slug: '/contact',
-        description: 'Formulaire de prise de contact simple et accès aux coordonnées.',
-        badges: ['Formulaire', 'CTA', 'Infos'],
-        blocks: [
-          createBlock(
-            'contact-hero',
-            'Hero contact',
-            'Hero',
-            'En ligne',
-            'Intro pour inciter à prendre contact.',
-            [],
-            {
-              title: 'Discutons de votre prochain projet',
-              subtitle: 'Partagez vos objectifs, nous proposons une approche personnalisée.',
-              ctaLabel: 'Planifier un call',
-              ctaUrl: '#call',
-              image: '',
-              align: 'center',
-            },
-          ),
-          createBlock(
-            'contact-text',
-            'Informations pratiques',
-            'Paragraphe',
-            'En ligne',
-            'Texte practical.',
-            [],
-            {
-              title: 'Nous écrire',
-              content: 'hello@clower.studio · +33 1 84 25 12 00 · Fuseau CET',
-              align: 'left',
-            },
-          ),
-          createBlock(
-            'contact-image',
-            'Illustration',
-            'Image',
-            'En ligne',
-            'Illustration inspirante.',
-            [],
-            {
-              src: '',
-              alt: 'Illustration équipe',
-              showCaption: true,
-              caption: 'Studio Clower, Paris',
-            },
-          ),
-        ],
-      },
-    ];
     const blockLibraryDefinitions = {
       hero: {
         type: 'Hero',
@@ -1139,37 +1021,6 @@ document.addEventListener('DOMContentLoaded', () => {
           columnsDesktop: '3',
         },
       },
-    };
-    const clonePages = (pages) =>
-      pages.map((page) => ({
-        ...page,
-        badges: [...(page.badges || [])],
-        blocks: (page.blocks || []).map((block) => ({
-          ...block,
-          props: (block.props || []).map((prop) => ({ ...prop })),
-          settings: { ...(block.settings || {}) },
-        })),
-      }));
-    const getStoredPages = () => {
-      try {
-        const raw = window.localStorage.getItem(storageKeys.pages);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            return clonePages(parsed);
-          }
-        }
-      } catch {
-        /* ignore storage errors */
-      }
-      return clonePages(defaultPages);
-    };
-    const persistPages = (pages) => {
-      try {
-        window.localStorage.setItem(storageKeys.pages, JSON.stringify(pages));
-      } catch {
-        /* ignore storage errors */
-      }
     };
     const persistActivePage = (pageId) => {
       try {
@@ -1637,7 +1488,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       pages = pages.map((page) => (page.id === nextPage.id ? nextPage : page));
       currentPage = nextPage;
-      persistPages(pages);
+      savePageToServer(nextPage);
     };
     const setActivePage = (pageId, options = {}) => {
       const target = pages.find((page) => page.id === pageId) || pages[0] || null;
@@ -1726,8 +1577,8 @@ document.addEventListener('DOMContentLoaded', () => {
       addPageSlug.value = normalizePageSlug(addPageTitle.value);
     };
 
-    let pages = getStoredPages();
-    let activePageId = getStoredActivePage(pages);
+    let pages = [];
+    let activePageId = null;
     let pageSlugManuallyEdited = false;
     let currentPage = null;
     let activeBlockId = null;
@@ -1737,8 +1588,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let previewReady = false;
     let previewRequestController = null;
 
-    renderPageLists(pages, activePageId);
-    setActivePage(activePageId);
     syncDrawerState();
 
     drawerOpenButtons.forEach((button) => {
@@ -1760,7 +1609,7 @@ document.addEventListener('DOMContentLoaded', () => {
       addPageError && (addPageError.textContent = '');
       pageSlugManuallyEdited = true;
     });
-    addPageForm?.addEventListener('submit', (event) => {
+    addPageForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!addPageTitle || !addPageSlug) {
         return;
@@ -1771,23 +1620,29 @@ document.addEventListener('DOMContentLoaded', () => {
         addPageError && (addPageError.textContent = 'Titre et slug sont requis.');
         return;
       }
-      if (pages.some((page) => page.slug === slug)) {
-        addPageError && (addPageError.textContent = 'Ce slug est déjà utilisé.');
-        return;
+      addPageError && (addPageError.textContent = '');
+      if (addPageSubmitButton) {
+        addPageSubmitButton.disabled = true;
+        addPageSubmitButton.textContent = 'Création...';
       }
-      const newPageId = `page-${Date.now().toString(36)}`;
-      const newPage = {
-        id: newPageId,
-        title,
-        slug,
-        description: `Nouvelle page "${title}" prête à être maquettée.`,
-        badges: ['Layout', 'Texte'],
-        blocks: createInitialBlocks(newPageId, title),
-      };
-      pages = [...pages, newPage];
-      persistPages(pages);
-      closeAddPageForm();
-      setActivePage(newPage.id);
+      try {
+        const createdPage = await createPageOnServer({ title, slug });
+        if (!createdPage || !createdPage.id) {
+          throw new Error('Réponse invalide.');
+        }
+        pages = [...pages, createdPage];
+        closeAddPageForm();
+        showToast('Page créée');
+        setActivePage(createdPage.id);
+      } catch (err) {
+        console.error('[design] create page failed', err);
+        addPageError && (addPageError.textContent = err.message || 'Impossible de créer la page.');
+      } finally {
+        if (addPageSubmitButton) {
+          addPageSubmitButton.disabled = false;
+          addPageSubmitButton.textContent = 'Créer';
+        }
+      }
     });
     blockLibraryToggle?.addEventListener('click', (event) => {
       event.stopPropagation();
@@ -1924,5 +1779,6 @@ document.addEventListener('DOMContentLoaded', () => {
     blockList?.addEventListener('dragover', handleBlockDragOver);
     blockList?.addEventListener('dragleave', handleBlockDragLeave);
     blockList?.addEventListener('drop', handleBlockDrop);
+    loadPagesFromServer();
   }
 });

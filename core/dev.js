@@ -20,6 +20,87 @@ const WORKSPACE_FILES = Object.fromEntries(
 );
 const previewLoader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCache: true });
 const previewEnv = new nunjucks.Environment(previewLoader, { autoescape: true });
+const SITES_DATA_ROOT = path.join(paths.data, 'sites');
+
+const stripLeadingSlash = (value) => value?.replace(/^\//, '') || '';
+
+const sanitizeSiteSlug = (slug) => stripLeadingSlash(normalizeSlug(slug));
+
+const getPagesDir = (siteSlug) => path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'pages');
+
+async function ensurePagesDir(siteSlug) {
+  const dir = getPagesDir(siteSlug);
+  await ensureDir(dir);
+  return dir;
+}
+
+function normalizePageRecord(page = {}) {
+  return {
+    id: page.id,
+    title: (typeof page.title === 'string' && page.title.trim()) || 'Page',
+    slug: page.slug || '/',
+    description: page.description || '',
+    badges: Array.isArray(page.badges) ? page.badges : [],
+    blocks: Array.isArray(page.blocks) ? page.blocks : [],
+  };
+}
+
+function normalizePageSlugValue(value) {
+  const raw = (value || '').trim();
+  if (!raw) {
+    return '';
+  }
+  if (raw === '/') {
+    return '/';
+  }
+  const cleaned = slugify(raw);
+  return cleaned ? `/${cleaned}` : '';
+}
+
+function generatePageIdFromSlug(slugValue, fallbackTitle = '') {
+  if (slugValue === '/') {
+    return 'home';
+  }
+  const base = slugify(slugValue.replace(/^\//, '')) || slugify(fallbackTitle) || 'page';
+  return base || `page-${Date.now().toString(36)}`;
+}
+
+async function readPagesForSite(siteSlug) {
+  const dir = await ensurePagesDir(siteSlug);
+  let entries = [];
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const pages = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith('.json')) {
+      continue;
+    }
+    const fullPath = path.join(dir, entry.name);
+    try {
+      const raw = await fs.readFile(fullPath, 'utf8');
+      const parsed = JSON.parse(raw || '{}');
+      if (parsed && parsed.id) {
+        pages.push(normalizePageRecord(parsed));
+      }
+    } catch (err) {
+      console.warn(`[preview] Impossible de lire ${fullPath}: ${err.message}`);
+    }
+  }
+  pages.sort((a, b) => (a.slug || '').localeCompare(b.slug || ''));
+  return pages;
+}
+
+async function writePageForSite(siteSlug, page) {
+  const dir = await ensurePagesDir(siteSlug);
+  const safeId = page.id || generatePageIdFromSlug(page.slug || '/', page.title);
+  const filename = `${safeId}.json`;
+  const normalizedPage = normalizePageRecord({ ...page, id: safeId });
+  await fs.writeFile(path.join(dir, filename), JSON.stringify(normalizedPage, null, 2), 'utf8');
+  return normalizedPage;
+}
 
 process.env.NODE_ENV = 'development';
 
@@ -134,6 +215,85 @@ async function start() {
       return res.status(404).json({ message: 'Site introuvable.' });
     }
     res.json(site);
+  });
+
+  app.get('/api/sites/:slug/pages', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    try {
+      const pages = await readPagesForSite(siteSlug);
+      res.json(pages);
+    } catch (err) {
+      console.error('[pages] list failed', err);
+      res.status(500).json({ message: 'Impossible de charger les pages.' });
+    }
+  });
+
+  app.post('/api/sites/:slug/pages', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const { title, slug } = req.body || {};
+    const trimmedTitle = typeof title === 'string' ? title.trim() : '';
+    const normalizedSlug = normalizePageSlugValue(slug || trimmedTitle);
+    if (!trimmedTitle || !normalizedSlug) {
+      return res.status(400).json({ message: 'Titre et slug sont requis.' });
+    }
+    try {
+      const existingPages = await readPagesForSite(siteSlug);
+      if (existingPages.some((page) => page.slug === normalizedSlug)) {
+        return res.status(400).json({ message: 'Ce slug est déjà utilisé.' });
+      }
+      const idSet = new Set(existingPages.map((page) => page.id));
+      let newId = generatePageIdFromSlug(normalizedSlug, trimmedTitle);
+      while (idSet.has(newId)) {
+        newId = `${newId}-${Math.floor(Math.random() * 1000)}`;
+      }
+      const newPage = {
+        id: newId,
+        title: trimmedTitle,
+        slug: normalizedSlug,
+        description: '',
+        badges: [],
+        blocks: [],
+      };
+      const saved = await writePageForSite(siteSlug, newPage);
+      res.status(201).json(saved);
+    } catch (err) {
+      console.error('[pages] create failed', err);
+      res.status(500).json({ message: 'Impossible de créer cette page.' });
+    }
+  });
+
+  app.put('/api/sites/:slug/pages/:pageId', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const rawPageId = req.params.pageId;
+    const safePageId = slugify(rawPageId || '');
+    if (!safePageId) {
+      return res.status(400).json({ message: 'Page invalide.' });
+    }
+    const payload = req.body || {};
+    const title = typeof payload.title === 'string' && payload.title.trim() ? payload.title.trim() : `Page ${safePageId}`;
+    const normalizedSlug = normalizePageSlugValue(payload.slug || title);
+    if (!normalizedSlug) {
+      return res.status(400).json({ message: 'Slug invalide.' });
+    }
+    try {
+      const existingPages = await readPagesForSite(siteSlug);
+      if (existingPages.some((page) => page.slug === normalizedSlug && page.id !== safePageId)) {
+        return res.status(400).json({ message: 'Ce slug est déjà utilisé.' });
+      }
+      const updatedPage = {
+        id: safePageId,
+        title,
+        slug: normalizedSlug,
+        description: payload.description || '',
+        badges: Array.isArray(payload.badges) ? payload.badges : [],
+        blocks: Array.isArray(payload.blocks) ? payload.blocks : [],
+      };
+      const saved = await writePageForSite(siteSlug, updatedPage);
+      res.json(saved);
+    } catch (err) {
+      console.error('[pages] update failed', err);
+      res.status(500).json({ message: 'Impossible de mettre à jour cette page.' });
+    }
   });
 
   app.post('/api/preview', requireAuthJson, (req, res) => {
