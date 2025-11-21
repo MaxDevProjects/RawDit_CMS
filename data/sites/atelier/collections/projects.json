@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "id": "atelier-proj-1",
+      "title": "Exposition Chromatique",
+      "status": "Publié",
+      "summary": "Installation interactive pour une galerie lyonnaise."
+    },
+    {
+      "id": "atelier-proj-2",
+      "title": "Réseau Cyclique",
+      "status": "Brouillon",
+      "summary": "Prototype de parcours immersif pour festival urbain."
+    }
+  ]
+}

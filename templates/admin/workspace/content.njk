@@ -2,25 +2,101 @@
 {% set pageTitle = "Contenus" %}
 {% set activeWorkspaceTab = "content" %}
 
+{% block workspace_header_actions %}
+  <button
+    type="button"
+    data-collection-drawer-open
+    class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#9C6BFF] hover:text-[#9C6BFF] sm:w-auto lg:hidden"
+  >
+    <span class="text-lg leading-none">☰</span>
+    Collections
+  </button>
+{% endblock %}
+
 {% block sidebar_start %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Collections</h2>
-    <p class="text-sm text-slate-600">Organisez les blocs éditoriaux de ce site.</p>
+  <div class="lg:hidden flex items-center justify-between gap-3 rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
+    <div>
+      <p class="text-xs uppercase tracking-wide text-slate-500">Collections</p>
+      <p class="text-sm text-slate-700">Choisissez une collection</p>
+    </div>
+    <button
+      type="button"
+      data-collection-drawer-open
+      class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+    >
+      <span class="text-lg leading-none">☰</span>
+      Collections
+    </button>
+  </div>
+
+  <div
+    data-collection-drawer-backdrop
+    class="fixed inset-0 z-30 hidden bg-slate-900/30 backdrop-blur-sm lg:hidden"
+    aria-hidden="true"
+  ></div>
+
+  <section
+    data-collection-drawer
+    class="fixed inset-y-0 left-0 z-40 w-[300px] max-w-[90vw] -translate-x-full transform transition-transform duration-300 lg:relative lg:inset-auto lg:translate-x-0 lg:h-auto"
+    aria-label="Collections de contenus"
+  >
+    <div class="h-full overflow-y-auto bg-white shadow-2xl lg:h-auto lg:overflow-visible lg:rounded-2xl lg:border lg:border-slate-200 lg:shadow-sm">
+      <div class="flex items-center justify-between border-b border-slate-200 p-4 lg:border-none">
+        <div>
+          <p class="text-xs uppercase tracking-tight text-slate-500">Collections</p>
+          <h2 class="text-lg font-semibold text-slate-900">Contenus structurés</h2>
+        </div>
+        <button
+          type="button"
+          data-collection-drawer-close
+          class="lg:hidden rounded-full p-2 text-sm text-slate-500 hover:bg-slate-100"
+          aria-label="Fermer"
+        >
+          ✕
+        </button>
+      </div>
+      <div class="p-4 space-y-2">
+        <ul
+          data-collection-list
+          class="space-y-2"
+          role="listbox"
+          aria-label="Collections de contenus"
+        ></ul>
+        <p data-collection-empty class="text-sm text-slate-500">Aucune collection pour ce site.</p>
+      </div>
+    </div>
   </section>
 {% endblock %}
 
 {% block content_main %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
-    <h1 class="text-xl font-semibold text-slate-900">Workspace Contenus</h1>
-    <p class="text-sm text-slate-600">
-      Cette section affichera les listes de contenus, statuts et workflows pour le site actif.
-    </p>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p class="text-xs uppercase tracking-tight text-slate-500">Collection active</p>
+        <h1 data-collection-title class="text-xl font-semibold text-slate-900">Sélectionnez une collection</h1>
+        <p data-collection-description class="text-sm text-slate-500"></p>
+      </div>
+    </div>
+
+    <div data-collection-items-empty class="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
+      Choisissez une collection dans la colonne de gauche pour afficher ses items.
+    </div>
+
+    <div data-collection-items class="space-y-3"></div>
   </section>
 {% endblock %}
 
 {% block sidebar_end %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Préférences</h2>
-    <p class="text-sm text-slate-600">Configurez les validations et les alertes depuis ce panneau.</p>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+    <div>
+      <p class="text-xs uppercase tracking-tight text-slate-500">Aide</p>
+      <h2 class="text-sm font-semibold text-slate-900">Design Studio</h2>
+    </div>
+    <p class="text-sm text-slate-600">Connectez vos collections aux blocs dynamiques directement depuis le bloc sélectionné dans l’onglet Design.</p>
+    <ul class="text-xs text-slate-500 space-y-1">
+      <li>• Importez vos contenus structurés</li>
+      <li>• Associez les collections aux sections</li>
+      <li>• Gardez une vue sur l’état (brouillon/publié)</li>
+    </ul>
   </section>
 {% endblock %}

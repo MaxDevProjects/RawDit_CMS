@@ -104,6 +104,38 @@ async function writePageForSite(siteSlug, page) {
   return normalizedPage;
 }
 
+async function readCollectionsIndex(siteSlug) {
+  const dir = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'collections');
+  const indexPath = path.join(dir, 'index.json');
+  try {
+    const raw = await fs.readFile(indexPath, 'utf8');
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return [];
+    }
+    console.warn(`[collections] Impossible de lire ${indexPath}: ${err.message}`);
+    return [];
+  }
+}
+
+async function readCollectionItems(siteSlug, collectionId) {
+  const dir = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'collections');
+  const filePath = path.join(dir, `${collectionId}.json`);
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    const parsed = JSON.parse(raw || '{}');
+    return Array.isArray(parsed.items) ? parsed.items : [];
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return [];
+    }
+    console.warn(`[collections] Impossible de lire ${filePath}: ${err.message}`);
+    return [];
+  }
+}
+
 async function buildPreviewCss(html) {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'clower-preview-'));
   const contentPath = path.join(tempDir, 'content.html');
@@ -334,6 +366,32 @@ async function start() {
     } catch (err) {
       console.error('[pages] update failed', err);
       res.status(500).json({ message: 'Impossible de mettre à jour cette page.' });
+    }
+  });
+
+  app.get('/api/sites/:slug/collections', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    try {
+      const collections = await readCollectionsIndex(siteSlug);
+      res.json(collections);
+    } catch (err) {
+      console.error('[collections] list failed', err);
+      res.status(500).json({ message: 'Impossible de charger les collections.' });
+    }
+  });
+
+  app.get('/api/sites/:slug/collections/:collectionId/items', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const collectionId = slugify(req.params.collectionId || '');
+    if (!collectionId) {
+      return res.status(400).json({ message: 'Collection invalide.' });
+    }
+    try {
+      const items = await readCollectionItems(siteSlug, collectionId);
+      res.json({ items });
+    } catch (err) {
+      console.error('[collections] items failed', err);
+      res.status(500).json({ message: 'Impossible de charger les items.' });
     }
   });
 

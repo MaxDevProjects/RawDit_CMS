@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "id": "proj-1",
+      "title": "Clower Atelier",
+      "status": "Publié",
+      "summary": "Branding complet et site statique focalisé sur la sobriété numérique.",
+      "slug": "/projets/clower-atelier"
+    },
+    {
+      "id": "proj-2",
+      "title": "Mosaik Studio",
+      "status": "Publié",
+      "summary": "Site multi-sections avec intégration CMS headless.",
+      "slug": "/projets/mosaik"
+    },
+    {
+      "id": "proj-3",
+      "title": "Orbital Launch",
+      "status": "Brouillon",
+      "summary": "Landing page immersive avec scénographie scroll.",
+      "slug": "/projets/orbital"
+    }
+  ]
+}

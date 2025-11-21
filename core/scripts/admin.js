@@ -529,6 +529,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (workspaceContext?.section === 'design') {
     initDesignWorkspace();
   }
+  if (workspaceContext?.section === 'content') {
+    initContentWorkspace();
+  }
 
   if (workspaceContext && storedSite.name) {
     updateSiteLabels(storedSite.name);
@@ -1784,5 +1787,197 @@ document.addEventListener('DOMContentLoaded', () => {
     blockList?.addEventListener('dragleave', handleBlockDragLeave);
     blockList?.addEventListener('drop', handleBlockDrop);
     loadPagesFromServer();
+  }
+
+  function initContentWorkspace() {
+    const collectionList = document.querySelector('[data-collection-list]');
+    if (!collectionList) {
+      return;
+    }
+    const collectionEmptyState = document.querySelector('[data-collection-empty]');
+    const collectionItemsEmpty = document.querySelector('[data-collection-items-empty]');
+    const collectionItems = document.querySelector('[data-collection-items]');
+    const collectionTitle = document.querySelector('[data-collection-title]');
+    const collectionDescription = document.querySelector('[data-collection-description]');
+    const collectionDrawer = document.querySelector('[data-collection-drawer]');
+    const collectionDrawerBackdrop = document.querySelector('[data-collection-drawer-backdrop]');
+    const collectionDrawerOpenButtons = document.querySelectorAll('[data-collection-drawer-open]');
+    const collectionDrawerCloseButtons = document.querySelectorAll('[data-collection-drawer-close]');
+
+    const safeSiteSlugValue = stripLeadingSlash(
+      workspaceContext?.slugValue || storedSite.slug || '',
+    );
+    const collectionsApiBase = safeSiteSlugValue
+      ? `/api/sites/${encodeURIComponent(safeSiteSlugValue)}/collections`
+      : null;
+
+    let collections = [];
+    let activeCollectionId = null;
+
+    const openCollectionDrawer = () => {
+      if (!collectionDrawer) {
+        return;
+      }
+      collectionDrawer.classList.add('is-open');
+      collectionDrawer.style.transform = 'translateX(0)';
+      collectionDrawerBackdrop?.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    };
+
+    const closeCollectionDrawer = () => {
+      if (!collectionDrawer) {
+        return;
+      }
+      collectionDrawer.classList.remove('is-open');
+      collectionDrawer.style.transform = '';
+      collectionDrawerBackdrop?.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    };
+
+    collectionDrawerOpenButtons.forEach((button) => {
+      button.addEventListener('click', openCollectionDrawer);
+    });
+    collectionDrawerCloseButtons.forEach((button) => {
+      button.addEventListener('click', closeCollectionDrawer);
+    });
+    collectionDrawerBackdrop?.addEventListener('click', closeCollectionDrawer);
+
+    const renderCollectionList = () => {
+      collectionList.innerHTML = '';
+      if (!collections.length) {
+        collectionEmptyState?.classList.remove('hidden');
+        return;
+      }
+      collectionEmptyState?.classList.add('hidden');
+      collections.forEach((collection) => {
+        const isActive = collection.id === activeCollectionId;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.collectionId = collection.id;
+        button.className = [
+          'w-full rounded-xl border px-3 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/40',
+          isActive
+            ? 'bg-[#F7F0FF] border-[#9C6BFF]/40 text-slate-900'
+            : 'border-slate-200 text-slate-700 hover:border-[#9C6BFF]/40',
+        ].join(' ');
+        button.setAttribute('role', 'option');
+        if (isActive) {
+          button.setAttribute('aria-current', 'true');
+        } else {
+          button.removeAttribute('aria-current');
+        }
+        button.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-semibold">${collection.name || collection.id}</p>
+              <p class="text-xs text-slate-500">${collection.description || ''}</p>
+            </div>
+            <span class="text-[11px] uppercase tracking-wide text-slate-400">${collection.type || ''}</span>
+          </div>
+        `;
+        button.addEventListener('click', () => {
+          setActiveCollection(collection.id);
+          if (!window.matchMedia('(min-width: 1024px)').matches) {
+            closeCollectionDrawer();
+          }
+        });
+        collectionList.appendChild(button);
+      });
+    };
+
+    const renderCollectionItems = (items) => {
+      if (!collectionItems) {
+        return;
+      }
+      collectionItems.innerHTML = '';
+      if (!items || items.length === 0) {
+        collectionItemsEmpty?.classList.remove('hidden');
+        return;
+      }
+      collectionItemsEmpty?.classList.add('hidden');
+      items.forEach((item) => {
+        const card = document.createElement('article');
+        card.className =
+          'rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm hover:border-[#9C6BFF]/40';
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-semibold text-slate-900">${item.title || 'Item'}</p>
+              <p class="text-xs text-slate-500">${item.summary || ''}</p>
+            </div>
+            <span class="text-[11px] uppercase tracking-wide ${
+              (item.status || '').toLowerCase() === 'publié'
+                ? 'text-emerald-600'
+                : 'text-amber-600'
+            }">${item.status || ''}</span>
+          </div>
+        `;
+        collectionItems.appendChild(card);
+      });
+    };
+
+    const setActiveCollection = async (collectionId) => {
+      if (!collectionId || activeCollectionId === collectionId) {
+        return;
+      }
+      activeCollectionId = collectionId;
+      const collection = collections.find((entry) => entry.id === collectionId);
+      if (collectionTitle) {
+        collectionTitle.textContent = collection?.name || 'Collection';
+      }
+      if (collectionDescription) {
+        collectionDescription.textContent = collection?.description || '';
+      }
+      renderCollectionList();
+      if (!collectionsApiBase) {
+        renderCollectionItems([]);
+        return;
+      }
+      try {
+        const response = await fetch(
+          `${collectionsApiBase}/${encodeURIComponent(collectionId)}/items`,
+          { headers: { Accept: 'application/json' } },
+        );
+        if (!response.ok) {
+          throw new Error('Impossible de charger les items.');
+        }
+        const payload = await response.json().catch(() => ({ items: [] }));
+        renderCollectionItems(payload.items || []);
+      } catch (err) {
+        console.error('[content] items failed', err);
+        showToast(err.message || 'Impossible de charger les items.');
+        renderCollectionItems([]);
+      }
+    };
+
+    const loadCollections = async () => {
+      if (!collectionsApiBase) {
+        collectionEmptyState?.classList.remove('hidden');
+        return;
+      }
+      try {
+        const response = await fetch(collectionsApiBase, {
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error('Impossible de charger les collections.');
+        }
+        const payload = await response.json().catch(() => []);
+        collections = Array.isArray(payload) ? payload : [];
+        if (collections.length > 0) {
+          activeCollectionId = collections[0].id;
+          renderCollectionList();
+          setActiveCollection(activeCollectionId);
+        } else {
+          renderCollectionList();
+          renderCollectionItems([]);
+        }
+      } catch (err) {
+        console.error('[content] load collections', err);
+        showToast(err.message || 'Impossible de charger les collections.');
+      }
+    };
+
+    loadCollections();
   }
 });
