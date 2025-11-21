@@ -175,6 +175,36 @@ function injectPreviewCss(html, css) {
   return `${styleTag}${html}`;
 }
 
+async function buildPreviewCollections(page, siteSlug) {
+  if (!siteSlug) {
+    return {};
+  }
+  const normalizedSlug = normalizeSlug(siteSlug);
+  if (!normalizedSlug) {
+    return {};
+  }
+  const result = {};
+  const ids = new Set();
+  (page.blocks || []).forEach((block) => {
+    const type = (block.type || '').toLowerCase();
+    if (type === 'collectiongrid') {
+      const collectionId = block.collectionId || block.settings?.collectionId;
+      if (collectionId) {
+        ids.add(collectionId);
+      }
+    }
+  });
+  for (const id of ids) {
+    try {
+      const items = await readCollectionItems(normalizedSlug, id);
+      result[id] = items;
+    } catch {
+      result[id] = [];
+    }
+  }
+  return result;
+}
+
 process.env.NODE_ENV = 'development';
 
 /**
@@ -401,9 +431,11 @@ async function start() {
       return res.status(400).json({ message: 'Page invalide.' });
     }
     try {
+      const collectionsData = await buildPreviewCollections(page, site?.slug || '');
       const html = previewEnv.render('preview.njk', {
         page,
         site: site || {},
+        collections: collectionsData,
       });
       const css = await buildPreviewCss(html);
       const finalHtml = injectPreviewCss(html, css);

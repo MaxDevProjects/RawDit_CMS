@@ -613,6 +613,13 @@ document.addEventListener('DOMContentLoaded', () => {
           columnsDesktop: 'group-columns-desktop',
         },
       },
+      collectiongrid: {
+        section: 'collection',
+        fields: {
+          collectionId: 'collection-grid-collection',
+          limit: 'collection-grid-limit',
+        },
+      },
     };
     const blockTypeAliases = {
       texte: 'paragraphe',
@@ -624,6 +631,9 @@ document.addEventListener('DOMContentLoaded', () => {
       image: 'image',
       groupe: 'groupe',
       group: 'groupe',
+      collection: 'collectiongrid',
+      collectiongrid: 'collectiongrid',
+      'collection-grid': 'collectiongrid',
     };
     const updateGroupMiniPreview = (mobileValue, desktopValue) => {
       if (!groupPreviewMobile || !groupPreviewDesktop) {
@@ -682,10 +692,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const saved = await response.json().catch(() => ({}));
         if (saved?.id) {
-          pages = pages.map((entry) => (entry.id === saved.id ? saved : entry));
-          if (currentPage?.id === saved.id) {
-            currentPage = saved;
+          const normalized = normalizePageData(saved);
+          pages = pages.map((entry) => (entry.id === normalized.id ? normalized : entry));
+          if (currentPage?.id === normalized.id) {
+            currentPage = normalized;
           }
+          return normalized;
         }
         return saved;
       } catch (err) {
@@ -706,7 +718,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       try {
         const loadedPages = await fetchPagesFromServer();
-        pages = Array.isArray(loadedPages) ? loadedPages : [];
+        pages = (Array.isArray(loadedPages) ? loadedPages : []).map((page) =>
+          normalizePageData(page),
+        );
         if (pages.length === 0) {
           activePageId = null;
           currentPage = null;
@@ -766,6 +780,10 @@ document.addEventListener('DOMContentLoaded', () => {
           section.classList.add('hidden');
         }
       });
+      if (config.section === 'collection') {
+        const desiredValue = block.collectionId || block.settings?.collectionId || '';
+        updateCollectionSelectOptions(desiredValue);
+      }
       Object.entries(config.fields).forEach(([settingKey, fieldName]) => {
         const input = blockForm.querySelector(`[name="${fieldName}"]`);
         if (!input) {
@@ -774,6 +792,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const value = block.settings?.[settingKey];
         if (input.type === 'checkbox') {
           input.checked = Boolean(value);
+        } else if (input.type === 'number') {
+          input.value = value ?? 1;
         } else if (input.tagName === 'TEXTAREA') {
           input.value = value ?? '';
         } else {
@@ -800,6 +820,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (input.type === 'checkbox') {
           values[settingKey] = input.checked;
+        } else if (input.type === 'number') {
+          const parsed = Number(input.value);
+          values[settingKey] = Number.isFinite(parsed) ? parsed : 0;
         } else if (input.tagName === 'TEXTAREA') {
           values[settingKey] = input.value || '';
         } else if (input.type === 'select-one') {
@@ -838,6 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
           description: block.description,
           props: block.props || [],
           settings: block.settings || {},
+          collectionId: block.collectionId || block.settings?.collectionId || '',
         })),
       };
     };
@@ -914,6 +938,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const values = collectFormValues(config);
+      if (config.section === 'collection') {
+        if (!values.collectionId) {
+          showToast('Sélectionnez une collection.');
+          return;
+        }
+        values.limit = Math.max(1, Number(values.limit) || 1);
+      }
       const updatedBlocks = (currentPage.blocks || []).map((entry) => {
         if (entry.id !== block.id) {
           return entry;
@@ -928,6 +959,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (config.descriptionField && values[config.descriptionField]) {
           updatedBlock.description = values[config.descriptionField];
+        }
+        if (config.section === 'collection') {
+          updatedBlock.collectionId = values.collectionId;
+          updatedBlock.settings.collectionId = values.collectionId;
+          updatedBlock.settings.limit = values.limit;
         }
         return updatedBlock;
       });
@@ -953,18 +989,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const pagesApiBase = safeSiteSlug
       ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/pages`
       : null;
+    const collectionsApiBase = safeSiteSlug
+      ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/collections`
+      : null;
     const storageKeys = {
       active: `clower:activePage:${siteKey}`,
     };
-    const createBlock = (id, label, type, status, description, props = [], settings = {}) => ({
-      id,
-      label,
-      type,
-      status,
-      description,
-      props,
-      settings: { ...settings },
-    });
+    const createBlock = (id, label, type, status, description, props = [], settings = {}) => {
+      const block = {
+        id,
+        label,
+        type,
+        status,
+        description,
+        props,
+        settings: { ...settings },
+      };
+      if (block.settings.collectionId) {
+        block.collectionId = block.settings.collectionId;
+      }
+      return block;
+    };
     const blockLibraryDefinitions = {
       hero: {
         type: 'Hero',
@@ -1022,6 +1067,16 @@ document.addEventListener('DOMContentLoaded', () => {
           layout: 'grid',
           columnsMobile: '1',
           columnsDesktop: '3',
+        },
+      },
+      collectiongrid: {
+        type: 'CollectionGrid',
+        label: 'Grille de contenus',
+        description: 'Affiche automatiquement les items d’une collection.',
+        status: 'Brouillon',
+        settings: {
+          collectionId: '',
+          limit: 6,
         },
       },
     };
@@ -1232,6 +1287,16 @@ document.addEventListener('DOMContentLoaded', () => {
         title.textContent = displayLabel;
         textWrapper.appendChild(meta);
         textWrapper.appendChild(title);
+        const blockType = (block.type || '').toLowerCase();
+        if (blockType === 'collectiongrid' && block.collectionId) {
+          const collectionName =
+            designCollections.find((entry) => entry.id === block.collectionId)?.name ||
+            block.collectionId;
+          const info = document.createElement('p');
+          info.className = 'text-xs text-slate-400';
+          info.textContent = `Collection : ${collectionName}`;
+          textWrapper.appendChild(info);
+        }
         content.appendChild(textWrapper);
         item.appendChild(content);
 
@@ -1443,6 +1508,12 @@ document.addEventListener('DOMContentLoaded', () => {
         definition.props,
         definition.settings || {},
       );
+      if ((definition.type || '').toLowerCase() === 'collectiongrid') {
+        const firstCollectionId = designCollections[0]?.id || '';
+        newBlock.collectionId = firstCollectionId;
+        newBlock.settings.collectionId = firstCollectionId;
+        newBlock.settings.limit = newBlock.settings.limit || 6;
+      }
       const nextBlocks = [...(currentPage.blocks || []), newBlock];
       updateCurrentPageBlocks(nextBlocks);
       setActivePage(currentPage.id, { preserveBlock: true });
@@ -1489,13 +1560,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!nextPage) {
         return;
       }
-      pages = pages.map((page) => (page.id === nextPage.id ? nextPage : page));
-      currentPage = nextPage;
-      savePageToServer(nextPage);
+      const normalized = normalizePageData(nextPage);
+      pages = pages.map((page) => (page.id === normalized.id ? normalized : page));
+      currentPage = normalized;
+      savePageToServer(normalized);
     };
     const setActivePage = (pageId, options = {}) => {
       const target = pages.find((page) => page.id === pageId) || pages[0] || null;
-      currentPage = target;
+      const normalizedTarget = target ? normalizePageData(target) : null;
+      currentPage = normalizedTarget;
       activePageId = target?.id || null;
       if (!options.preserveBlock || !currentPage || !currentPage.blocks.some((block) => block.id === activeBlockId)) {
         activeBlockId = currentPage?.blocks?.[0]?.id || null;
@@ -1590,7 +1663,91 @@ document.addEventListener('DOMContentLoaded', () => {
     let latestPreviewHtml = '';
     let previewReady = false;
     let previewRequestController = null;
+    let designCollections = [];
 
+    const normalizeBlockData = (block) => {
+      const normalized = {
+        ...block,
+        props: Array.isArray(block.props) ? block.props : [],
+        settings: { ...(block.settings || {}) },
+      };
+      const type = (normalized.type || '').toLowerCase();
+      if (type === 'collectiongrid') {
+        normalized.collectionId =
+          normalized.collectionId || normalized.settings.collectionId || '';
+        normalized.settings.collectionId = normalized.collectionId;
+        normalized.settings.limit = normalized.settings.limit || 6;
+      }
+      return normalized;
+    };
+
+    const normalizePageData = (page) => ({
+      ...page,
+      blocks: (page.blocks || []).map((block) => normalizeBlockData(block)),
+    });
+
+    const loadDesignCollections = async () => {
+      if (!collectionsApiBase) {
+        designCollections = [];
+        updateCollectionSelectOptions();
+        return;
+      }
+      try {
+        const response = await fetch(collectionsApiBase, {
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error('Impossible de charger les collections.');
+        }
+        const payload = await response.json().catch(() => []);
+        designCollections = Array.isArray(payload) ? payload : [];
+        const currentValue =
+          blockForm?.querySelector('[name="collection-grid-collection"]')?.value || '';
+        updateCollectionSelectOptions(currentValue);
+      } catch (err) {
+        console.error('[design] collections load', err);
+        showToast('Collections indisponibles.');
+        designCollections = [];
+        updateCollectionSelectOptions();
+      }
+    };
+
+    const updateCollectionSelectOptions = (selectedValue = '') => {
+      if (!blockForm) {
+        return;
+      }
+      const select = blockForm.querySelector('[name="collection-grid-collection"]');
+      if (!select) {
+        return;
+      }
+      select.innerHTML = '';
+      if (!designCollections.length) {
+        select.disabled = true;
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Aucune collection disponible';
+        select.appendChild(option);
+        return;
+      }
+      select.disabled = false;
+      if (selectedValue && !designCollections.some((entry) => entry.id === selectedValue)) {
+        const fallbackOption = document.createElement('option');
+        fallbackOption.value = selectedValue;
+        fallbackOption.textContent = selectedValue;
+        select.appendChild(fallbackOption);
+      }
+      designCollections.forEach((collection) => {
+        const option = document.createElement('option');
+        option.value = collection.id;
+        option.textContent = collection.name || collection.id;
+        select.appendChild(option);
+      });
+      if (selectedValue) {
+        select.value = selectedValue;
+      }
+    };
+
+    loadDesignCollections();
     syncDrawerState();
 
     drawerOpenButtons.forEach((button) => {
@@ -1637,7 +1794,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!createdPage || !createdPage.id) {
           throw new Error('Réponse invalide.');
         }
-        pages = [...pages, createdPage];
+        pages = [...pages, normalizePageData(createdPage)];
         closeAddPageForm();
         showToast('Page créée');
         setActivePage(createdPage.id);

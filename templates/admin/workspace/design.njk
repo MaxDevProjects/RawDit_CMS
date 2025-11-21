@@ -384,11 +384,11 @@
             </div>
           </div>
 
-          <div data-editor-section="group" class="hidden space-y-4">
-            <div class="space-y-2">
-              <p class="text-xs uppercase tracking-tight text-slate-500">Disposition responsive</p>
-              <p class="text-[11px] text-slate-500">Ex&nbsp;: 1 colonne sur mobile, 3 sur desktop.</p>
-              <div class="grid gap-2 sm:grid-cols-2">
+        <div data-editor-section="group" class="hidden space-y-4">
+          <div class="space-y-2">
+            <p class="text-xs uppercase tracking-tight text-slate-500">Disposition responsive</p>
+            <p class="text-[11px] text-slate-500">Ex&nbsp;: 1 colonne sur mobile, 3 sur desktop.</p>
+            <div class="grid gap-2 sm:grid-cols-2">
                 <label class="space-y-1 block">
                   <span class="text-xs font-medium text-slate-600">Colonnes mobile</span>
                   <select name="group-columns-mobile" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
@@ -418,8 +418,34 @@
                   <svg class="h-4 w-4 text-slate-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 16.56a.75.75 0 01-1.06 0A.75.75 0 016.21 15.5l5.47-5.5-5.47-5.5a.75.75 0 111.06-1.06l6 6a.75.75 0 010 1.06l-6 6z" clip-rule="evenodd"/></svg>
                   <div class="flex-1">
                     <div data-group-preview-desktop class="flex gap-1"></div>
-                  </div>
-                </div>
+          </div>
+        </div>
+
+          <div data-editor-section="collection" class="hidden space-y-4">
+            <div>
+              <p class="text-xs uppercase tracking-tight text-slate-500">Source de données</p>
+              <p class="text-[11px] text-slate-500">Cette grille affichera automatiquement les items de la collection choisie.</p>
+            </div>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Collection</span>
+              <select
+                name="collection-grid-collection"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              >
+                <option value="">Aucune collection disponible</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Nombre max d’items</span>
+              <input
+                type="number"
+                min="1"
+                name="collection-grid-limit"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+                value="6"
+              />
+            </label>
+          </div>
               </div>
             </div>
           </div>
