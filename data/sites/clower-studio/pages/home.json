@@ -2,5 +2,33 @@
   "id": "home",
   "title": "Accueil",
   "slug": "/",
-  "blocks": []
+  "description": "",
+  "badges": [],
+  "blocks": [
+    {
+      "id": "home-hero-mi8lkcvi-65",
+      "label": "Titre du hero",
+      "type": "Hero",
+      "status": "Brouillon",
+      "description": "Section pleine largeur avec CTA principal.",
+      "props": [
+        {
+          "label": "CTA",
+          "value": "Découvrir"
+        },
+        {
+          "label": "Hauteur",
+          "value": "80vh"
+        }
+      ],
+      "settings": {
+        "title": "Titre du hero",
+        "subtitle": "",
+        "ctaLabel": "Découvrir",
+        "ctaUrl": "services",
+        "image": "",
+        "align": "center"
+      }
+    }
+  ]
 }
