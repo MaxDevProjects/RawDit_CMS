@@ -1,6 +1,8 @@
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { createServer } from 'node:net';
+import { spawn } from 'node:child_process';
+import os from 'node:os';
 import chokidar from 'chokidar';
 import express from 'express';
 import nunjucks from 'nunjucks';
@@ -100,6 +102,45 @@ async function writePageForSite(siteSlug, page) {
   const normalizedPage = normalizePageRecord({ ...page, id: safeId });
   await fs.writeFile(path.join(dir, filename), JSON.stringify(normalizedPage, null, 2), 'utf8');
   return normalizedPage;
+}
+
+async function buildPreviewCss(html) {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'clower-preview-'));
+  const contentPath = path.join(tempDir, 'content.html');
+  const outputPath = path.join(tempDir, 'preview.css');
+  await fs.writeFile(contentPath, html, 'utf8');
+  const inputCss = path.join(paths.styles, 'site.css');
+  const tailwindExecutable = process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss';
+  const tailwindBin = path.join(paths.root, 'node_modules', '.bin', tailwindExecutable);
+  await new Promise((resolve, reject) => {
+    const child = spawn(
+      tailwindBin,
+      ['-i', inputCss, '-o', outputPath, '--minify', '--content', contentPath],
+      { cwd: paths.root, stdio: ['ignore', 'inherit', 'inherit'] },
+    );
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Tailwind exited with code ${code}`));
+      }
+    });
+  });
+  try {
+    const css = await fs.readFile(outputPath, 'utf8');
+    return `${css}\n.preview-block-active{outline:2px dashed rgba(156,107,255,0.6);background-color:rgba(156,107,255,0.05);}`;
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+function injectPreviewCss(html, css) {
+  const styleTag = `<style>${css}</style>`;
+  if (html.includes('</head>')) {
+    return html.replace('</head>', `${styleTag}</head>`);
+  }
+  return `${styleTag}${html}`;
 }
 
 process.env.NODE_ENV = 'development';
@@ -296,7 +337,7 @@ async function start() {
     }
   });
 
-  app.post('/api/preview', requireAuthJson, (req, res) => {
+  app.post('/api/preview', requireAuthJson, async (req, res) => {
     const { page, site } = req.body || {};
     if (!page || !Array.isArray(page.blocks)) {
       return res.status(400).json({ message: 'Page invalide.' });
@@ -306,7 +347,9 @@ async function start() {
         page,
         site: site || {},
       });
-      res.json({ html });
+      const css = await buildPreviewCss(html);
+      const finalHtml = injectPreviewCss(html, css);
+      res.json({ html: finalHtml });
     } catch (err) {
       console.error('[preview] Impossible de rendre la page', err);
       res.status(500).json({ message: 'Impossible de générer la preview.' });

@@ -1611,6 +1611,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     addPageForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (!pagesApiBase) {
+        addPageError && (addPageError.textContent = 'Aucun site sélectionné.');
+        return;
+      }
       if (!addPageTitle || !addPageSlug) {
         return;
       }
