@@ -514,7 +514,8 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
       if (!test.success) {
         throw new Error(test.message || 'Connexion FTP refusée.');
       }
-      logLine('Connexion FTP OK (transfert simulé)');
+      logLine('Connexion FTP OK');
+      await uploadSiteViaFtp(siteSlug, config, validation.port, logLine, { password });
     } else {
       if (!password && !privateKey) {
         throw new Error(
@@ -553,6 +554,7 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
       logs,
     };
     await appendDeployLog(siteSlug, entry);
+    err.deployEntry = entry;
     throw err;
   }
 }
@@ -620,6 +622,39 @@ async function uploadSiteViaSftp(siteSlug, config, remotePort, logLine, { passwo
 
   await client.end();
   logLine('Upload SFTP terminé');
+}
+
+async function uploadSiteViaFtp(siteSlug, config, remotePort, logLine, { password }) {
+  let FtpClient;
+  try {
+    const mod = await import('basic-ftp');
+    FtpClient = mod.default || mod.Client;
+  } catch (err) {
+    throw new Error('Module basic-ftp manquant. Installez-le pour activer l’upload FTP.');
+  }
+  const localRoot = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
+  const stats = await fs.stat(localRoot).catch(() => null);
+  if (!stats || !stats.isDirectory()) {
+    throw new Error('Dossier de site introuvable après build.');
+  }
+  const remoteBase = sanitizeRemotePath(config.remotePath || '/www');
+  const client = new FtpClient();
+  try {
+    logLine('Connexion FTP…');
+    await client.access({
+      host: config.host,
+      port: remotePort,
+      user: config.user,
+      password,
+      secure: false,
+    });
+    await client.ensureDir(remoteBase);
+    logLine('Upload FTP en cours…');
+    await client.uploadFromDir(localRoot, remoteBase);
+    logLine('Upload FTP terminé');
+  } finally {
+    client.close();
+  }
 }
 
 function normalizeMediaItem(item = {}) {
@@ -1335,7 +1370,10 @@ async function start() {
       res.json(entry);
     } catch (err) {
       console.error('[deploy] run failed', err);
-      res.status(500).json({ message: err.message || 'Déploiement échoué.' });
+      res.status(500).json({
+        message: err.message || 'Déploiement échoué.',
+        logs: err.deployEntry?.logs || [],
+      });
     }
   });
 

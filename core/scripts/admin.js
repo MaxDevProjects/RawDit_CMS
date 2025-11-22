@@ -2979,6 +2979,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLogs(['API déploiement indisponible (redémarre le serveur).']);
             return;
           }
+          renderLogs(result.logs || []);
           throw new Error(result.message || 'Déploiement échoué.');
         }
         renderLogs(result.logs || []);
