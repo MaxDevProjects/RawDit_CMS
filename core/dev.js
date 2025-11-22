@@ -401,7 +401,9 @@ async function getSiteOutputDir(siteSlug) {
   const sites = await readSites();
   const record = sites.find((s) => s.slug === normalizeSlug(siteSlug));
   if (record?.outputPath) {
-    return path.join(paths.root, record.outputPath.replace(/^\//, ''));
+    const relative = record.outputPath.replace(/^\//, '');
+    const resolved = path.join(paths.root, relative);
+    return resolved;
   }
   return path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
 }
@@ -409,7 +411,7 @@ async function getSiteOutputDir(siteSlug) {
 async function ensureBuildOutput(siteSlug) {
   const dest = getBuildOutputDir(siteSlug);
   await fs.rm(dest, { recursive: true, force: true });
-  await ensureDir(path.dirname(dest));
+  await ensureDir(dest);
   return dest;
 }
 
