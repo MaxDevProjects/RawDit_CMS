@@ -13,6 +13,7 @@ import { AuthService } from './lib/auth-service.js';
 import { SessionStore } from './lib/session-store.js';
 import { ensureDir } from './lib/fs-utils.js';
 import { existsSync } from 'node:fs';
+import { createReadStream } from 'node:fs';
 
 const COOKIE_NAME = 'admin_session';
 const authService = new AuthService();
@@ -235,7 +236,7 @@ async function readDeployConfig(siteSlug) {
       port: [21, 22].includes(port) ? port : protocol === 'ftp' ? 21 : 22,
       user: parsed.user || '',
       password: '', // jamais renvoyé
-      remotePath: sanitizeRemotePath(parsed.remotePath),
+      remotePath: normalizeRemotePathStrict(parsed.remotePath).path,
     };
   } catch (err) {
     if (err.code === 'ENOENT') {
@@ -259,7 +260,7 @@ async function writeDeployConfig(siteSlug, payload = {}) {
     host: typeof payload.host === 'string' ? payload.host.trim() : current.host,
     port,
     user: typeof payload.user === 'string' ? payload.user.trim() : current.user,
-    remotePath: sanitizeRemotePath(payload.remotePath || current.remotePath),
+    remotePath: validation.remotePath,
   };
   const filePath = getDeployConfigPath(siteSlug);
   await ensureDir(path.dirname(filePath));
@@ -301,6 +302,26 @@ function isHostAllowed(host) {
 function sanitizeRemotePath(remotePath) {
   const value = (remotePath || '').trim() || '/www';
   return value.startsWith('/') ? value : `/${value}`;
+}
+
+function normalizeRemotePathStrict(remotePath) {
+  const trimmed = (remotePath || '').trim();
+  if (!trimmed) {
+    return { ok: true, path: '/www' };
+  }
+  const parts = trimmed.split('/').filter(Boolean);
+  const clean = [];
+  for (const part of parts) {
+    if (part === '.') {
+      continue;
+    }
+    if (part === '..') {
+      return { ok: false, message: 'Chemin distant invalide (.. interdit).' };
+    }
+    clean.push(part);
+  }
+  const normalized = '/' + clean.join('/');
+  return { ok: true, path: normalized || '/www' };
 }
 
 const envKeyForPassword = (siteSlug) =>
@@ -373,6 +394,34 @@ async function appendDeployLog(siteSlug, entry, { max = 10 } = {}) {
   return all;
 }
 
+const getBuildOutputDir = (siteSlug) =>
+  path.join(paths.root, 'build', 'sites', sanitizeSiteSlug(siteSlug));
+
+async function ensureBuildOutput(siteSlug) {
+  const dest = getBuildOutputDir(siteSlug);
+  await fs.rm(dest, { recursive: true, force: true });
+  await ensureDir(path.dirname(dest));
+  return dest;
+}
+
+async function collectFiles(localRoot) {
+  const entries = [];
+  const walk = async (dir, base = '') => {
+    const files = await fs.readdir(dir, { withFileTypes: true });
+    for (const file of files) {
+      const rel = base ? `${base}/${file.name}` : file.name;
+      const full = path.join(dir, file.name);
+      if (file.isDirectory()) {
+        await walk(full, rel);
+      } else if (file.isFile()) {
+        entries.push({ rel, full });
+      }
+    }
+  };
+  await walk(localRoot, '');
+  return entries;
+}
+
 function validateDeployInput(payload) {
   const protocol = payload.protocol === 'ftp' ? 'ftp' : 'sftp';
   const port = Number(payload.port) || (protocol === 'ftp' ? 21 : 22);
@@ -388,10 +437,11 @@ function validateDeployInput(payload) {
   if (!payload.user || typeof payload.user !== 'string') {
     return { ok: false, message: 'Utilisateur requis.' };
   }
-  if (!payload.remotePath) {
-    return { ok: false, message: 'Chemin distant requis.' };
+  const remote = normalizeRemotePathStrict(payload.remotePath);
+  if (!remote.ok) {
+    return { ok: false, message: remote.message || 'Chemin distant invalide.' };
   }
-  return { ok: true, protocol, port };
+  return { ok: true, protocol, port, remotePath: remote.path };
 }
 
 function testFtpConnection({ host, port, user, password }) {
@@ -489,6 +539,7 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
       durationMs: Date.now() - start,
       status: 'error',
       message: validation.message || 'Configuration invalide.',
+      filesUploaded: 0,
       logs,
     };
     await appendDeployLog(siteSlug, entry);
@@ -497,7 +548,15 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
   try {
     logLine('Build du site…');
     await buildAll({ clean: false });
+    const localSource = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
+    const localDest = await ensureBuildOutput(siteSlug);
+    const sourceStats = await fs.stat(localSource).catch(() => null);
+    if (!sourceStats || !sourceStats.isDirectory()) {
+      throw new Error('Sources du site introuvables après build.');
+    }
+    await fs.cp(localSource, localDest, { recursive: true });
     logLine('Build terminé');
+    const entries = await collectFiles(localDest);
     const password = resolveDeployPassword(siteSlug, passwordOverride, config.password);
     const privateKey = resolvePrivateKey(siteSlug);
     if (config.protocol === 'ftp') {
@@ -515,7 +574,16 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
         throw new Error(test.message || 'Connexion FTP refusée.');
       }
       logLine('Connexion FTP OK');
-      await uploadSiteViaFtp(siteSlug, config, validation.port, logLine, { password });
+      logLine(`Déploiement vers ${config.protocol.toUpperCase()} ${config.host}:${validation.port} → ${config.remotePath}`);
+      const uploaded = await uploadSiteViaFtp(
+        siteSlug,
+        { ...config, entries },
+        validation.port,
+        logLine,
+        { password },
+      );
+      logLine(`Fichiers envoyés: ${uploaded}`);
+      filesUploaded = uploaded;
     } else {
       if (!password && !privateKey) {
         throw new Error(
@@ -528,7 +596,16 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
         throw new Error(test.message || 'Connexion SFTP indisponible.');
       }
       logLine('Connexion SFTP OK');
-      await uploadSiteViaSftp(siteSlug, config, validation.port, logLine, { password });
+      logLine(`Déploiement vers ${config.protocol.toUpperCase()} ${config.host}:${validation.port} → ${config.remotePath}`);
+      const uploaded = await uploadSiteViaSftp(
+        siteSlug,
+        { ...config, entries },
+        validation.port,
+        logLine,
+        { password },
+      );
+      logLine(`Fichiers envoyés: ${uploaded}`);
+      filesUploaded = uploaded;
     }
     logLine('Déploiement terminé');
     const entry = {
@@ -537,7 +614,9 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
       finishedAt: new Date().toISOString(),
       durationMs: Date.now() - start,
       status: 'success',
-      message: 'Déploiement simulé avec succès.',
+      success: true,
+      filesUploaded,
+      message: 'Déploiement terminé.',
       logs,
     };
     await appendDeployLog(siteSlug, entry);
@@ -551,6 +630,7 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
       durationMs: Date.now() - start,
       status: 'error',
       message: err.message || 'Déploiement échoué.',
+      filesUploaded,
       logs,
     };
     await appendDeployLog(siteSlug, entry);
@@ -571,13 +651,8 @@ async function uploadSiteViaSftp(siteSlug, config, remotePort, logLine, { passwo
   if (!key && !password) {
     throw new Error('Aucun secret fourni (clé privée via env ou mot de passe).');
   }
-  const localRoot = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
-  const stats = await fs.stat(localRoot).catch(() => null);
-  if (!stats || !stats.isDirectory()) {
-    throw new Error('Dossier de site introuvable après build.');
-  }
   const client = new SftpClient();
-  const remoteBase = sanitizeRemotePath(config.remotePath || '/www');
+  const remoteBase = config.remotePath;
   const connectConfig = {
     host: config.host,
     port: remotePort,
@@ -596,32 +671,19 @@ async function uploadSiteViaSftp(siteSlug, config, remotePort, logLine, { passwo
   logLine('Connexion SFTP…');
   await client.connect(connectConfig);
   logLine('Connexion SFTP établie, envoi des fichiers…');
-
-  const entries = [];
-  const walk = async (dir, base = '') => {
-    const files = await fs.readdir(dir, { withFileTypes: true });
-    for (const file of files) {
-      const rel = base ? `${base}/${file.name}` : file.name;
-      const full = path.join(dir, file.name);
-      if (file.isDirectory()) {
-        await walk(full, rel);
-      } else if (file.isFile()) {
-        entries.push({ rel, full });
-      }
-    }
-  };
-  await walk(localRoot, '');
-
-  for (const entry of entries) {
+  let uploaded = 0;
+  for (const entry of config.entries || []) {
     const remotePathFull = path.posix.join(remoteBase, entry.rel.replace(/\\/g, '/'));
     const remoteDir = path.posix.dirname(remotePathFull);
     await client.mkdir(remoteDir, true);
     await client.put(entry.full, remotePathFull);
     logLine(`Transféré: ${remotePathFull}`);
+    uploaded += 1;
   }
 
   await client.end();
   logLine('Upload SFTP terminé');
+  return uploaded;
 }
 
 async function uploadSiteViaFtp(siteSlug, config, remotePort, logLine, { password }) {
@@ -632,13 +694,9 @@ async function uploadSiteViaFtp(siteSlug, config, remotePort, logLine, { passwor
   } catch (err) {
     throw new Error('Module basic-ftp manquant. Installez-le pour activer l’upload FTP.');
   }
-  const localRoot = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
-  const stats = await fs.stat(localRoot).catch(() => null);
-  if (!stats || !stats.isDirectory()) {
-    throw new Error('Dossier de site introuvable après build.');
-  }
-  const remoteBase = sanitizeRemotePath(config.remotePath || '/www');
+  const remoteBase = config.remotePath;
   const client = new FtpClient();
+  let uploaded = 0;
   try {
     logLine('Connexion FTP…');
     await client.access({
@@ -650,11 +708,19 @@ async function uploadSiteViaFtp(siteSlug, config, remotePort, logLine, { passwor
     });
     await client.ensureDir(remoteBase);
     logLine('Upload FTP en cours…');
-    await client.uploadFromDir(localRoot, remoteBase);
+    for (const entry of config.entries || []) {
+      const remotePathFull = path.posix.join(remoteBase, entry.rel.replace(/\\/g, '/'));
+      const remoteDir = path.posix.dirname(remotePathFull);
+      await client.ensureDir(remoteDir);
+      await client.uploadFrom(entry.full, remotePathFull);
+      logLine(`Transféré: ${remotePathFull}`);
+      uploaded += 1;
+    }
     logLine('Upload FTP terminé');
   } finally {
     client.close();
   }
+  return uploaded;
 }
 
 function normalizeMediaItem(item = {}) {
