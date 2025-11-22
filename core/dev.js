@@ -531,6 +531,7 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
   logLine('Démarrage du déploiement');
   const config = await readDeployConfig(siteSlug);
   const validation = validateDeployInput(config);
+  let filesUploaded = 0;
   if (!validation.ok) {
     const entry = {
       id: `deploy-${Date.now().toString(36)}`,
