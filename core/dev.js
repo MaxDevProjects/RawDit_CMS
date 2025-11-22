@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { createServer, createConnection } from 'node:net';
+import ipaddr from 'ipaddr.js';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
 import chokidar from 'chokidar';
@@ -26,6 +27,7 @@ const previewEnv = new nunjucks.Environment(previewLoader, { autoescape: true })
 const SITES_DATA_ROOT = path.join(paths.data, 'sites');
 const PUBLIC_SITES_ROOT = path.join(paths.public, 'sites');
 const DEPLOY_CONFIG_FILENAME = 'deploy.json';
+const DEPLOY_LOG_FILENAME = 'deploy-log.json';
 const DEFAULT_COLLECTIONS = [
   {
     id: 'projects',
@@ -223,13 +225,15 @@ async function readDeployConfig(siteSlug) {
   try {
     const raw = await fs.readFile(filePath, 'utf8');
     const parsed = JSON.parse(raw || '{}');
+    const protocol = parsed.protocol === 'ftp' ? 'ftp' : 'sftp';
+    const port = Number(parsed.port) || (protocol === 'ftp' ? 21 : 22);
     return {
-      protocol: parsed.protocol === 'ftp' ? 'ftp' : 'sftp',
+      protocol,
       host: parsed.host || '',
-      port: Number(parsed.port) || (parsed.protocol === 'ftp' ? 21 : 22),
+      port: [21, 22].includes(port) ? port : protocol === 'ftp' ? 21 : 22,
       user: parsed.user || '',
       password: parsed.password || '',
-      remotePath: parsed.remotePath || '/www',
+      remotePath: sanitizeRemotePath(parsed.remotePath),
     };
   } catch (err) {
     if (err.code === 'ENOENT') {
@@ -242,8 +246,12 @@ async function readDeployConfig(siteSlug) {
 
 async function writeDeployConfig(siteSlug, payload = {}) {
   const current = await readDeployConfig(siteSlug);
-  const protocol = payload.protocol === 'ftp' ? 'ftp' : 'sftp';
-  const port = Number(payload.port) || (protocol === 'ftp' ? 21 : 22);
+  const validation = validateDeployInput({ ...current, ...payload });
+  if (!validation.ok) {
+    throw new Error(validation.message || 'Données invalides.');
+  }
+  const protocol = validation.protocol;
+  const port = validation.port;
   const merged = {
     protocol,
     host: typeof payload.host === 'string' ? payload.host.trim() : current.host,
@@ -253,10 +261,7 @@ async function writeDeployConfig(siteSlug, payload = {}) {
       typeof payload.password === 'string' && payload.password.length > 0
         ? payload.password
         : current.password,
-    remotePath:
-      typeof payload.remotePath === 'string' && payload.remotePath.trim()
-        ? payload.remotePath.trim()
-        : current.remotePath || '/www',
+    remotePath: sanitizeRemotePath(payload.remotePath || current.remotePath),
   };
   const filePath = getDeployConfigPath(siteSlug);
   await ensureDir(path.dirname(filePath));
@@ -264,17 +269,238 @@ async function writeDeployConfig(siteSlug, payload = {}) {
   return merged;
 }
 
-function testDeployConnection({ host, port }) {
+function isIpAllowed(host) {
+  try {
+    const addr = ipaddr.parse(host);
+    const range = addr.range();
+    return !['loopback', 'private', 'linkLocal', 'uniqueLocal', 'reserved'].includes(range);
+  } catch {
+    return true;
+  }
+}
+
+function isHostAllowed(host) {
+  if (!host || typeof host !== 'string') {
+    return false;
+  }
+  if (host.includes('://')) {
+    return false;
+  }
+  const trimmed = host.trim();
+  if (!trimmed) {
+    return false;
+  }
+  if (trimmed.includes(' ')) {
+    return false;
+  }
+  if (!isIpAllowed(trimmed)) {
+    return false;
+  }
+  // Accept IPv4/IPv6 (already filtered) or domain names.
+  return /^[a-zA-Z0-9.-]+$/.test(trimmed);
+}
+
+function sanitizeRemotePath(remotePath) {
+  const value = (remotePath || '').trim() || '/www';
+  return value.startsWith('/') ? value : `/${value}`;
+}
+
+function getDeployLogPath(siteSlug) {
+  return path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', DEPLOY_LOG_FILENAME);
+}
+
+async function readDeployLog(siteSlug) {
+  const filePath = getDeployLogPath(siteSlug);
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return [];
+    }
+    console.warn(`[deploy] Impossible de lire les logs: ${err.message}`);
+    return [];
+  }
+}
+
+async function appendDeployLog(siteSlug, entry, { max = 10 } = {}) {
+  const filePath = getDeployLogPath(siteSlug);
+  await ensureDir(path.dirname(filePath));
+  const entries = await readDeployLog(siteSlug);
+  const all = [entry, ...entries].slice(0, max);
+  await fs.writeFile(filePath, JSON.stringify(all, null, 2), 'utf8');
+  return all;
+}
+
+function validateDeployInput(payload) {
+  const protocol = payload.protocol === 'ftp' ? 'ftp' : 'sftp';
+  const port = Number(payload.port) || (protocol === 'ftp' ? 21 : 22);
+  if (!isHostAllowed(payload.host)) {
+    return { ok: false, message: 'Hôte non autorisé.' };
+  }
+  if (![21, 22].includes(port)) {
+    return { ok: false, message: 'Port non autorisé (limité à 21 ou 22).' };
+  }
+  if (!payload.user || typeof payload.user !== 'string') {
+    return { ok: false, message: 'Utilisateur requis.' };
+  }
+  if (!payload.remotePath) {
+    return { ok: false, message: 'Chemin distant requis.' };
+  }
+  return { ok: true, protocol, port };
+}
+
+function testFtpConnection({ host, port, user, password }) {
   return new Promise((resolve) => {
-    const socket = createConnection({ host, port, timeout: 4000 });
+    const socket = createConnection({ host, port, timeout: 5000 });
+    let step = 'greeting';
+    let resolved = false;
     const done = (success, message) => {
+      if (resolved) return;
+      resolved = true;
       socket.destroy();
       resolve({ success, message });
     };
-    socket.on('connect', () => done(true, 'Connexion réussie.'));
+    const send = (line) => socket.write(`${line}\r\n`);
+    socket.on('data', (chunk) => {
+      const text = chunk.toString();
+      const code = text.slice(0, 3);
+      if (step === 'greeting') {
+        if (code.startsWith('220')) {
+          step = 'user';
+          send(`USER ${user}`);
+        } else {
+          done(false, `Réponse inattendue: ${text.trim()}`);
+        }
+      } else if (step === 'user') {
+        if (code.startsWith('331')) {
+          step = 'pass';
+          send(`PASS ${password || ''}`);
+        } else if (code.startsWith('230')) {
+          done(true, 'Connexion FTP réussie.');
+        } else {
+          done(false, `Authentification refusée: ${text.trim()}`);
+        }
+      } else if (step === 'pass') {
+        if (code.startsWith('230')) {
+          done(true, 'Connexion FTP réussie.');
+        } else {
+          done(false, `Mot de passe refusé: ${text.trim()}`);
+        }
+      }
+    });
     socket.on('timeout', () => done(false, 'Délai dépassé.'));
     socket.on('error', (err) => done(false, err?.message || 'Erreur de connexion.'));
+    socket.on('close', () => {
+      if (!resolved && step !== 'pass') {
+        done(false, 'Connexion fermée prématurément.');
+      }
+    });
   });
+}
+
+function testSftpConnection({ host, port }) {
+  return new Promise((resolve) => {
+    const socket = createConnection({ host, port, timeout: 5000 });
+    let resolved = false;
+    const done = (success, message) => {
+      if (resolved) return;
+      resolved = true;
+      socket.destroy();
+      resolve({ success, message });
+    };
+    socket.on('data', (chunk) => {
+      const text = chunk.toString();
+      if (text.startsWith('SSH-')) {
+        done(true, 'Serveur SSH accessible (auth non testée).');
+      }
+    });
+    socket.on('connect', () => {
+      // Send our banner to trigger server response.
+      socket.write('SSH-2.0-ClowerDeployTest\r\n');
+    });
+    socket.on('timeout', () => done(false, 'Délai dépassé.'));
+    socket.on('error', (err) => done(false, err?.message || 'Erreur de connexion.'));
+    socket.on('close', () => {
+      if (!resolved) {
+        done(false, 'Connexion fermée sans réponse SSH.');
+      }
+    });
+  });
+}
+
+async function runDeploy(siteSlug) {
+  const start = Date.now();
+  const startedAt = new Date().toISOString();
+  const logs = [];
+  const logLine = (line) => logs.push(`[${new Date().toISOString()}] ${line}`);
+  logLine('Démarrage du déploiement');
+  const config = await readDeployConfig(siteSlug);
+  const validation = validateDeployInput(config);
+  if (!validation.ok) {
+    const entry = {
+      id: `deploy-${Date.now().toString(36)}`,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - start,
+      status: 'error',
+      message: validation.message || 'Configuration invalide.',
+      logs,
+    };
+    await appendDeployLog(siteSlug, entry);
+    throw new Error(validation.message || 'Configuration invalide.');
+  }
+  try {
+    logLine('Build du site…');
+    await buildAll({ clean: false });
+    logLine('Build terminé');
+    if (config.protocol === 'ftp') {
+      logLine(`Test FTP ${config.host}:${validation.port}`);
+      const test = await testFtpConnection({
+        host: config.host,
+        port: validation.port,
+        user: config.user,
+        password: config.password || '',
+      });
+      if (!test.success) {
+        throw new Error(test.message || 'Connexion FTP refusée.');
+      }
+      logLine('Connexion FTP OK (transfert simulé)');
+    } else {
+      logLine(`Test SFTP ${config.host}:${validation.port}`);
+      const test = await testSftpConnection({ host: config.host, port: validation.port });
+      if (!test.success) {
+        throw new Error(test.message || 'Connexion SFTP indisponible.');
+      }
+      logLine('Connexion SFTP OK (transfert simulé)');
+    }
+    logLine('Déploiement terminé');
+    const entry = {
+      id: `deploy-${Date.now().toString(36)}`,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - start,
+      status: 'success',
+      message: 'Déploiement simulé avec succès.',
+      logs,
+    };
+    await appendDeployLog(siteSlug, entry);
+    return entry;
+  } catch (err) {
+    logLine(`Erreur: ${err.message}`);
+    const entry = {
+      id: `deploy-${Date.now().toString(36)}`,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - start,
+      status: 'error',
+      message: err.message || 'Déploiement échoué.',
+      logs,
+    };
+    await appendDeployLog(siteSlug, entry);
+    throw err;
+  }
 }
 
 function normalizeMediaItem(item = {}) {
@@ -891,8 +1117,9 @@ async function start() {
       return res.status(400).json({ message: 'Site invalide.' });
     }
     const payload = req.body || {};
-    if (!payload.host || !payload.user || !payload.remotePath) {
-      return res.status(400).json({ message: 'Complétez les champs requis.' });
+    const validation = validateDeployInput(payload);
+    if (!validation.ok) {
+      return res.status(400).json({ message: validation.message || 'Données invalides.' });
     }
     try {
       const saved = await writeDeployConfig(siteSlug, payload);
@@ -916,20 +1143,61 @@ async function start() {
       return res.status(400).json({ message: 'Site invalide.' });
     }
     const payload = req.body || {};
-    if (!payload.host || !payload.user || !payload.remotePath) {
-      return res.status(400).json({ message: 'Complétez les champs requis avant de tester.' });
+    const validation = validateDeployInput(payload);
+    if (!validation.ok) {
+      return res.status(400).json({ message: validation.message || 'Données invalides.' });
     }
-    const protocol = payload.protocol === 'ftp' ? 'ftp' : 'sftp';
-    const port = Number(payload.port) || (protocol === 'ftp' ? 21 : 22);
+    const protocol = validation.protocol;
+    const port = validation.port;
     try {
-      const result = await testDeployConnection({ host: payload.host, port });
+      if (protocol === 'ftp') {
+        const result = await testFtpConnection({
+          host: payload.host,
+          port,
+          user: payload.user,
+          password: payload.password || '',
+        });
+        if (!result.success) {
+          return res.status(500).json({ success: false, message: result.message });
+        }
+        return res.json({ success: true, message: result.message || 'Connexion FTP réussie.' });
+      }
+      const result = await testSftpConnection({ host: payload.host, port });
       if (!result.success) {
         return res.status(500).json({ success: false, message: result.message });
       }
-      res.json({ success: true, message: result.message || 'Connexion réussie.' });
+      res.json({ success: true, message: result.message || 'Connexion SFTP disponible.' });
     } catch (err) {
       console.error('[deploy] test failed', err);
       res.status(500).json({ success: false, message: err.message || 'Test de connexion échoué.' });
+    }
+  });
+
+  app.get('/api/sites/:slug/deploy-log', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    try {
+      const entries = await readDeployLog(siteSlug);
+      res.json({ entries });
+    } catch (err) {
+      console.error('[deploy] log failed', err);
+      res.status(500).json({ message: 'Impossible de charger les logs.' });
+    }
+  });
+
+  app.post('/api/sites/:slug/deploy', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    try {
+      const entry = await runDeploy(siteSlug);
+      res.json(entry);
+    } catch (err) {
+      console.error('[deploy] run failed', err);
+      res.status(500).json({ message: err.message || 'Déploiement échoué.' });
     }
   });
 

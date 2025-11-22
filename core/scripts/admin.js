@@ -2694,12 +2694,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedback = document.querySelector('[data-deploy-feedback]');
     const saveButton = document.querySelector('[data-deploy-save]');
     const testButton = document.querySelector('[data-deploy-test]');
+    const deployButton = document.querySelector('[data-deploy-trigger]');
+    const historyList = document.querySelector('[data-deploy-history]');
+    const logBox = document.querySelector('[data-deploy-log]');
 
     const safeSiteSlug = stripLeadingSlash(
       workspaceContext?.slugValue || storedSite.slug || '',
     );
     const deployApiBase = safeSiteSlug
       ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/deploy-config`
+      : null;
+    const deployRunApi = safeSiteSlug
+      ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/deploy`
+      : null;
+    const deployLogApi = safeSiteSlug
+      ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/deploy-log`
       : null;
 
     let hasPassword = false;
@@ -2753,6 +2762,13 @@ document.addEventListener('DOMContentLoaded', () => {
             ? `<span class="inline-flex items-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-600"></span><span>Test en cours…</span></span>`
             : 'Tester la connexion';
       }
+      if (deployButton) {
+        deployButton.disabled = disable && action !== null;
+        deployButton.innerHTML =
+          action === 'deploy'
+            ? `<span class="inline-flex items-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-white"></span><span>Déploiement…</span></span>`
+            : 'Déployer maintenant';
+      }
     };
 
     const populateForm = (config) => {
@@ -2765,6 +2781,75 @@ document.addEventListener('DOMContentLoaded', () => {
       if (passwordInput) {
         passwordInput.value = '';
         passwordInput.placeholder = hasPassword ? 'Non affiché' : 'Mot de passe';
+      }
+    };
+
+    const renderHistory = (entries = []) => {
+      if (!historyList) {
+        return;
+      }
+      historyList.innerHTML = '';
+      if (!entries.length) {
+        const li = document.createElement('li');
+        li.className = 'text-slate-500';
+        li.textContent = 'Aucun déploiement pour le moment.';
+        historyList.appendChild(li);
+        return;
+      }
+      entries.forEach((entry) => {
+        const li = document.createElement('li');
+        li.className =
+          'flex items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2';
+        const statusBadge =
+          entry.status === 'success'
+            ? '<span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">Succès</span>'
+            : '<span class="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700">Échec</span>';
+        const date = entry.finishedAt || entry.startedAt || '';
+        const duration =
+          entry.durationMs && Number(entry.durationMs) >= 0
+            ? `${Math.round(Number(entry.durationMs) / 1000)}s`
+            : '';
+        li.innerHTML = `
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">${statusBadge}<span class="text-xs text-slate-500">${date}</span></div>
+            <p class="text-sm text-slate-800">${entry.message || ''}</p>
+          </div>
+          <div class="text-xs text-slate-500">${duration}</div>
+        `;
+        li.dataset.deployId = entry.id || '';
+        li.addEventListener('click', () => {
+          if (entry.logs && logBox) {
+            logBox.textContent = entry.logs.join('\n');
+          }
+        });
+        historyList.appendChild(li);
+      });
+    };
+
+    const renderLogs = (lines = []) => {
+      if (!logBox) {
+        return;
+      }
+      logBox.textContent = lines.length ? lines.join('\n') : 'Aucun log pour le moment.';
+    };
+
+    const fetchHistory = async () => {
+      if (!deployLogApi) {
+        return;
+      }
+      try {
+        const response = await fetch(deployLogApi, { headers: { Accept: 'application/json' } });
+        if (!response.ok) {
+          throw new Error('Impossible de charger l’historique.');
+        }
+        const payload = await response.json().catch(() => ({}));
+        const entries = Array.isArray(payload.entries) ? payload.entries : [];
+        renderHistory(entries);
+        if (entries[0]?.logs) {
+          renderLogs(entries[0].logs);
+        }
+      } catch (err) {
+        console.error('[deploy] history failed', err);
       }
     };
 
@@ -2814,10 +2899,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const payload = buildPayload();
-      if (!payload.host || !payload.user || !payload.remotePath) {
-        setFeedback('Remplissez les champs requis.', 'error');
-        return;
-      }
       setBusy('save');
       try {
         const response = await fetch(deployApiBase, {
@@ -2873,6 +2954,34 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    deployButton?.addEventListener('click', async () => {
+      if (!deployRunApi) {
+        setFeedback('Aucun site actif sélectionné.', 'error');
+        return;
+      }
+      setBusy('deploy');
+      renderLogs(['Déploiement en cours…']);
+      try {
+        const response = await fetch(deployRunApi, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(buildPayload()),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result.message || 'Déploiement échoué.');
+        }
+        renderLogs(result.logs || []);
+        await fetchHistory();
+        showToast('Déploiement terminé');
+      } catch (err) {
+        console.error('[deploy] run failed', err);
+        setFeedback(err.message || 'Déploiement échoué.', 'error');
+      } finally {
+        setBusy(null);
+      }
+    });
+
     showPasswordToggle?.addEventListener('change', () => {
       if (!passwordInput) {
         return;
@@ -2881,6 +2990,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     fetchConfig();
+    fetchHistory();
   }
 
   function initMediaWorkspace() {
