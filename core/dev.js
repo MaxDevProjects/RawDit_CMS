@@ -473,7 +473,7 @@ function testSftpConnection({ host, port }) {
   });
 }
 
-async function runDeploy(siteSlug) {
+async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
   const start = Date.now();
   const startedAt = new Date().toISOString();
   const logs = [];
@@ -498,7 +498,7 @@ async function runDeploy(siteSlug) {
     logLine('Build du site…');
     await buildAll({ clean: false });
     logLine('Build terminé');
-    const password = resolveDeployPassword(siteSlug, null, config.password);
+    const password = resolveDeployPassword(siteSlug, passwordOverride, config.password);
     const privateKey = resolvePrivateKey(siteSlug);
     if (config.protocol === 'ftp') {
       if (!password) {
@@ -1329,8 +1329,9 @@ async function start() {
     if (!siteSlug) {
       return res.status(400).json({ message: 'Site invalide.' });
     }
+    const payload = req.body || {};
     try {
-      const entry = await runDeploy(siteSlug);
+      const entry = await runDeploy(siteSlug, { passwordOverride: payload.password || null });
       res.json(entry);
     } catch (err) {
       console.error('[deploy] run failed', err);
