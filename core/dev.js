@@ -12,6 +12,7 @@ import { buildAll } from './build.js';
 import { AuthService } from './lib/auth-service.js';
 import { SessionStore } from './lib/session-store.js';
 import { ensureDir } from './lib/fs-utils.js';
+import { existsSync } from 'node:fs';
 
 const COOKIE_NAME = 'admin_session';
 const authService = new AuthService();
@@ -316,6 +317,34 @@ const resolveDeployPassword = (siteSlug, providedPassword, storedPassword) => {
   return storedPassword || '';
 };
 
+const envKeyForPrivateKey = (siteSlug) =>
+  `DEPLOY_KEY_${sanitizeSiteSlug(siteSlug).toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
+const envKeyForKeyPassphrase = (siteSlug) =>
+  `DEPLOY_KEY_PASSPHRASE_${sanitizeSiteSlug(siteSlug).toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
+
+const resolvePrivateKey = (siteSlug) => {
+  const envKey = envKeyForPrivateKey(siteSlug);
+  const raw = process.env[envKey];
+  if (!raw) {
+    return null;
+  }
+  if (raw.includes('BEGIN OPENSSH PRIVATE KEY') || raw.includes('BEGIN RSA PRIVATE KEY')) {
+    return raw;
+  }
+  if (existsSync(raw)) {
+    try {
+      return fs.readFile(raw, 'utf8');
+    } catch {
+      return null;
+    }
+  }
+  try {
+    return Buffer.from(raw, 'base64').toString('utf8');
+  } catch {
+    return null;
+  }
+};
+
 function getDeployLogPath(siteSlug) {
   return path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', DEPLOY_LOG_FILENAME);
 }
@@ -470,10 +499,11 @@ async function runDeploy(siteSlug) {
     await buildAll({ clean: false });
     logLine('Build terminé');
     const password = resolveDeployPassword(siteSlug, null, config.password);
-    if (!password) {
-      throw new Error('Aucun mot de passe défini (utilisez une variable d’environnement ou saisissez-le).');
-    }
+    const privateKey = resolvePrivateKey(siteSlug);
     if (config.protocol === 'ftp') {
+      if (!password) {
+        throw new Error('Aucun mot de passe défini (utilisez une variable d’environnement ou saisissez-le).');
+      }
       logLine(`Test FTP ${config.host}:${validation.port}`);
       const test = await testFtpConnection({
         host: config.host,
@@ -486,12 +516,18 @@ async function runDeploy(siteSlug) {
       }
       logLine('Connexion FTP OK (transfert simulé)');
     } else {
+      if (!password && !privateKey) {
+        throw new Error(
+          'Aucun secret fourni (mot de passe ou clé privée via variables d’environnement).',
+        );
+      }
       logLine(`Test SFTP ${config.host}:${validation.port}`);
       const test = await testSftpConnection({ host: config.host, port: validation.port });
       if (!test.success) {
         throw new Error(test.message || 'Connexion SFTP indisponible.');
       }
-      logLine('Connexion SFTP OK (transfert simulé)');
+      logLine('Connexion SFTP OK');
+      await uploadSiteViaSftp(siteSlug, config, validation.port, logLine, { password });
     }
     logLine('Déploiement terminé');
     const entry = {
@@ -519,6 +555,71 @@ async function runDeploy(siteSlug) {
     await appendDeployLog(siteSlug, entry);
     throw err;
   }
+}
+
+async function uploadSiteViaSftp(siteSlug, config, remotePort, logLine, { password }) {
+  let SftpClient;
+  try {
+    const mod = await import('ssh2-sftp-client');
+    SftpClient = mod.default || mod;
+  } catch (err) {
+    throw new Error('Module ssh2-sftp-client manquant. Installez-le pour activer l’upload SFTP.');
+  }
+  const key = resolvePrivateKey(siteSlug);
+  if (!key && !password) {
+    throw new Error('Aucun secret fourni (clé privée via env ou mot de passe).');
+  }
+  const localRoot = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
+  const stats = await fs.stat(localRoot).catch(() => null);
+  if (!stats || !stats.isDirectory()) {
+    throw new Error('Dossier de site introuvable après build.');
+  }
+  const client = new SftpClient();
+  const remoteBase = sanitizeRemotePath(config.remotePath || '/www');
+  const connectConfig = {
+    host: config.host,
+    port: remotePort,
+    username: config.user,
+    readyTimeout: 8000,
+  };
+  if (key) {
+    connectConfig.privateKey = key;
+    const passphrase = process.env[envKeyForKeyPassphrase(siteSlug)];
+    if (passphrase) {
+      connectConfig.passphrase = passphrase;
+    }
+  } else {
+    connectConfig.password = password;
+  }
+  logLine('Connexion SFTP…');
+  await client.connect(connectConfig);
+  logLine('Connexion SFTP établie, envoi des fichiers…');
+
+  const entries = [];
+  const walk = async (dir, base = '') => {
+    const files = await fs.readdir(dir, { withFileTypes: true });
+    for (const file of files) {
+      const rel = base ? `${base}/${file.name}` : file.name;
+      const full = path.join(dir, file.name);
+      if (file.isDirectory()) {
+        await walk(full, rel);
+      } else if (file.isFile()) {
+        entries.push({ rel, full });
+      }
+    }
+  };
+  await walk(localRoot, '');
+
+  for (const entry of entries) {
+    const remotePathFull = path.posix.join(remoteBase, entry.rel.replace(/\\/g, '/'));
+    const remoteDir = path.posix.dirname(remotePathFull);
+    await client.mkdir(remoteDir, true);
+    await client.put(entry.full, remotePathFull);
+    logLine(`Transféré: ${remotePathFull}`);
+  }
+
+  await client.end();
+  logLine('Upload SFTP terminé');
 }
 
 function normalizeMediaItem(item = {}) {
@@ -1189,10 +1290,14 @@ async function start() {
         return res.json({ success: true, message: result.message || 'Connexion FTP réussie.' });
       }
       const password = resolveDeployPassword(siteSlug, payload.password, null);
-      if (!password) {
+      const privateKey = resolvePrivateKey(siteSlug);
+      if (!password && !privateKey) {
         return res
           .status(400)
-          .json({ message: 'Mot de passe requis (via champ ou variable d’environnement).' });
+          .json({
+            message:
+              'Mot de passe ou clé privée requis (via champ ou variables DEPLOY_KEY_<SLUG>).',
+          });
       }
       const result = await testSftpConnection({ host: payload.host, port });
       if (!result.success) {

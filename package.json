@@ -23,12 +23,13 @@
   },
   "homepage": "https://github.com/MaxDevProjects/Clower-edit#readme",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
     "@tailwindcss/cli": "^4.1.17",
+    "bcryptjs": "^2.4.3",
     "chokidar": "^3.6.0",
     "esbuild": "^0.27.0",
     "express": "^5.1.0",
     "nunjucks": "^3.2.4",
+    "ssh2-sftp-client": "^10.0.3",
     "tailwindcss": "^4.1.17"
   }
 }
