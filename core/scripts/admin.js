@@ -2840,6 +2840,11 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const response = await fetch(deployLogApi, { headers: { Accept: 'application/json' } });
         if (!response.ok) {
+          if (response.status === 404) {
+            renderHistory([]);
+            renderLogs(['API déploiement indisponible (redémarre le serveur).']);
+            return;
+          }
           throw new Error('Impossible de charger l’historique.');
         }
         const payload = await response.json().catch(() => ({}));
@@ -2969,6 +2974,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) {
+          if (response.status === 404) {
+            setFeedback('API déploiement indisponible (redémarre le serveur).', 'error');
+            renderLogs(['API déploiement indisponible (redémarre le serveur).']);
+            return;
+          }
           throw new Error(result.message || 'Déploiement échoué.');
         }
         renderLogs(result.logs || []);
