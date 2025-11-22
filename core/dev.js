@@ -28,6 +28,7 @@ const SITES_DATA_ROOT = path.join(paths.data, 'sites');
 const PUBLIC_SITES_ROOT = path.join(paths.public, 'sites');
 const DEPLOY_CONFIG_FILENAME = 'deploy.json';
 const DEPLOY_LOG_FILENAME = 'deploy-log.json';
+const ENV_ALLOW_FTP = process.env.ALLOW_FTP === 'true';
 const DEFAULT_COLLECTIONS = [
   {
     id: 'projects',
@@ -232,7 +233,7 @@ async function readDeployConfig(siteSlug) {
       host: parsed.host || '',
       port: [21, 22].includes(port) ? port : protocol === 'ftp' ? 21 : 22,
       user: parsed.user || '',
-      password: parsed.password || '',
+      password: '', // jamais renvoyé
       remotePath: sanitizeRemotePath(parsed.remotePath),
     };
   } catch (err) {
@@ -257,10 +258,6 @@ async function writeDeployConfig(siteSlug, payload = {}) {
     host: typeof payload.host === 'string' ? payload.host.trim() : current.host,
     port,
     user: typeof payload.user === 'string' ? payload.user.trim() : current.user,
-    password:
-      typeof payload.password === 'string' && payload.password.length > 0
-        ? payload.password
-        : current.password,
     remotePath: sanitizeRemotePath(payload.remotePath || current.remotePath),
   };
   const filePath = getDeployConfigPath(siteSlug);
@@ -305,6 +302,20 @@ function sanitizeRemotePath(remotePath) {
   return value.startsWith('/') ? value : `/${value}`;
 }
 
+const envKeyForPassword = (siteSlug) =>
+  `DEPLOY_PASSWORD_${sanitizeSiteSlug(siteSlug).toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
+
+const resolveDeployPassword = (siteSlug, providedPassword, storedPassword) => {
+  const envKey = envKeyForPassword(siteSlug);
+  if (process.env[envKey]) {
+    return process.env[envKey];
+  }
+  if (providedPassword && providedPassword.length > 0) {
+    return providedPassword;
+  }
+  return storedPassword || '';
+};
+
 function getDeployLogPath(siteSlug) {
   return path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', DEPLOY_LOG_FILENAME);
 }
@@ -336,6 +347,9 @@ async function appendDeployLog(siteSlug, entry, { max = 10 } = {}) {
 function validateDeployInput(payload) {
   const protocol = payload.protocol === 'ftp' ? 'ftp' : 'sftp';
   const port = Number(payload.port) || (protocol === 'ftp' ? 21 : 22);
+  if (protocol === 'ftp' && !ENV_ALLOW_FTP) {
+    return { ok: false, message: 'FTP désactivé (ALLOW_FTP=true requis).' };
+  }
   if (!isHostAllowed(payload.host)) {
     return { ok: false, message: 'Hôte non autorisé.' };
   }
@@ -455,13 +469,17 @@ async function runDeploy(siteSlug) {
     logLine('Build du site…');
     await buildAll({ clean: false });
     logLine('Build terminé');
+    const password = resolveDeployPassword(siteSlug, null, config.password);
+    if (!password) {
+      throw new Error('Aucun mot de passe défini (utilisez une variable d’environnement ou saisissez-le).');
+    }
     if (config.protocol === 'ftp') {
       logLine(`Test FTP ${config.host}:${validation.port}`);
       const test = await testFtpConnection({
         host: config.host,
         port: validation.port,
         user: config.user,
-        password: config.password || '',
+        password,
       });
       if (!test.success) {
         throw new Error(test.message || 'Connexion FTP refusée.');
@@ -1097,13 +1115,14 @@ async function start() {
     }
     try {
       const config = await readDeployConfig(siteSlug);
+      const envPassword = resolveDeployPassword(siteSlug, null, null);
       res.json({
         protocol: config.protocol,
         host: config.host,
         port: config.port,
         user: config.user,
         remotePath: config.remotePath,
-        hasPassword: Boolean(config.password),
+        hasPassword: Boolean(envPassword),
       });
     } catch (err) {
       console.error('[deploy] load config failed', err);
@@ -1123,13 +1142,14 @@ async function start() {
     }
     try {
       const saved = await writeDeployConfig(siteSlug, payload);
+      const hasPassword = Boolean(resolveDeployPassword(siteSlug, payload.password, null));
       res.json({
         protocol: saved.protocol,
         host: saved.host,
         port: saved.port,
         user: saved.user,
         remotePath: saved.remotePath,
-        hasPassword: Boolean(saved.password),
+        hasPassword,
       });
     } catch (err) {
       console.error('[deploy] save config failed', err);
@@ -1151,16 +1171,28 @@ async function start() {
     const port = validation.port;
     try {
       if (protocol === 'ftp') {
+        const password = resolveDeployPassword(siteSlug, payload.password, null);
+        if (!password) {
+          return res
+            .status(400)
+            .json({ message: 'Mot de passe requis (via champ ou variable d’environnement).' });
+        }
         const result = await testFtpConnection({
           host: payload.host,
           port,
           user: payload.user,
-          password: payload.password || '',
+          password,
         });
         if (!result.success) {
           return res.status(500).json({ success: false, message: result.message });
         }
         return res.json({ success: true, message: result.message || 'Connexion FTP réussie.' });
+      }
+      const password = resolveDeployPassword(siteSlug, payload.password, null);
+      if (!password) {
+        return res
+          .status(400)
+          .json({ message: 'Mot de passe requis (via champ ou variable d’environnement).' });
       }
       const result = await testSftpConnection({ host: payload.host, port });
       if (!result.success) {
