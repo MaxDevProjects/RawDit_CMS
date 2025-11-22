@@ -26,7 +26,7 @@
         "subtitle": "Ceci est un sous titre",
         "ctaLabel": "Découvrir",
         "ctaUrl": "services",
-        "image": "https://picsum.photos/200/300",
+        "image": "/sites/clower-studio/media/capture-d-ecran-2025-10-30-182720.png",
         "align": "left"
       }
     },
@@ -51,6 +51,19 @@
     {
       "id": "home-collectiongrid-mi8siug0-716",
       "label": "Grille de contenus 1",
+      "type": "CollectionGrid",
+      "status": "Brouillon",
+      "description": "Affiche automatiquement les items d’une collection.",
+      "props": [],
+      "settings": {
+        "collectionId": "testimonials",
+        "limit": 6
+      },
+      "collectionId": "testimonials"
+    },
+    {
+      "id": "home-collectiongrid-miagoo0p-827",
+      "label": "Grille de contenus 2",
       "type": "CollectionGrid",
       "status": "Brouillon",
       "description": "Affiche automatiquement les items d’une collection.",

@@ -1,34 +1,24 @@
 {
   "items": [
     {
-      "id": "img-hero-atelier",
-      "filename": "hero-atelier.svg",
-      "path": "/sites/clower-studio/media/hero-atelier.svg",
-      "type": "image/svg+xml",
-      "size": 2450,
-      "alt": "Visuel hero pour Clower Atelier",
-      "usedIn": ["page:home:hero"],
-      "uploadedAt": "2024-11-10T09:15:00.000Z"
-    },
-    {
-      "id": "img-portrait-studio",
-      "filename": "portrait-studio.svg",
-      "path": "/sites/clower-studio/media/portrait-studio.svg",
-      "type": "image/svg+xml",
-      "size": 3120,
-      "alt": "Illustration portrait studio",
-      "usedIn": ["page:about:hero", "page:team:section-1"],
-      "uploadedAt": "2024-11-11T14:02:00.000Z"
-    },
-    {
-      "id": "doc-brand-guide",
-      "filename": "brand-guide.pdf",
-      "path": "/sites/clower-studio/media/brand-guide.pdf",
-      "type": "application/pdf",
-      "size": 88432,
-      "alt": "Guide de marque Clower",
+      "id": "capture-d-ecran-2025-10-30-182720-miagi45j",
+      "filename": "capture-d-ecran-2025-10-30-182720.png",
+      "path": "/sites/clower-studio/media/capture-d-ecran-2025-10-30-182720.png",
+      "type": "image/png",
+      "size": 89400,
+      "alt": "Capture d'écran 2025 10 30 182720 ttt",
       "usedIn": [],
-      "uploadedAt": "2024-11-12T08:41:00.000Z"
+      "uploadedAt": "2025-11-22T15:41:12.967Z"
+    },
+    {
+      "id": "capture-d-ecran-2025-11-11-165133-miagn2vx",
+      "filename": "capture-d-ecran-2025-11-11-165133.png",
+      "path": "/sites/clower-studio/media/capture-d-ecran-2025-11-11-165133.png",
+      "type": "image/png",
+      "size": 182897,
+      "alt": "Capture d'écran 2025 10 30 182720 ttt",
+      "usedIn": [],
+      "uploadedAt": "2025-11-22T15:45:04.605Z"
     }
   ]
 }

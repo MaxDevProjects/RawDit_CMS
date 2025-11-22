@@ -1,0 +1,89 @@
+[
+  {
+    "id": "deploy-mialhe6r",
+    "startedAt": "2025-11-22T18:00:36.400Z",
+    "finishedAt": "2025-11-22T18:00:37.395Z",
+    "durationMs": 995,
+    "status": "error",
+    "message": "Aucun secret fourni (mot de passe ou clé privée via variables d’environnement).",
+    "logs": [
+      "[2025-11-22T18:00:36.400Z] Démarrage du déploiement",
+      "[2025-11-22T18:00:36.404Z] Build du site…",
+      "[2025-11-22T18:00:37.395Z] Build terminé",
+      "[2025-11-22T18:00:37.395Z] Erreur: Aucun secret fourni (mot de passe ou clé privée via variables d’environnement)."
+    ]
+  },
+  {
+    "id": "deploy-mialgw71",
+    "startedAt": "2025-11-22T18:00:09.997Z",
+    "finishedAt": "2025-11-22T18:00:14.077Z",
+    "durationMs": 4080,
+    "status": "success",
+    "message": "Déploiement simulé avec succès.",
+    "logs": [
+      "[2025-11-22T18:00:09.997Z] Démarrage du déploiement",
+      "[2025-11-22T18:00:10.002Z] Build du site…",
+      "[2025-11-22T18:00:10.875Z] Build terminé",
+      "[2025-11-22T18:00:10.875Z] Test SFTP srv620796.hstgr.cloud:22",
+      "[2025-11-22T18:00:11.048Z] Connexion SFTP OK",
+      "[2025-11-22T18:00:11.112Z] Connexion SFTP…",
+      "[2025-11-22T18:00:12.745Z] Connexion SFTP établie, envoi des fichiers…",
+      "[2025-11-22T18:00:13.449Z] Transféré: /home/srv/cloweredit-deploy-test/media/capture-d-ecran-2025-10-30-182720.png",
+      "[2025-11-22T18:00:13.999Z] Transféré: /home/srv/cloweredit-deploy-test/media/capture-d-ecran-2025-11-11-165133.png",
+      "[2025-11-22T18:00:14.077Z] Upload SFTP terminé",
+      "[2025-11-22T18:00:14.077Z] Déploiement terminé"
+    ]
+  },
+  {
+    "id": "deploy-mial6pne",
+    "startedAt": "2025-11-22T17:52:15.085Z",
+    "finishedAt": "2025-11-22T17:52:19.034Z",
+    "durationMs": 3949,
+    "status": "success",
+    "message": "Déploiement simulé avec succès.",
+    "logs": [
+      "[2025-11-22T17:52:15.085Z] Démarrage du déploiement",
+      "[2025-11-22T17:52:15.086Z] Build du site…",
+      "[2025-11-22T17:52:15.995Z] Build terminé",
+      "[2025-11-22T17:52:15.995Z] Test SFTP srv620796.hstgr.cloud:22",
+      "[2025-11-22T17:52:16.250Z] Connexion SFTP OK",
+      "[2025-11-22T17:52:16.252Z] Connexion SFTP…",
+      "[2025-11-22T17:52:17.559Z] Connexion SFTP établie, envoi des fichiers…",
+      "[2025-11-22T17:52:18.416Z] Transféré: /home/srv/cloweredit-deploy-test/media/capture-d-ecran-2025-10-30-182720.png",
+      "[2025-11-22T17:52:18.963Z] Transféré: /home/srv/cloweredit-deploy-test/media/capture-d-ecran-2025-11-11-165133.png",
+      "[2025-11-22T17:52:19.034Z] Upload SFTP terminé",
+      "[2025-11-22T17:52:19.034Z] Déploiement terminé"
+    ]
+  },
+  {
+    "id": "deploy-mial6gu4",
+    "startedAt": "2025-11-22T17:52:06.775Z",
+    "finishedAt": "2025-11-22T17:52:07.612Z",
+    "durationMs": 837,
+    "status": "error",
+    "message": "Aucun secret fourni (mot de passe ou clé privée via variables d’environnement).",
+    "logs": [
+      "[2025-11-22T17:52:06.775Z] Démarrage du déploiement",
+      "[2025-11-22T17:52:06.777Z] Build du site…",
+      "[2025-11-22T17:52:07.612Z] Build terminé",
+      "[2025-11-22T17:52:07.612Z] Erreur: Aucun secret fourni (mot de passe ou clé privée via variables d’environnement)."
+    ]
+  },
+  {
+    "id": "deploy-miakj5ma",
+    "startedAt": "2025-11-22T17:33:54.526Z",
+    "finishedAt": "2025-11-22T17:33:59.986Z",
+    "durationMs": 5460,
+    "status": "error",
+    "message": "connect: getConnection: All configured authentication methods failed",
+    "logs": [
+      "[2025-11-22T17:33:54.526Z] Démarrage du déploiement",
+      "[2025-11-22T17:33:54.528Z] Build du site…",
+      "[2025-11-22T17:33:55.389Z] Build terminé",
+      "[2025-11-22T17:33:55.389Z] Test SFTP srv620796.hstgr.cloud:22",
+      "[2025-11-22T17:33:55.524Z] Connexion SFTP OK",
+      "[2025-11-22T17:33:55.594Z] Connexion SFTP…",
+      "[2025-11-22T17:33:59.986Z] Erreur: connect: getConnection: All configured authentication methods failed"
+    ]
+  }
+]

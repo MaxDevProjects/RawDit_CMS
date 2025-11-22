@@ -1,5 +1,7 @@
 import { pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { paths } from './lib/paths.js';
 import { ensureDir, emptyDir } from './lib/fs-utils.js';
 import { loadData } from './lib/data-loader.js';
@@ -10,10 +12,22 @@ import { ensureDefaultAdminUser } from './lib/auth-bootstrap.js';
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
+async function cleanPublicDirPreserveSites() {
+  await ensureDir(paths.public);
+  const entries = await fs.readdir(paths.public, { withFileTypes: true }).catch(() => []);
+  for (const entry of entries) {
+    if (entry.name === 'sites') {
+      continue;
+    }
+    await fs.rm(path.join(paths.public, entry.name), { recursive: true, force: true });
+  }
+  await ensureDir(path.join(paths.public, 'sites'));
+}
+
 export async function buildAll({ clean = true } = {}) {
   const start = performance.now();
   if (clean) {
-    await Promise.all([emptyDir(paths.public), emptyDir(paths.adminPublic)]);
+    await Promise.all([cleanPublicDirPreserveSites(), emptyDir(paths.adminPublic)]);
   } else {
     await Promise.all([ensureDir(paths.public), ensureDir(paths.adminPublic)]);
   }
