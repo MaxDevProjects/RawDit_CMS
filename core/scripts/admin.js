@@ -499,6 +499,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  function detectWorkspaceSection() {
+    if (document.querySelector('[data-page-list]')) {
+      return 'design';
+    }
+    if (document.querySelector('[data-collection-list]')) {
+      return 'content';
+    }
+    if (document.querySelector('[data-media-grid]')) {
+      return 'media';
+    }
+    if (document.querySelector('[data-deploy-form]')) {
+      return 'deploy';
+    }
+    return null;
+  }
+
   function openWorkspaceBackModal() {
     if (!workspaceBackModal) {
       window.location.href = '/admin/sites';
@@ -526,14 +542,19 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '/admin/sites';
   });
 
-  if (workspaceContext?.section === 'design') {
+  const activeSection = workspaceContext?.section || detectWorkspaceSection();
+
+  if (activeSection === 'design') {
     initDesignWorkspace();
   }
-  if (workspaceContext?.section === 'content') {
+  if (activeSection === 'content') {
     initContentWorkspace();
   }
-  if (workspaceContext?.section === 'media') {
+  if (activeSection === 'media') {
     initMediaWorkspace();
+  }
+  if (activeSection === 'deploy') {
+    initDeployWorkspace();
   }
 
   if (workspaceContext && storedSite.name) {
@@ -2658,6 +2679,210 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCollections();
   }
 
+  function initDeployWorkspace() {
+    const form = document.querySelector('[data-deploy-form]');
+    if (!form) {
+      return;
+    }
+    const protocolSelect = document.querySelector('[data-deploy-protocol]');
+    const hostInput = document.querySelector('[data-deploy-host]');
+    const portInput = document.querySelector('[data-deploy-port]');
+    const userInput = document.querySelector('[data-deploy-user]');
+    const passwordInput = document.querySelector('[data-deploy-password]');
+    const showPasswordToggle = document.querySelector('[data-deploy-show-password]');
+    const remotePathInput = document.querySelector('[data-deploy-remote-path]');
+    const feedback = document.querySelector('[data-deploy-feedback]');
+    const saveButton = document.querySelector('[data-deploy-save]');
+    const testButton = document.querySelector('[data-deploy-test]');
+
+    const safeSiteSlug = stripLeadingSlash(
+      workspaceContext?.slugValue || storedSite.slug || '',
+    );
+    const deployApiBase = safeSiteSlug
+      ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/deploy-config`
+      : null;
+
+    let hasPassword = false;
+    let busyAction = null;
+
+    const sanitizeRemotePath = (value) => {
+      const trimmed = (value || '').trim();
+      if (!trimmed) {
+        return '/www';
+      }
+      return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    };
+
+    const setFeedback = (message, tone = 'muted') => {
+      if (!feedback) {
+        return;
+      }
+      const baseClass = 'inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold';
+      const toneClass =
+        tone === 'success'
+          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+          : tone === 'error'
+            ? 'bg-rose-50 text-rose-700 border border-rose-100'
+            : 'bg-slate-50 text-slate-600 border border-slate-100';
+      if (!message) {
+        feedback.textContent = '';
+        feedback.className = 'text-sm text-slate-500';
+        return;
+      }
+      const icon = tone === 'success' ? '✅' : tone === 'error' ? '❌' : 'ℹ️';
+      feedback.innerHTML = `<span class="${baseClass} ${toneClass}">${icon}<span>${message}</span></span>`;
+      feedback.className = 'text-sm';
+    };
+
+    const setBusy = (action = null) => {
+      busyAction = action;
+      const disable = Boolean(action);
+      const spinner =
+        '<svg class="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>';
+      if (saveButton) {
+        saveButton.disabled = disable;
+        saveButton.innerHTML =
+          action === 'save'
+            ? `<span class="inline-flex items-center gap-2">${spinner}<span>Enregistrement…</span></span>`
+            : 'Enregistrer';
+      }
+      if (testButton) {
+        testButton.disabled = disable;
+        testButton.innerHTML =
+          action === 'test'
+            ? `<span class="inline-flex items-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-600"></span><span>Test en cours…</span></span>`
+            : 'Tester la connexion';
+      }
+    };
+
+    const populateForm = (config) => {
+      protocolSelect && (protocolSelect.value = config.protocol || 'sftp');
+      hostInput && (hostInput.value = config.host || '');
+      portInput && (portInput.value = config.port || '');
+      userInput && (userInput.value = config.user || '');
+      remotePathInput && (remotePathInput.value = config.remotePath || '/www');
+      hasPassword = Boolean(config.hasPassword);
+      if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.placeholder = hasPassword ? 'Non affiché' : 'Mot de passe';
+      }
+    };
+
+    const fetchConfig = async () => {
+      if (!deployApiBase) {
+        setFeedback('Aucun site actif sélectionné.', 'error');
+        return;
+      }
+      setBusy('load');
+      try {
+        const response = await fetch(deployApiBase, { headers: { Accept: 'application/json' } });
+        const payload = await response.json().catch(() => ({}));
+        if (response.ok) {
+          populateForm(payload || {});
+          setFeedback('Configuration chargée.', 'muted');
+        } else {
+          populateForm(payload || {});
+          setFeedback(payload.message || 'Configuration par défaut chargée.', 'muted');
+        }
+      } catch (err) {
+        console.error('[deploy] load failed', err);
+        setFeedback(err.message || 'Erreur lors du chargement.', 'error');
+      } finally {
+        setBusy(null);
+      }
+    };
+
+    const buildPayload = () => {
+      const payload = {
+        protocol: protocolSelect?.value || 'sftp',
+        host: hostInput?.value.trim() || '',
+        port: Number(portInput?.value) || undefined,
+        user: userInput?.value.trim() || '',
+        remotePath: sanitizeRemotePath(remotePathInput?.value || '/www'),
+      };
+      const pwd = passwordInput?.value || '';
+      if (pwd.trim().length > 0) {
+        payload.password = pwd;
+      }
+      return payload;
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!deployApiBase) {
+        setFeedback('Aucun site actif sélectionné.', 'error');
+        return;
+      }
+      const payload = buildPayload();
+      if (!payload.host || !payload.user || !payload.remotePath) {
+        setFeedback('Remplissez les champs requis.', 'error');
+        return;
+      }
+      setBusy('save');
+      try {
+        const response = await fetch(deployApiBase, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(errorPayload.message || 'Sauvegarde impossible.');
+        }
+        const saved = await response.json();
+        populateForm(saved || {});
+        setFeedback('Configuration enregistrée.', 'success');
+        showToast('Configuration déploiement sauvegardée');
+      } catch (err) {
+        console.error('[deploy] save failed', err);
+        setFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
+      } finally {
+        setBusy(null);
+      }
+    });
+
+    testButton?.addEventListener('click', async () => {
+      if (!deployApiBase) {
+        setFeedback('Aucun site actif sélectionné.', 'error');
+        return;
+      }
+      const payload = buildPayload();
+      if (!payload.host || !payload.user || !payload.remotePath) {
+        setFeedback('Remplissez les champs requis avant de tester.', 'error');
+        return;
+      }
+      setBusy('test');
+      try {
+        const response = await fetch(`${deployApiBase}/test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.success === false) {
+          setFeedback(result.message || 'Test de connexion échoué.', 'error');
+          return;
+        }
+        setFeedback(result.message || 'Connexion OK.', 'success');
+        showToast('Test de connexion réussi');
+      } catch (err) {
+        console.error('[deploy] test failed', err);
+        setFeedback(err.message || 'Test de connexion échoué.', 'error');
+      } finally {
+        setBusy(null);
+      }
+    });
+
+    showPasswordToggle?.addEventListener('change', () => {
+      if (!passwordInput) {
+        return;
+      }
+      passwordInput.type = showPasswordToggle.checked ? 'text' : 'password';
+    });
+
+    fetchConfig();
+  }
+
   function initMediaWorkspace() {
     const grid = document.querySelector('[data-media-grid]');
     if (!grid) {
@@ -2672,9 +2897,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailName = document.querySelector('[data-media-detail-name]');
     const detailType = document.querySelector('[data-media-detail-type]');
     const detailSize = document.querySelector('[data-media-detail-size]');
-    const detailAlt = document.querySelector('[data-media-detail-alt]');
     const detailPath = document.querySelector('[data-media-detail-path]');
     const detailUsed = document.querySelector('[data-media-detail-used]');
+    const detailAltInput = document.querySelector('[data-media-alt-edit]');
+    const detailSaveButton = document.querySelector('[data-media-save]');
+    const detailDeleteButton = document.querySelector('[data-media-delete]');
+    const deleteModal = document.querySelector('[data-media-delete-modal]');
+    const deleteCancelButton = document.querySelector('[data-media-delete-cancel]');
+    const deleteConfirmButton = document.querySelector('[data-media-delete-confirm]');
+    const uploadOpenButton = document.querySelector('[data-media-upload-open]');
+    const fileInput = document.querySelector('[data-media-file-input]');
+    const uploadStatus = document.querySelector('[data-media-upload-status]');
 
     const safeSiteSlugValue = stripLeadingSlash(
       workspaceContext?.slugValue || storedSite.slug || '',
@@ -2686,6 +2919,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let mediaItems = [];
     let filteredItems = [];
     let activeMediaId = null;
+    let highlightMediaId = null;
+    let pendingUploadFile = null;
+    let uploadInProgress = false;
+    let detailDirty = false;
+    let uploadMode = false;
+    let uploadPreviewUrl = null;
 
     const deriveGroupType = (item) => {
       const type = (item.type || '').toLowerCase();
@@ -2728,7 +2967,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetDetailPanel = () => {
       detailPanel?.classList.add('hidden');
       detailEmpty?.classList.remove('hidden');
+      clearUploadState();
       activeMediaId = null;
+      detailDirty = false;
+      updateDetailActions(false);
       if (detailPreview) {
         detailPreview.innerHTML =
           '<span class="text-slate-400 text-sm">Aucun média sélectionné</span>';
@@ -2738,11 +2980,25 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       detailType && (detailType.textContent = '');
       detailSize && (detailSize.textContent = '');
-      detailAlt && (detailAlt.textContent = '');
+      if (detailAltInput) {
+        detailAltInput.value = '';
+      }
       detailPath && (detailPath.textContent = '');
       if (detailUsed) {
         detailUsed.innerHTML = '';
       }
+    };
+
+    const clearUploadState = () => {
+      pendingUploadFile = null;
+      uploadMode = false;
+      uploadInProgress = false;
+      if (uploadPreviewUrl) {
+        URL.revokeObjectURL(uploadPreviewUrl);
+        uploadPreviewUrl = null;
+      }
+      uploadStatus && (uploadStatus.textContent = 'Aucun fichier sélectionné.');
+      fileInput && (fileInput.value = '');
     };
 
     const updateCountBadge = () => {
@@ -2791,9 +3047,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </p>
           </div>
         `;
+        if (item.id === highlightMediaId) {
+          card.classList.add('ring-2', 'ring-[#9C6BFF]');
+          window.setTimeout(() => {
+            card.classList.remove('ring-2', 'ring-[#9C6BFF]');
+          }, 1600);
+        }
         card.addEventListener('click', () => selectMedia(item.id));
         grid.appendChild(card);
       });
+      highlightMediaId = null;
     };
 
     const renderUsedIn = (item) => {
@@ -2816,6 +3079,26 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     };
 
+    const updateDetailActions = (saving) => {
+      if (!detailSaveButton) {
+        return;
+      }
+      if (uploadMode) {
+        detailSaveButton.textContent = saving ? 'Téléversement…' : 'Téléverser';
+        detailSaveButton.disabled = saving || !pendingUploadFile;
+        if (detailDeleteButton) {
+          detailDeleteButton.classList.add('hidden');
+        }
+        return;
+      }
+      detailSaveButton.textContent = saving ? 'Enregistrement…' : 'Enregistrer';
+      detailSaveButton.disabled = saving || !detailDirty;
+      if (detailDeleteButton) {
+        detailDeleteButton.classList.remove('hidden');
+        detailDeleteButton.disabled = !activeMediaId;
+      }
+    };
+
     const selectMedia = (mediaId) => {
       const item = mediaItems.find((entry) => entry.id === mediaId);
       if (!item) {
@@ -2823,7 +3106,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGrid();
         return;
       }
+      clearUploadState();
       activeMediaId = item.id;
+      detailDirty = false;
+      updateDetailActions(false);
       renderGrid();
       detailEmpty?.classList.add('hidden');
       detailPanel?.classList.remove('hidden');
@@ -2838,9 +3124,44 @@ document.addEventListener('DOMContentLoaded', () => {
       detailName && (detailName.textContent = item.filename || 'Fichier');
       detailType && (detailType.textContent = formatTypeLabel(item));
       detailSize && (detailSize.textContent = formatFileSize(item.size));
-      detailAlt && (detailAlt.textContent = item.alt || '—');
+      if (detailAltInput) {
+        detailAltInput.value = item.alt || '';
+      }
       detailPath && (detailPath.textContent = item.path || '—');
       renderUsedIn(item);
+    };
+
+    const showUploadPreview = (file) => {
+      if (!file) {
+        return;
+      }
+      uploadMode = true;
+      detailDirty = false;
+      activeMediaId = null;
+      detailEmpty?.classList.add('hidden');
+      detailPanel?.classList.remove('hidden');
+      if (uploadPreviewUrl) {
+        URL.revokeObjectURL(uploadPreviewUrl);
+      }
+      uploadPreviewUrl = URL.createObjectURL(file);
+      if (detailPreview) {
+        detailPreview.innerHTML = `<img src="${uploadPreviewUrl}" alt="${file.name}" class="h-full w-full rounded-2xl object-cover" />`;
+      }
+      detailName && (detailName.textContent = file.name);
+      detailType && (detailType.textContent = formatTypeLabel({ type: file.type, filename: file.name }));
+      detailSize && (detailSize.textContent = formatFileSize(file.size));
+      if (detailAltInput && !detailAltInput.value.trim()) {
+        detailAltInput.value = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+      }
+      detailPath && (detailPath.textContent = 'En attente de téléversement');
+      if (detailUsed) {
+        detailUsed.innerHTML = '';
+        const li = document.createElement('li');
+        li.textContent = 'Non utilisé';
+        li.className = 'text-xs text-slate-400';
+        detailUsed.appendChild(li);
+      }
+      updateDetailActions(false);
     };
 
     const applyFilters = () => {
@@ -2884,6 +3205,217 @@ document.addEventListener('DOMContentLoaded', () => {
 
     filterType?.addEventListener('change', () => {
       applyFilters();
+    });
+    detailAltInput?.addEventListener('input', () => {
+      if (uploadMode) {
+        updateDetailActions(false);
+        return;
+      }
+      if (!activeMediaId) {
+        return;
+      }
+      detailDirty = true;
+      updateDetailActions(false);
+    });
+
+    const handleFileSelection = (file) => {
+      if (!file) {
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        showToast('Seules les images sont acceptées pour le moment.');
+        return;
+      }
+      if (file.size > 4 * 1024 * 1024) {
+        showToast('Fichier trop volumineux (4 Mo max).');
+        return;
+      }
+      pendingUploadFile = file;
+      showUploadPreview(file);
+      if (uploadStatus) {
+        uploadStatus.textContent = `${file.name} · ${formatFileSize(file.size)}`;
+      }
+    };
+
+    const readFileAsBase64 = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result || '';
+          const [, base64 = ''] = String(result).split(',');
+          resolve(base64);
+        };
+        reader.onerror = () => reject(new Error('Impossible de lire ce fichier.'));
+        reader.readAsDataURL(file);
+      });
+
+    const uploadSelectedMedia = async () => {
+      if (!pendingUploadFile || !mediaApiBase) {
+        return;
+      }
+      uploadInProgress = true;
+      updateDetailActions(true);
+      try {
+        const base64 = await readFileAsBase64(pendingUploadFile);
+        const payload = {
+          filename: pendingUploadFile.name,
+          type: pendingUploadFile.type,
+          size: pendingUploadFile.size,
+          alt: detailAltInput?.value || '',
+          data: base64,
+        };
+        const response = await fetch(mediaApiBase, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(errorPayload.message || 'Upload impossible.');
+        }
+        const saved = await response.json();
+        saved.groupType = deriveGroupType(saved);
+        mediaItems = [...mediaItems, saved];
+        highlightMediaId = saved.id;
+        applyFilters();
+        selectMedia(saved.id);
+        showToast('Média ajouté');
+        clearUploadState();
+      } catch (err) {
+        console.error('[media] upload failed', err);
+        showToast(err.message || 'Impossible de téléverser ce média.');
+      } finally {
+        uploadInProgress = false;
+        pendingUploadFile = null;
+        updateDetailActions(false);
+      }
+    };
+
+    uploadOpenButton?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        handleFileSelection(fileInput.files[0]);
+      }
+    });
+    const closeDeleteModal = () => {
+      if (!deleteModal) {
+        return;
+      }
+      deleteModal.classList.add('hidden');
+      deleteModal.classList.remove('flex');
+    };
+
+    const openDeleteModal = () => {
+      if (!activeMediaId || uploadMode) {
+        return;
+      }
+      if (deleteModal) {
+        deleteModal.classList.remove('hidden');
+        deleteModal.classList.add('flex');
+        return;
+      }
+      // Fallback si aucune modale n'est disponible
+      if (window.confirm('Supprimer ce média ?')) {
+        deleteActiveMedia();
+      }
+    };
+
+    const deleteActiveMedia = async () => {
+      if (!activeMediaId || !mediaApiBase) {
+        closeDeleteModal();
+        return;
+      }
+      const disableButtons = () => {
+        if (detailDeleteButton) {
+          detailDeleteButton.disabled = true;
+        }
+        if (deleteConfirmButton) {
+          deleteConfirmButton.disabled = true;
+          deleteConfirmButton.textContent = 'Suppression…';
+        }
+      };
+      const enableButtons = () => {
+        if (detailDeleteButton) {
+          detailDeleteButton.disabled = false;
+        }
+        if (deleteConfirmButton) {
+          deleteConfirmButton.disabled = false;
+          deleteConfirmButton.textContent = 'Supprimer';
+        }
+      };
+      disableButtons();
+      try {
+        const response = await fetch(
+          `${mediaApiBase}/${encodeURIComponent(activeMediaId)}`,
+          { method: 'DELETE' },
+        );
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.message || 'Suppression impossible.');
+        }
+        mediaItems = mediaItems.filter((item) => item.id !== activeMediaId);
+        filteredItems = filteredItems.filter((item) => item.id !== activeMediaId);
+        showToast('Média supprimé');
+        resetDetailPanel();
+        updateCountBadge();
+        renderGrid();
+      } catch (err) {
+        console.error('[media] delete failed', err);
+        showToast(err.message || 'Impossible de supprimer ce média.');
+      } finally {
+        enableButtons();
+        closeDeleteModal();
+      }
+    };
+
+    deleteCancelButton?.addEventListener('click', closeDeleteModal);
+    deleteModal?.addEventListener('click', (event) => {
+      if (event.target === deleteModal) {
+        closeDeleteModal();
+      }
+    });
+
+    deleteConfirmButton?.addEventListener('click', () => deleteActiveMedia());
+    detailDeleteButton?.addEventListener('click', openDeleteModal);
+
+    detailSaveButton?.addEventListener('click', async () => {
+      if (uploadMode) {
+        uploadSelectedMedia();
+        return;
+      }
+      if (!activeMediaId || !mediaApiBase || !detailAltInput) {
+        return;
+      }
+      updateDetailActions(true);
+      try {
+        const payload = { alt: detailAltInput.value || '' };
+        const response = await fetch(
+          `${mediaApiBase}/${encodeURIComponent(activeMediaId)}`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          },
+        );
+        if (!response.ok) {
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(errorPayload.message || 'Impossible de mettre à jour ce média.');
+        }
+        const updated = await response.json();
+        mediaItems = mediaItems.map((item) =>
+          item.id === activeMediaId ? { ...item, ...updated } : item,
+        );
+        filteredItems = filteredItems.map((item) =>
+          item.id === activeMediaId ? { ...item, ...updated } : item,
+        );
+        detailDirty = false;
+        updateDetailActions(false);
+        showToast('Média mis à jour');
+      } catch (err) {
+        console.error('[media] update failed', err);
+        showToast(err.message || 'Échec de la mise à jour.');
+        updateDetailActions(false);
+      }
     });
 
     loadMedia();

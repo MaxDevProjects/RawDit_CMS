@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-import { createServer } from 'node:net';
+import { createServer, createConnection } from 'node:net';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
 import chokidar from 'chokidar';
@@ -25,6 +25,7 @@ const previewLoader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCac
 const previewEnv = new nunjucks.Environment(previewLoader, { autoescape: true });
 const SITES_DATA_ROOT = path.join(paths.data, 'sites');
 const PUBLIC_SITES_ROOT = path.join(paths.public, 'sites');
+const DEPLOY_CONFIG_FILENAME = 'deploy.json';
 const DEFAULT_COLLECTIONS = [
   {
     id: 'projects',
@@ -214,6 +215,68 @@ async function ensureSiteMediaStructure(siteSlug) {
   await ensureDir(getSitePublicMediaDir(siteSlug));
 }
 
+const getDeployConfigPath = (siteSlug) =>
+  path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', DEPLOY_CONFIG_FILENAME);
+
+async function readDeployConfig(siteSlug) {
+  const filePath = getDeployConfigPath(siteSlug);
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    const parsed = JSON.parse(raw || '{}');
+    return {
+      protocol: parsed.protocol === 'ftp' ? 'ftp' : 'sftp',
+      host: parsed.host || '',
+      port: Number(parsed.port) || (parsed.protocol === 'ftp' ? 21 : 22),
+      user: parsed.user || '',
+      password: parsed.password || '',
+      remotePath: parsed.remotePath || '/www',
+    };
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return { protocol: 'sftp', host: '', port: 22, user: '', password: '', remotePath: '/www' };
+    }
+    console.warn(`[deploy] Impossible de lire la configuration: ${err.message}`);
+    return { protocol: 'sftp', host: '', port: 22, user: '', password: '', remotePath: '/www' };
+  }
+}
+
+async function writeDeployConfig(siteSlug, payload = {}) {
+  const current = await readDeployConfig(siteSlug);
+  const protocol = payload.protocol === 'ftp' ? 'ftp' : 'sftp';
+  const port = Number(payload.port) || (protocol === 'ftp' ? 21 : 22);
+  const merged = {
+    protocol,
+    host: typeof payload.host === 'string' ? payload.host.trim() : current.host,
+    port,
+    user: typeof payload.user === 'string' ? payload.user.trim() : current.user,
+    password:
+      typeof payload.password === 'string' && payload.password.length > 0
+        ? payload.password
+        : current.password,
+    remotePath:
+      typeof payload.remotePath === 'string' && payload.remotePath.trim()
+        ? payload.remotePath.trim()
+        : current.remotePath || '/www',
+  };
+  const filePath = getDeployConfigPath(siteSlug);
+  await ensureDir(path.dirname(filePath));
+  await fs.writeFile(filePath, JSON.stringify(merged, null, 2), 'utf8');
+  return merged;
+}
+
+function testDeployConnection({ host, port }) {
+  return new Promise((resolve) => {
+    const socket = createConnection({ host, port, timeout: 4000 });
+    const done = (success, message) => {
+      socket.destroy();
+      resolve({ success, message });
+    };
+    socket.on('connect', () => done(true, 'Connexion réussie.'));
+    socket.on('timeout', () => done(false, 'Délai dépassé.'));
+    socket.on('error', (err) => done(false, err?.message || 'Erreur de connexion.'));
+  });
+}
+
 function normalizeMediaItem(item = {}) {
   const inferredFilename =
     item.filename ||
@@ -246,6 +309,37 @@ async function readMediaLibrary(siteSlug) {
     console.warn(`[media] Impossible de lire ${mediaPath}: ${err.message}`);
     return [];
   }
+}
+
+async function writeMediaItems(siteSlug, items) {
+  await ensureSiteMediaStructure(siteSlug);
+  const mediaPath = getSiteMediaJsonPath(siteSlug);
+  await fs.writeFile(mediaPath, JSON.stringify({ items }, null, 2), 'utf8');
+  return items;
+}
+
+const mimeExtensionMap = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/svg+xml': '.svg',
+  'image/gif': '.gif',
+};
+
+function sanitizeFilenameBase(filename) {
+  const nameWithoutExt = filename.replace(/\.[^.]+$/, '');
+  return slugify(nameWithoutExt) || 'media';
+}
+
+function inferExtension(filename, mimeType) {
+  const directExt = path.extname(filename || '').toLowerCase();
+  if (directExt) {
+    return directExt;
+  }
+  if (mimeType && mimeExtensionMap[mimeType]) {
+    return mimeExtensionMap[mimeType];
+  }
+  return '.bin';
 }
 
 async function buildPreviewCss(html) {
@@ -351,7 +445,7 @@ async function start() {
   }
 
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: '10mb' }));
 
   app.post('/api/login', async (req, res) => {
     const { username, password } = req.body || {};
@@ -656,6 +750,186 @@ async function start() {
     } catch (err) {
       console.error('[media] list failed', err);
       res.status(500).json({ message: 'Impossible de charger les médias.' });
+    }
+  });
+
+  app.post('/api/sites/:slug/media', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    const payload = req.body || {};
+    const rawFilename = typeof payload.filename === 'string' ? payload.filename.trim() : '';
+    const mimeType = typeof payload.type === 'string' ? payload.type.trim() : '';
+    const base64Data = typeof payload.data === 'string' ? payload.data.trim() : '';
+    const alt = typeof payload.alt === 'string' ? payload.alt.trim() : '';
+    if (!base64Data) {
+      return res.status(400).json({ message: 'Fichier manquant.' });
+    }
+    const cleanFilename = sanitizeFilenameBase(rawFilename || mimeType || 'media');
+    const extension = inferExtension(rawFilename || '', mimeType);
+    const safeSlug = stripLeadingSlash(siteSlug);
+    const mediaDir = getSitePublicMediaDir(siteSlug);
+    try {
+      await ensureSiteMediaStructure(siteSlug);
+      const buffer = Buffer.from(base64Data, 'base64');
+      if (!buffer || buffer.length === 0) {
+        return res.status(400).json({ message: 'Impossible de lire ce fichier.' });
+      }
+      if (buffer.length > 4 * 1024 * 1024) {
+        return res.status(400).json({ message: 'Fichier trop volumineux (4 Mo max).' });
+      }
+      let finalFilename = `${cleanFilename}${extension}`;
+      let counter = 1;
+      while (true) {
+        try {
+          await fs.access(path.join(mediaDir, finalFilename));
+          finalFilename = `${cleanFilename}-${counter++}${extension}`;
+        } catch {
+          break;
+        }
+      }
+      const destPath = path.join(mediaDir, finalFilename);
+      await fs.writeFile(destPath, buffer);
+      const items = await readMediaLibrary(siteSlug);
+      const newItem = normalizeMediaItem({
+        id: `${cleanFilename}-${Date.now().toString(36)}`,
+        filename: finalFilename,
+        path: `/sites/${safeSlug}/media/${finalFilename}`,
+        type: mimeType || 'file',
+        size: buffer.length,
+        alt,
+        usedIn: [],
+        uploadedAt: new Date().toISOString(),
+      });
+      items.push(newItem);
+      await writeMediaItems(siteSlug, items);
+      res.status(201).json(newItem);
+    } catch (err) {
+      console.error('[media] upload failed', err);
+      res.status(500).json({ message: 'Impossible de téléverser ce média.' });
+    }
+  });
+
+  app.put('/api/sites/:slug/media/:mediaId', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const mediaId = slugify(req.params.mediaId || '');
+    if (!siteSlug || !mediaId) {
+      return res.status(400).json({ message: 'Paramètres invalides.' });
+    }
+    const payload = req.body || {};
+    try {
+      const items = await readMediaLibrary(siteSlug);
+      const index = items.findIndex((item) => item.id === mediaId);
+      if (index === -1) {
+        return res.status(404).json({ message: 'Média introuvable.' });
+      }
+      const current = items[index];
+      const updated = {
+        ...current,
+        alt: typeof payload.alt === 'string' ? payload.alt : current.alt,
+      };
+      items[index] = updated;
+      await writeMediaItems(siteSlug, items);
+      res.json(updated);
+    } catch (err) {
+      console.error('[media] update failed', err);
+      res.status(500).json({ message: 'Impossible de mettre à jour ce média.' });
+    }
+  });
+
+  app.delete('/api/sites/:slug/media/:mediaId', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const mediaId = slugify(req.params.mediaId || '');
+    if (!siteSlug || !mediaId) {
+      return res.status(400).json({ message: 'Paramètres invalides.' });
+    }
+    try {
+      const items = await readMediaLibrary(siteSlug);
+      const index = items.findIndex((item) => item.id === mediaId);
+      if (index === -1) {
+        return res.status(404).json({ message: 'Média introuvable.' });
+      }
+      const [removed] = items.splice(index, 1);
+      await writeMediaItems(siteSlug, items);
+      if (removed?.path) {
+        const relativePath = removed.path.replace(/^\/sites\//, '');
+        const targetPath = path.join(paths.public, 'sites', relativePath);
+        fs.rm(targetPath, { force: true }).catch(() => {});
+      }
+      res.status(204).end();
+    } catch (err) {
+      console.error('[media] delete failed', err);
+      res.status(500).json({ message: 'Impossible de supprimer ce média.' });
+    }
+  });
+
+  app.get('/api/sites/:slug/deploy-config', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    try {
+      const config = await readDeployConfig(siteSlug);
+      res.json({
+        protocol: config.protocol,
+        host: config.host,
+        port: config.port,
+        user: config.user,
+        remotePath: config.remotePath,
+        hasPassword: Boolean(config.password),
+      });
+    } catch (err) {
+      console.error('[deploy] load config failed', err);
+      res.status(500).json({ message: 'Impossible de charger la configuration.' });
+    }
+  });
+
+  app.put('/api/sites/:slug/deploy-config', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    const payload = req.body || {};
+    if (!payload.host || !payload.user || !payload.remotePath) {
+      return res.status(400).json({ message: 'Complétez les champs requis.' });
+    }
+    try {
+      const saved = await writeDeployConfig(siteSlug, payload);
+      res.json({
+        protocol: saved.protocol,
+        host: saved.host,
+        port: saved.port,
+        user: saved.user,
+        remotePath: saved.remotePath,
+        hasPassword: Boolean(saved.password),
+      });
+    } catch (err) {
+      console.error('[deploy] save config failed', err);
+      res.status(500).json({ message: 'Impossible d’enregistrer la configuration.' });
+    }
+  });
+
+  app.post('/api/sites/:slug/deploy-config/test', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    const payload = req.body || {};
+    if (!payload.host || !payload.user || !payload.remotePath) {
+      return res.status(400).json({ message: 'Complétez les champs requis avant de tester.' });
+    }
+    const protocol = payload.protocol === 'ftp' ? 'ftp' : 'sftp';
+    const port = Number(payload.port) || (protocol === 'ftp' ? 21 : 22);
+    try {
+      const result = await testDeployConnection({ host: payload.host, port });
+      if (!result.success) {
+        return res.status(500).json({ success: false, message: result.message });
+      }
+      res.json({ success: true, message: result.message || 'Connexion réussie.' });
+    } catch (err) {
+      console.error('[deploy] test failed', err);
+      res.status(500).json({ success: false, message: err.message || 'Test de connexion échoué.' });
     }
   });
 

@@ -3,24 +3,125 @@
 {% set activeWorkspaceTab = "deploy" %}
 
 {% block sidebar_start %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Environnements</h2>
-    <p class="text-sm text-slate-600">Suivez staging et production rapidement.</p>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+    <h2 class="text-sm font-semibold text-slate-900">Conseils</h2>
+    <ul class="text-sm text-slate-600 space-y-1">
+      <li>Utilisez SFTP si disponible (plus sécurisé).</li>
+      <li>Le mot de passe n’est jamais renvoyé dans la page.</li>
+      <li>Le chemin distant est relatif à la racine du serveur.</li>
+    </ul>
   </section>
 {% endblock %}
 
 {% block content_main %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
-    <h1 class="text-xl font-semibold text-slate-900">Workspace Déploiement</h1>
-    <p class="text-sm text-slate-600">
-      Les pipelines, logs et historiques s’afficheront ici pour le site actif.
-    </p>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+    <div class="space-y-1">
+      <p class="text-xs uppercase tracking-tight text-slate-500">Déploiement</p>
+      <h1 class="text-xl font-semibold text-slate-900">Configuration du déploiement</h1>
+      <p class="text-sm text-slate-600">
+        Paramétrez la connexion FTP/SFTP pour publier le site actif.
+      </p>
+    </div>
+
+    <form data-deploy-form class="space-y-4">
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Protocole</span>
+          <select
+            data-deploy-protocol
+            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+          >
+            <option value="sftp">SFTP</option>
+            <option value="ftp">FTP</option>
+          </select>
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Hôte</span>
+          <input
+            type="text"
+            data-deploy-host
+            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            placeholder="ftp.mon-domaine.com"
+            required
+          />
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Port</span>
+          <input
+            type="number"
+            min="1"
+            max="65535"
+            data-deploy-port
+            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            placeholder="22"
+            required
+          />
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Nom d’utilisateur</span>
+          <input
+            type="text"
+            data-deploy-user
+            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            placeholder="deploy-user"
+            required
+          />
+        </label>
+        <div class="space-y-2">
+          <label class="space-y-1 block">
+            <span class="text-xs font-semibold text-slate-600">Mot de passe</span>
+            <input
+              type="password"
+              data-deploy-password
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              placeholder="Non affiché"
+              autocomplete="new-password"
+            />
+          </label>
+          <label class="inline-flex items-center gap-2 text-xs text-slate-600">
+            <input type="checkbox" class="rounded border-slate-300 text-[#9C6BFF]" data-deploy-show-password />
+            <span>Afficher le mot de passe</span>
+          </label>
+          <p class="text-xs text-slate-500">Laisser vide pour conserver le mot de passe existant.</p>
+        </div>
+        <label class="space-y-1 block md:col-span-2">
+          <span class="text-xs font-semibold text-slate-600">Chemin distant</span>
+          <input
+            type="text"
+            data-deploy-remote-path
+            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            placeholder="/www/mon-site"
+            required
+          />
+        </label>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p data-deploy-feedback role="status" aria-live="polite" class="text-sm text-slate-500"></p>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            data-deploy-test
+            class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Tester la connexion
+          </button>
+          <button
+            type="submit"
+            data-deploy-save
+            class="rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+          >
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </form>
   </section>
 {% endblock %}
 
 {% block sidebar_end %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-    <h2 class="text-sm font-semibold mb-2">Notifications</h2>
-    <p class="text-sm text-slate-600">Paramétrez Slack, e-mails ou verrous de déploiement.</p>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+    <h2 class="text-sm font-semibold text-slate-900">Prochaine étape</h2>
+    <p class="text-sm text-slate-600">Une fois la configuration validée, le déploiement statique sera déclenché depuis cet onglet.</p>
   </section>
 {% endblock %}

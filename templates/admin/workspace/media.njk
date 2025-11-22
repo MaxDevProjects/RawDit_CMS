@@ -37,9 +37,22 @@
           <code class="font-mono text-xs bg-slate-100 px-1 rounded">/sites/{{ workspaceContext.slugPart or 'site' }}/media</code>.
         </p>
       </div>
-      <span data-media-count class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-        0 média
-      </span>
+      <div class="flex items-center gap-3">
+        <span data-media-count class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+          0 média
+        </span>
+        <input type="file" accept="image/*" data-media-file-input class="sr-only" />
+        <button
+          type="button"
+          data-media-upload-open
+          class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#8654f5]"
+        >
+          Téléverser un média
+        </button>
+      </div>
+      <p data-media-upload-status class="w-full text-right text-xs text-slate-500">
+        Aucun fichier sélectionné.
+      </p>
     </div>
     <div class="p-6 space-y-5">
       <div
@@ -85,12 +98,63 @@
       </div>
       <div class="space-y-1">
         <p class="text-xs font-semibold text-slate-500">Texte alternatif</p>
-        <p class="text-sm text-slate-700" data-media-detail-alt></p>
+        <textarea
+          rows="2"
+          data-media-alt-edit
+          class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+        ></textarea>
       </div>
       <div class="space-y-1">
         <p class="text-xs font-semibold text-slate-500">Utilisé dans</p>
         <ul data-media-detail-used class="text-sm text-slate-700 space-y-1"></ul>
       </div>
+      <div class="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          data-media-delete
+          class="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+        >
+          Supprimer
+        </button>
+        <button
+          type="button"
+          data-media-save
+          class="rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+          disabled
+        >
+          Enregistrer
+        </button>
+      </div>
     </div>
   </section>
 {% endblock %}
+
+<div
+  data-media-delete-modal
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="w-full max-w-sm space-y-4 rounded-2xl bg-white p-5 shadow-2xl">
+    <div class="space-y-1">
+      <h2 class="text-lg font-semibold text-slate-900">Supprimer ce média ?</h2>
+      <p class="text-sm text-slate-600">Ce fichier sera retiré de la bibliothèque.</p>
+    </div>
+    <div class="flex items-center justify-end gap-2">
+      <button
+        type="button"
+        data-media-delete-cancel
+        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+      >
+        Annuler
+      </button>
+      <button
+        type="button"
+        data-media-delete-confirm
+        class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+      >
+        Supprimer
+      </button>
+    </div>
+  </div>
+</div>
