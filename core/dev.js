@@ -397,6 +397,15 @@ async function appendDeployLog(siteSlug, entry, { max = 10 } = {}) {
 const getBuildOutputDir = (siteSlug) =>
   path.join(paths.root, 'build', 'sites', sanitizeSiteSlug(siteSlug));
 
+async function getSiteOutputDir(siteSlug) {
+  const sites = await readSites();
+  const record = sites.find((s) => s.slug === normalizeSlug(siteSlug));
+  if (record?.outputPath) {
+    return path.join(paths.root, record.outputPath.replace(/^\//, ''));
+  }
+  return path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
+}
+
 async function ensureBuildOutput(siteSlug) {
   const dest = getBuildOutputDir(siteSlug);
   await fs.rm(dest, { recursive: true, force: true });
@@ -549,7 +558,7 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
   try {
     logLine('Build du site…');
     await buildAll({ clean: false });
-    const localSource = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
+    const localSource = await getSiteOutputDir(siteSlug);
     const localDest = await ensureBuildOutput(siteSlug);
     const sourceStats = await fs.stat(localSource).catch(() => null);
     if (!sourceStats || !sourceStats.isDirectory()) {
