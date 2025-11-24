@@ -3257,9 +3257,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const response = await fetch(themeApi, { headers: { Accept: 'application/json' } });
           if (!response.ok) return;
           const payload = await response.json().catch(() => ({}));
-          setColorFields('primary', payload.colors?.primary || '#9C6BFF');
-          setColorFields('secondary', payload.colors?.secondary || '#0EA5E9');
-          setColorFields('accent', payload.colors?.accent || '#F97316');
+          setColorFields('primary', payload.colors?.primary || 'violet-500');
+          setColorFields('secondary', payload.colors?.secondary || 'indigo-400');
+          setColorFields('accent', payload.colors?.accent || 'emerald-500');
+          setColorFields('background', payload.colors?.background || 'slate-50');
+          setColorFields('text', payload.colors?.text || 'slate-900');
           if (headingSelect) headingSelect.value = payload.typography?.headings || 'Inter, sans-serif';
           if (bodySelect) bodySelect.value = payload.typography?.body || 'Inter, sans-serif';
           if (radiusSmall) radiusSmall.value = payload.radius?.small || '8px';
@@ -3271,10 +3273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       };
 
-      siteForm.addEventListener('submit', async (event) => {
-        // handled above
-      });
-
+      fillColorOptions();
       applyButton?.addEventListener('click', async (event) => {
         event.preventDefault();
         if (!themeApi) {
@@ -3283,9 +3282,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const payload = {
           colors: {
-            primary: colorHexInputs.primary?.value || '#9C6BFF',
-            secondary: colorHexInputs.secondary?.value || '#0EA5E9',
-            accent: colorHexInputs.accent?.value || '#F97316',
+            primary: colorSelects.primary?.value || 'violet-500',
+            secondary: colorSelects.secondary?.value || 'indigo-400',
+            accent: colorSelects.accent?.value || 'emerald-500',
+            background: colorSelects.background?.value || 'slate-50',
+            text: colorSelects.text?.value || 'slate-900',
           },
           typography: {
             headings: headingSelect?.value || 'Inter, sans-serif',
