@@ -4,7 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ data.site.title }}</title>
-    <link rel="stylesheet" href="./assets/site.css" />
+    {% set slugPath = '' %}
+    {% if site and site.slug %}
+      {% set slugPath = site.slug %}
+    {% elseif data and data.site and data.site.slug %}
+      {% set slugPath = data.site.slug %}
+    {% endif %}
+    {% set slugPart = slugPath %}
+    {% if slugPart and (slugPart | first) == '/' %}
+      {% set slugPart = slugPart | slice(1) %}
+    {% endif %}
+    {% set assetBase = '/sites/' ~ slugPart ~ '/assets' %}
+    <link rel="stylesheet" href="{{ assetBase }}/site.css" />
   </head>
   <body class="min-h-screen flex flex-col">
     <header class="p-10 text-center">
@@ -20,6 +31,6 @@
         </article>
       </div>
     </main>
-    <script src="./assets/site.js" defer></script>
+    <script src="{{ assetBase }}/site.js" defer></script>
   </body>
 </html>
