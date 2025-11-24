@@ -14,7 +14,11 @@
     {% if slugPart and (slugPart | first) == '/' %}
       {% set slugPart = slugPart | slice(1) %}
     {% endif %}
-    {% set assetBase = '/sites/' ~ slugPart ~ '/assets' %}
+    {% if slugPart %}
+      {% set assetBase = '/sites/' ~ slugPart ~ '/assets' %}
+    {% else %}
+      {% set assetBase = '/assets' %}
+    {% endif %}
     <link rel="stylesheet" href="{{ assetBase }}/theme.css" />
     <link rel="stylesheet" href="{{ assetBase }}/site.css" />
   </head>
