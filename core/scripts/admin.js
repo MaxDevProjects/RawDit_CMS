@@ -3008,9 +3008,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function initSettingsWorkspace() {
+    const tabButtons = document.querySelectorAll('[data-settings-tab]');
+    const tabPanels = document.querySelectorAll('[data-settings-panel]');
     const form = document.querySelector('[data-admin-password-form]');
     const siteForm = document.querySelector('[data-site-config-form]');
     const siteFeedback = document.querySelector('[data-site-config-feedback]');
+    const switchTab = (name) => {
+      tabButtons.forEach((btn) => {
+        const isActive = btn.dataset.settingsTab === name;
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        btn.classList.toggle('bg-[#9C6BFF]', isActive);
+        btn.classList.toggle('text-white', isActive);
+      });
+      tabPanels.forEach((panel) => {
+        panel.classList.toggle('hidden', panel.dataset.settingsPanel !== name);
+      });
+    };
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.settingsTab || 'account'));
+    });
+    switchTab('account');
+
     if (!form) {
       // still allow site form even if password form absent
     }
@@ -3159,6 +3177,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const preview = siteForm.querySelector('[data-theme-preview]');
       const themeFeedback = siteForm.querySelector('[data-theme-feedback]');
       const applyButton = siteForm.querySelector('[data-theme-apply]');
+      const paletteContainers = {
+        primary: siteForm.querySelector('[data-theme-palette-primary]'),
+        secondary: siteForm.querySelector('[data-theme-palette-secondary]'),
+        accent: siteForm.querySelector('[data-theme-palette-accent]'),
+      };
+      const tailwindPalette = [
+        '#0EA5E9',
+        '#22D3EE',
+        '#10B981',
+        '#F97316',
+        '#F59E0B',
+        '#E11D48',
+        '#6366F1',
+        '#8B5CF6',
+        '#0F172A',
+        '#1E293B',
+      ];
 
       const setThemeFeedback = (message, tone = 'muted') => {
         if (!themeFeedback) return;
@@ -3195,6 +3230,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (colorHexInputs[key]) colorHexInputs[key].value = value;
       };
 
+      const renderPalette = (key) => {
+        const container = paletteContainers[key];
+        if (!container) return;
+        container.innerHTML = '';
+        tailwindPalette.forEach((hex) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className =
+            'h-7 w-7 rounded-full border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#9C6BFF]';
+          btn.style.background = hex;
+          btn.title = hex;
+          btn.addEventListener('click', () => {
+            setColorFields(key, hex);
+            syncPreview();
+          });
+          container.appendChild(btn);
+        });
+      };
+
       Object.keys(colorInputs).forEach((key) => {
         colorInputs[key]?.addEventListener('input', () => {
           const val = colorInputs[key].value;
@@ -3206,6 +3260,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (colorInputs[key]) colorInputs[key].value = val;
           syncPreview();
         });
+        renderPalette(key);
       });
       [headingSelect, bodySelect, radiusSmall, radiusMedium, radiusLarge].forEach((el) => {
         el?.addEventListener('change', syncPreview);

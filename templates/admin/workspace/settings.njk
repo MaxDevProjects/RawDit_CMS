@@ -10,113 +10,144 @@
 {% endblock %}
 
 {% block content_main %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-    <div class="space-y-1">
-      <p class="text-xs uppercase tracking-tight text-slate-500">Compte</p>
-      <h1 class="text-xl font-semibold text-slate-900">Compte administrateur</h1>
-      <p class="text-sm text-slate-600">Change ton mot de passe d’accès à l’atelier.</p>
-    </div>
-    <form data-admin-password-form class="space-y-4 max-w-lg">
-      <label class="space-y-1 block">
-        <span class="text-xs font-semibold text-slate-600">Mot de passe actuel</span>
-        <input
-          type="password"
-          name="currentPassword"
-          autocomplete="current-password"
-          class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-          required
-        />
-      </label>
-      <label class="space-y-1 block">
-        <span class="text-xs font-semibold text-slate-600">Nouveau mot de passe</span>
-        <input
-          type="password"
-          name="newPassword"
-          autocomplete="new-password"
-          class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-          required
-        />
-      </label>
-      <label class="space-y-1 block">
-        <span class="text-xs font-semibold text-slate-600">Confirmation</span>
-        <input
-          type="password"
-          name="confirmPassword"
-          autocomplete="new-password"
-          class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-          required
-        />
-      </label>
-      <div class="flex items-center justify-between gap-3">
-        <p data-admin-password-feedback role="status" class="text-sm text-slate-500"></p>
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="border-b border-slate-200 px-6 pt-4">
+      <div class="flex flex-wrap items-center gap-2" role="tablist" aria-label="Paramètres">
         <button
-          type="submit"
-          data-admin-password-submit
-          class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+          type="button"
+          data-settings-tab="account"
+          class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 aria-selected:bg-[#9C6BFF] aria-selected:text-white"
+          aria-selected="true"
         >
-          Mettre à jour
+          Compte
+        </button>
+        <button
+          type="button"
+          data-settings-tab="site"
+          class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          aria-selected="false"
+        >
+          Site
+        </button>
+        <button
+          type="button"
+          data-settings-tab="theme"
+          class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          aria-selected="false"
+        >
+          Thème
         </button>
       </div>
-    </form>
-  </section>
-
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-    <div class="space-y-1">
-      <p class="text-xs uppercase tracking-tight text-slate-500">Site</p>
-      <h2 class="text-lg font-semibold text-slate-900">Paramètres généraux</h2>
-      <p class="text-sm text-slate-600">
-        Ces informations sont utilisées par défaut dans le titre du site, les métadonnées et certains blocs.
-      </p>
     </div>
-    <form data-site-config-form class="space-y-4 max-w-xl">
-      <label class="space-y-1 block">
-        <span class="text-xs font-semibold text-slate-600">Nom du site</span>
-        <input
-          type="text"
-          data-site-name
-          class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-          required
-        />
-      </label>
-      <label class="space-y-1 block">
-        <span class="text-xs font-semibold text-slate-600">Langue principale</span>
-        <select
-          data-site-language
-          class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-        >
-          <option value="fr">Français</option>
-          <option value="en">Anglais</option>
-        </select>
-      </label>
-      <label class="space-y-1 block">
-        <span class="text-xs font-semibold text-slate-600">Tagline</span>
-        <textarea
-          rows="3"
-          data-site-tagline
-          class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-          placeholder="Ex : Atelier créatif dédié aux marques ambitieuses."
-        ></textarea>
-      </label>
-      <div class="flex items-center justify-between gap-3">
-        <p data-site-config-feedback role="status" class="text-sm text-slate-500"></p>
-        <button
-          type="submit"
-          data-site-save
-          class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
-        >
-          Enregistrer
-        </button>
-      </div>
-    </form>
-  </section>
 
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-    <div class="space-y-1">
-      <p class="text-xs uppercase tracking-tight text-slate-500">Thème</p>
-      <h2 class="text-lg font-semibold text-slate-900">Thème global</h2>
-      <p class="text-sm text-slate-600">Couleurs, typos et rayons appliqués aux pages du site.</p>
-    </div>
-    <form data-theme-form class="space-y-5">
+    <div class="space-y-6 p-6">
+      <section data-settings-panel="account" class="space-y-6">
+        <div class="space-y-1">
+          <p class="text-xs uppercase tracking-tight text-slate-500">Compte</p>
+          <h1 class="text-xl font-semibold text-slate-900">Compte administrateur</h1>
+          <p class="text-sm text-slate-600">Change ton mot de passe d’accès à l’atelier.</p>
+        </div>
+        <form data-admin-password-form class="space-y-4 max-w-lg">
+          <label class="space-y-1 block">
+            <span class="text-xs font-semibold text-slate-600">Mot de passe actuel</span>
+            <input
+              type="password"
+              name="currentPassword"
+              autocomplete="current-password"
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              required
+            />
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-semibold text-slate-600">Nouveau mot de passe</span>
+            <input
+              type="password"
+              name="newPassword"
+              autocomplete="new-password"
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              required
+            />
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-semibold text-slate-600">Confirmation</span>
+            <input
+              type="password"
+              name="confirmPassword"
+              autocomplete="new-password"
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              required
+            />
+          </label>
+          <div class="flex items-center justify-between gap-3">
+            <p data-admin-password-feedback role="status" class="text-sm text-slate-500"></p>
+            <button
+              type="submit"
+              data-admin-password-submit
+              class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+            >
+              Mettre à jour
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section data-settings-panel="site" class="space-y-6 hidden">
+        <div class="space-y-1">
+          <p class="text-xs uppercase tracking-tight text-slate-500">Site</p>
+          <h2 class="text-lg font-semibold text-slate-900">Paramètres généraux</h2>
+          <p class="text-sm text-slate-600">
+            Ces informations sont utilisées par défaut dans le titre du site, les métadonnées et certains blocs.
+          </p>
+        </div>
+        <form data-site-config-form class="space-y-4 max-w-xl">
+          <label class="space-y-1 block">
+            <span class="text-xs font-semibold text-slate-600">Nom du site</span>
+            <input
+              type="text"
+              data-site-name
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              required
+            />
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-semibold text-slate-600">Langue principale</span>
+            <select
+              data-site-language
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            >
+              <option value="fr">Français</option>
+              <option value="en">Anglais</option>
+            </select>
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-semibold text-slate-600">Tagline</span>
+            <textarea
+              rows="3"
+              data-site-tagline
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              placeholder="Ex : Atelier créatif dédié aux marques ambitieuses."
+            ></textarea>
+          </label>
+          <div class="flex items-center justify-between gap-3">
+            <p data-site-config-feedback role="status" class="text-sm text-slate-500"></p>
+            <button
+              type="submit"
+              data-site-save
+              class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+            >
+              Enregistrer
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section data-settings-panel="theme" class="space-y-6 hidden">
+        <div class="space-y-1">
+          <p class="text-xs uppercase tracking-tight text-slate-500">Thème</p>
+          <h2 class="text-lg font-semibold text-slate-900">Thème global</h2>
+          <p class="text-sm text-slate-600">Couleurs, typos et rayons appliqués aux pages du site.</p>
+        </div>
+        <form data-theme-form class="space-y-5">
       <div class="grid gap-4 md:grid-cols-3">
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Couleur primaire</span>
@@ -124,6 +155,7 @@
             <input type="color" data-theme-primary class="h-10 w-12 rounded" />
             <input type="text" data-theme-primary-hex class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="#9C6BFF" />
           </div>
+          <div data-theme-palette-primary class="flex flex-wrap gap-1 pt-1"></div>
         </label>
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Secondaire</span>
@@ -131,6 +163,7 @@
             <input type="color" data-theme-secondary class="h-10 w-12 rounded" />
             <input type="text" data-theme-secondary-hex class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="#0EA5E9" />
           </div>
+          <div data-theme-palette-secondary class="flex flex-wrap gap-1 pt-1"></div>
         </label>
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Accent</span>
@@ -138,6 +171,7 @@
             <input type="color" data-theme-accent class="h-10 w-12 rounded" />
             <input type="text" data-theme-accent-hex class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="#F97316" />
           </div>
+          <div data-theme-palette-accent class="flex flex-wrap gap-1 pt-1"></div>
         </label>
       </div>
 
@@ -221,7 +255,9 @@
         </div>
       </div>
     </form>
-  </section>
+      </section>
+    </div>
+  </div>
 {% endblock %}
 
 {% block sidebar_end %}
