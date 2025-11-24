@@ -1029,12 +1029,14 @@ async function start() {
       if (!adminUser) {
         return res.status(404).json({ message: 'Compte admin introuvable.' });
       }
-      const valid = await bcrypt.compare(currentPassword, adminUser.password || '');
+      const storedHash = adminUser.password || adminUser.passwordHash || '';
+      const valid = await bcrypt.compare(currentPassword, storedHash);
       if (!valid) {
         return res.status(401).json({ message: 'Mot de passe actuel incorrect.' });
       }
       const hash = await bcrypt.hash(newPassword, 10);
       adminUser.password = hash;
+      delete adminUser.passwordHash;
       await authService.saveUsers(users);
       res.json({ success: true, message: 'Mot de passe mis à jour avec succès.' });
     } catch (err) {
