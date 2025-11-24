@@ -406,7 +406,6 @@ async function getSiteOutputDir(siteSlug) {
     candidates.push(path.join(paths.root, relative));
   }
   candidates.push(path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug)));
-  candidates.push(paths.public);
   for (const candidate of candidates) {
     const stat = await fs.stat(candidate).catch(() => null);
     if (stat?.isDirectory()) {
