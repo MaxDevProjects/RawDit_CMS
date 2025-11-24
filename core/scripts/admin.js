@@ -556,6 +556,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (activeSection === 'deploy') {
     initDeployWorkspace();
   }
+  if (activeSection === 'settings') {
+    initSettingsWorkspace();
+  }
 
   if (workspaceContext && storedSite.name) {
     updateSiteLabels(storedSite.name);
@@ -3002,6 +3005,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fetchConfig();
     fetchHistory();
+  }
+
+  function initSettingsWorkspace() {
+    const form = document.querySelector('[data-admin-password-form]');
+    if (!form) {
+      return;
+    }
+    const feedback = form.querySelector('[data-admin-password-feedback]');
+    const submit = form.querySelector('[data-admin-password-submit]');
+    const setFeedback = (message, tone = 'muted') => {
+      if (!feedback) return;
+      const color =
+        tone === 'success'
+          ? 'text-emerald-600'
+          : tone === 'error'
+            ? 'text-rose-600'
+            : 'text-slate-500';
+      feedback.textContent = message || '';
+      feedback.className = `text-sm ${color}`;
+    };
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const currentPassword = formData.get('currentPassword') || '';
+      const newPassword = formData.get('newPassword') || '';
+      const confirmPassword = formData.get('confirmPassword') || '';
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        setFeedback('Complète tous les champs.', 'error');
+        return;
+      }
+      submit && (submit.disabled = true);
+      setFeedback('');
+      try {
+        const response = await fetch('/api/admin/password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.success === false) {
+          throw new Error(payload.message || 'Impossible de mettre à jour le mot de passe.');
+        }
+        setFeedback(payload.message || 'Mot de passe mis à jour.', 'success');
+        form.reset();
+      } catch (err) {
+        console.error('[settings] change password failed', err);
+        setFeedback(err.message || 'Erreur lors de la mise à jour.', 'error');
+      } finally {
+        submit && (submit.disabled = false);
+      }
+    });
   }
 
   function initMediaWorkspace() {

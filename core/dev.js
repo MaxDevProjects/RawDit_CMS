@@ -14,6 +14,7 @@ import { SessionStore } from './lib/session-store.js';
 import { ensureDir } from './lib/fs-utils.js';
 import { existsSync } from 'node:fs';
 import { createReadStream } from 'node:fs';
+import bcrypt from 'bcryptjs';
 
 const COOKIE_NAME = 'admin_session';
 const authService = new AuthService();
@@ -997,6 +998,34 @@ async function start() {
     sessionStore.destroySession(token);
     res.clearCookie(COOKIE_NAME, { path: '/' });
     res.status(204).end();
+  });
+
+  app.post('/api/admin/password', requireAuthJson, async (req, res) => {
+    const { currentPassword, newPassword, confirmPassword } = req.body || {};
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: 'Tous les champs sont requis.' });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'La confirmation ne correspond pas.' });
+    }
+    try {
+      const users = await authService.getUsers();
+      const adminUser = users.find((u) => u.username === 'admin');
+      if (!adminUser) {
+        return res.status(404).json({ message: 'Compte admin introuvable.' });
+      }
+      const valid = await bcrypt.compare(currentPassword, adminUser.password || '');
+      if (!valid) {
+        return res.status(401).json({ message: 'Mot de passe actuel incorrect.' });
+      }
+      const hash = await bcrypt.hash(newPassword, 10);
+      adminUser.password = hash;
+      await authService.saveUsers(users);
+      res.json({ success: true, message: 'Mot de passe mis à jour avec succès.' });
+    } catch (err) {
+      console.error('[admin] password change failed', err);
+      res.status(500).json({ message: 'Erreur lors de la mise à jour du mot de passe.' });
+    }
   });
 
   app.post('/api/sites', requireAuthJson, async (req, res) => {
