@@ -631,7 +631,6 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
   try {
     logLine('Build du site…');
     await buildSitePages(siteSlug);
-    await buildCss({ silent: true });
     const siteSource = await getSiteOutputDir(siteSlug);
     const siteStats = siteSource ? await fs.stat(siteSource).catch(() => null) : null;
     if (!siteSource || !siteStats || !siteStats.isDirectory()) {
