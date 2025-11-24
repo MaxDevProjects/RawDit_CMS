@@ -470,6 +470,16 @@ async function buildSitePages(siteSlug) {
   const loader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCache: true });
   const env = new nunjucks.Environment(loader, { autoescape: true });
 
+  // copier les assets globaux dans le dossier du site
+  const globalAssets = path.join(paths.public, 'assets');
+  const siteAssets = path.join(siteRoot, 'assets');
+  const globalAssetsStat = await fs.stat(globalAssets).catch(() => null);
+  if (globalAssetsStat?.isDirectory()) {
+    await fs.rm(siteAssets, { recursive: true, force: true }).catch(() => {});
+    await ensureDir(path.dirname(siteAssets));
+    await fs.cp(globalAssets, siteAssets, { recursive: true });
+  }
+
   await Promise.all(
     pages.map(async (page) => {
       const html = env.render('preview.njk', {
@@ -624,26 +634,13 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
     await buildSitePages(siteSlug);
     await buildCss({ silent: true });
     const siteSource = await getSiteOutputDir(siteSlug);
-    const localDest = await ensureBuildOutput(siteSlug);
     const siteStats = siteSource ? await fs.stat(siteSource).catch(() => null) : null;
     if (!siteSource || !siteStats || !siteStats.isDirectory()) {
       throw new Error('Sources du site introuvables après build.');
     }
     logLine(`Source locale détectée: ${siteSource}`);
-    const copied = [];
-    // copie assets partagés
-    const assetsSource = path.join(paths.public, 'assets');
-    if (await copyIfExists(assetsSource, path.join(localDest, 'assets'))) {
-      copied.push('assets');
-    }
-    // copie seulement le site actif
-    const siteTargetRel = path.join('sites', sanitizeSiteSlug(siteSlug));
-    const siteTarget = path.join(localDest, siteTargetRel);
-    await copyIfExists(siteSource, siteTarget);
-    copied.push(siteTargetRel);
-    logLine(`Contenus copiés pour déploiement: ${copied.join(', ')}`);
     logLine('Build terminé');
-    const entries = await collectFiles(localDest);
+    const entries = await collectFiles(siteSource);
     const password = resolveDeployPassword(siteSlug, passwordOverride, config.password);
     const privateKey = resolvePrivateKey(siteSlug);
     if (config.protocol === 'ftp') {
