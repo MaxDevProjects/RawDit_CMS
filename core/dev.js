@@ -372,9 +372,6 @@ function getDeployLogPath(siteSlug) {
   return path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', DEPLOY_LOG_FILENAME);
 }
 
-const getSiteConfigPath = (siteSlug) =>
-  path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', SITE_CONFIG_FILENAME);
-
 async function readDeployLog(siteSlug) {
   const filePath = getDeployLogPath(siteSlug);
   try {
