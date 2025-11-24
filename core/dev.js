@@ -400,12 +400,20 @@ const getBuildOutputDir = (siteSlug) =>
 async function getSiteOutputDir(siteSlug) {
   const sites = await readSites();
   const record = sites.find((s) => s.slug === normalizeSlug(siteSlug));
+  const candidates = [];
   if (record?.outputPath) {
     const relative = record.outputPath.replace(/^\//, '');
-    const resolved = path.join(paths.root, relative);
-    return resolved;
+    candidates.push(path.join(paths.root, relative));
   }
-  return path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
+  candidates.push(path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug)));
+  candidates.push(paths.public);
+  for (const candidate of candidates) {
+    const stat = await fs.stat(candidate).catch(() => null);
+    if (stat?.isDirectory()) {
+      return candidate;
+    }
+  }
+  return null;
 }
 
 async function ensureBuildOutput(siteSlug) {
@@ -562,10 +570,11 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
     await buildAll({ clean: false });
     const localSource = await getSiteOutputDir(siteSlug);
     const localDest = await ensureBuildOutput(siteSlug);
-    const sourceStats = await fs.stat(localSource).catch(() => null);
-    if (!sourceStats || !sourceStats.isDirectory()) {
+    const sourceStats = localSource ? await fs.stat(localSource).catch(() => null) : null;
+    if (!localSource || !sourceStats || !sourceStats.isDirectory()) {
       throw new Error('Sources du site introuvables après build.');
     }
+    logLine(`Source locale détectée: ${localSource}`);
     await fs.cp(localSource, localDest, { recursive: true });
     logLine('Build terminé');
     const entries = await collectFiles(localDest);
