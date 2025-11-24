@@ -454,6 +454,41 @@ async function collectFiles(localRoot) {
   return entries;
 }
 
+async function buildSitePages(siteSlug) {
+  const siteRoot = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
+  await ensureDir(siteRoot);
+  const pagesDir = path.join(siteRoot, 'pages');
+  await ensureDir(pagesDir);
+  const pages = await readPagesForSite(siteSlug);
+  const collectionsIndex = await readCollectionsIndex(siteSlug);
+  const collectionMap = {};
+  for (const col of collectionsIndex) {
+    const items = await readCollectionItems(siteSlug, col.id).catch(() => []);
+    collectionMap[col.id] = items;
+  }
+  const sites = await readSites();
+  const siteRecord = sites.find((s) => s.slug === normalizeSlug(siteSlug)) || {};
+
+  const loader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCache: true });
+  const env = new nunjucks.Environment(loader, { autoescape: true });
+
+  await Promise.all(
+    pages.map(async (page) => {
+      const html = env.render('preview.njk', {
+        page,
+        site: { title: siteRecord.name || 'Site', slug: siteRecord.slug || siteSlug },
+        collections: collectionMap,
+      });
+      const pageFile = path.join(pagesDir, `${page.id}.html`);
+      await fs.writeFile(pageFile, html, 'utf8');
+      const slugPath = (page.slug || '').replace(/^\//, '') || 'index';
+      const prettyPath = path.join(siteRoot, `${slugPath}.html`);
+      await ensureDir(path.dirname(prettyPath));
+      await fs.writeFile(prettyPath, html, 'utf8');
+    }),
+  );
+}
+
 function validateDeployInput(payload) {
   const protocol = payload.protocol === 'ftp' ? 'ftp' : 'sftp';
   const port = Number(payload.port) || (protocol === 'ftp' ? 21 : 22);
@@ -590,7 +625,8 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
   }
   try {
     logLine('Build du site…');
-    await buildAll({ clean: false });
+    await buildSitePages(siteSlug);
+    await buildCss({ silent: true });
     const siteSource = await getSiteOutputDir(siteSlug);
     const localDest = await ensureBuildOutput(siteSlug);
     const siteStats = siteSource ? await fs.stat(siteSource).catch(() => null) : null;
@@ -1065,6 +1101,9 @@ async function start() {
         blocks: [],
       };
       const saved = await writePageForSite(siteSlug, newPage);
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] pages create rebuild failed', err.message),
+      );
       res.status(201).json(saved);
     } catch (err) {
       console.error('[pages] create failed', err);
@@ -1099,6 +1138,9 @@ async function start() {
         blocks: Array.isArray(payload.blocks) ? payload.blocks : [],
       };
       const saved = await writePageForSite(siteSlug, updatedPage);
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] pages update rebuild failed', err.message),
+      );
       res.json(saved);
     } catch (err) {
       console.error('[pages] update failed', err);
@@ -1171,6 +1213,9 @@ async function start() {
       };
       items.push(newItem);
       await writeCollectionItems(siteSlug, collectionId, items);
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] collections create rebuild failed', err.message),
+      );
       res.status(201).json(newItem);
     } catch (err) {
       console.error('[collections] create item failed', err);
@@ -1211,6 +1256,9 @@ async function start() {
       };
       items[index] = updated;
       await writeCollectionItems(siteSlug, collectionId, items);
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] collections update rebuild failed', err.message),
+      );
       res.json(updated);
     } catch (err) {
       console.error('[collections] update item failed', err);
@@ -1233,6 +1281,9 @@ async function start() {
         return res.status(404).json({ message: 'Item introuvable.' });
       }
       await writeCollectionItems(siteSlug, collectionId, filtered);
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] collections delete rebuild failed', err.message),
+      );
       res.status(204).end();
     } catch (err) {
       console.error('[collections] delete item failed', err);
@@ -1358,6 +1409,9 @@ async function start() {
         const targetPath = path.join(paths.public, 'sites', relativePath);
         fs.rm(targetPath, { force: true }).catch(() => {});
       }
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] media delete rebuild failed', err.message),
+      );
       res.status(204).end();
     } catch (err) {
       console.error('[media] delete failed', err);
