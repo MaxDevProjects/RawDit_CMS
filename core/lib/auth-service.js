@@ -17,7 +17,11 @@ export class AuthService {
     if (!user) {
       return null;
     }
-    const match = await bcrypt.compare(password, user.passwordHash);
+    const hash = user.password || user.passwordHash || '';
+    if (!hash) {
+      return null;
+    }
+    const match = await bcrypt.compare(password, hash);
     if (!match) {
       return null;
     }
