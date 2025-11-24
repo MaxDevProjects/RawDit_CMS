@@ -457,8 +457,6 @@ async function collectFiles(localRoot) {
 async function buildSitePages(siteSlug) {
   const siteRoot = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
   await ensureDir(siteRoot);
-  const pagesDir = path.join(siteRoot, 'pages');
-  await ensureDir(pagesDir);
   const pages = await readPagesForSite(siteSlug);
   const collectionsIndex = await readCollectionsIndex(siteSlug);
   const collectionMap = {};
@@ -479,8 +477,6 @@ async function buildSitePages(siteSlug) {
         site: { title: siteRecord.name || 'Site', slug: siteRecord.slug || siteSlug },
         collections: collectionMap,
       });
-      const pageFile = path.join(pagesDir, `${page.id}.html`);
-      await fs.writeFile(pageFile, html, 'utf8');
       const slugPath = (page.slug || '').replace(/^\//, '') || 'index';
       const prettyPath = path.join(siteRoot, `${slugPath}.html`);
       await ensureDir(path.dirname(prettyPath));
