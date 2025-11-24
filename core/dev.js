@@ -32,6 +32,7 @@ const PUBLIC_SITES_ROOT = path.join(paths.public, 'sites');
 const DEPLOY_CONFIG_FILENAME = 'deploy.json';
 const DEPLOY_LOG_FILENAME = 'deploy-log.json';
 const SITE_CONFIG_FILENAME = 'site.json';
+const THEME_CONFIG_FILENAME = 'theme.json';
 const ENV_ALLOW_FTP = process.env.ALLOW_FTP === 'true';
 const DEFAULT_COLLECTIONS = [
   {
@@ -401,6 +402,8 @@ const getBuildOutputDir = (siteSlug) =>
 
 const getSiteConfigPath = (siteSlug) =>
   path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', SITE_CONFIG_FILENAME);
+const getThemeConfigPath = (siteSlug) =>
+  path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', THEME_CONFIG_FILENAME);
 
 async function getSiteOutputDir(siteSlug) {
   const sites = await readSites();
@@ -475,6 +478,11 @@ async function buildSitePages(siteSlug) {
     .readFile(siteConfigPath, 'utf8')
     .then((raw) => JSON.parse(raw || '{}'))
     .catch(() => ({}));
+  const themeConfigPath = getThemeConfigPath(siteSlug);
+  const themeConfig = await fs
+    .readFile(themeConfigPath, 'utf8')
+    .then((raw) => JSON.parse(raw || '{}'))
+    .catch(() => ({}));
   const siteMeta = {
     title: siteConfig.name || siteRecord.name || 'Site',
     slug: siteRecord.slug || siteSlug,
@@ -494,6 +502,22 @@ async function buildSitePages(siteSlug) {
     await ensureDir(path.dirname(siteAssets));
     await fs.cp(globalAssets, siteAssets, { recursive: true });
   }
+  // inject theme css variables
+  const themeCss = [
+    ':root {',
+    `  --color-primary: ${themeConfig.colors?.primary || '#9C6BFF'};`,
+    `  --color-secondary: ${themeConfig.colors?.secondary || '#0EA5E9'};`,
+    `  --color-accent: ${themeConfig.colors?.accent || '#F97316'};`,
+    `  --color-background: ${themeConfig.colors?.background || '#FFFFFF'};`,
+    `  --font-headings: ${themeConfig.typography?.headings || 'Inter, sans-serif'};`,
+    `  --font-body: ${themeConfig.typography?.body || 'Inter, sans-serif'};`,
+    `  --radius-small: ${themeConfig.radius?.small || '8px'};`,
+    `  --radius-medium: ${themeConfig.radius?.medium || '16px'};`,
+    `  --radius-large: ${themeConfig.radius?.large || '24px'};`,
+    '}',
+  ].join('\n');
+  await ensureDir(siteAssets);
+  await fs.writeFile(path.join(siteAssets, 'theme.css'), themeCss, 'utf8');
 
   await Promise.all(
     pages.map(async (page) => {
@@ -501,6 +525,7 @@ async function buildSitePages(siteSlug) {
         page,
         site: siteMeta,
         collections: collectionMap,
+        theme: themeConfig,
       });
       const slugPath = (page.slug || '').replace(/^\//, '') || 'index';
       const prettyPath = path.join(siteRoot, `${slugPath}.html`);
@@ -1637,6 +1662,74 @@ async function start() {
     } catch (err) {
       console.error('[site config] save failed', err);
       res.status(500).json({ message: 'Impossible de sauvegarder la configuration du site.' });
+    }
+  });
+
+  app.get('/api/sites/:slug/config/theme', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    const filePath = getThemeConfigPath(siteSlug);
+    try {
+      const raw = await fs.readFile(filePath, 'utf8').catch(() => '{}');
+      const config = JSON.parse(raw || '{}');
+      res.json({
+        colors: {
+          primary: config.colors?.primary || '#9C6BFF',
+          secondary: config.colors?.secondary || '#0EA5E9',
+          accent: config.colors?.accent || '#F97316',
+          background: config.colors?.background || '#FFFFFF',
+        },
+        typography: {
+          headings: config.typography?.headings || 'Inter, sans-serif',
+          body: config.typography?.body || 'Inter, sans-serif',
+        },
+        radius: {
+          small: config.radius?.small || '8px',
+          medium: config.radius?.medium || '16px',
+          large: config.radius?.large || '24px',
+        },
+      });
+    } catch (err) {
+      console.error('[theme] load failed', err);
+      res.status(500).json({ message: 'Impossible de charger le thème.' });
+    }
+  });
+
+  app.put('/api/sites/:slug/config/theme', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    const payload = req.body || {};
+    const colors = {
+      primary: payload.colors?.primary || '#9C6BFF',
+      secondary: payload.colors?.secondary || '#0EA5E9',
+      accent: payload.colors?.accent || '#F97316',
+      background: payload.colors?.background || '#FFFFFF',
+    };
+    const typography = {
+      headings: payload.typography?.headings || 'Inter, sans-serif',
+      body: payload.typography?.body || 'Inter, sans-serif',
+    };
+    const radius = {
+      small: payload.radius?.small || '8px',
+      medium: payload.radius?.medium || '16px',
+      large: payload.radius?.large || '24px',
+    };
+    const filePath = getThemeConfigPath(siteSlug);
+    try {
+      await ensureDir(path.dirname(filePath));
+      const config = { colors, typography, radius };
+      await fs.writeFile(filePath, JSON.stringify(config, null, 2), 'utf8');
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] theme rebuild failed', err.message),
+      );
+      res.json({ success: true, message: 'Thème appliqué.', ...config });
+    } catch (err) {
+      console.error('[theme] save failed', err);
+      res.status(500).json({ message: 'Impossible de sauvegarder le thème.' });
     }
   });
 

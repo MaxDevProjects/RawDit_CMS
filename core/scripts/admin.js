@@ -3084,6 +3084,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const siteConfigApi = safeSiteSlug
         ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/site`
         : null;
+      const themeApi = safeSiteSlug
+        ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/theme`
+        : null;
 
       const loadSiteConfig = async () => {
         if (!siteConfigApi) return;
@@ -3136,6 +3139,148 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       loadSiteConfig();
+
+      // Theme handling
+      const colorInputs = {
+        primary: siteForm.querySelector('[data-theme-primary]'),
+        secondary: siteForm.querySelector('[data-theme-secondary]'),
+        accent: siteForm.querySelector('[data-theme-accent]'),
+      };
+      const colorHexInputs = {
+        primary: siteForm.querySelector('[data-theme-primary-hex]'),
+        secondary: siteForm.querySelector('[data-theme-secondary-hex]'),
+        accent: siteForm.querySelector('[data-theme-accent-hex]'),
+      };
+      const headingSelect = siteForm.querySelector('[data-theme-headings]');
+      const bodySelect = siteForm.querySelector('[data-theme-body]');
+      const radiusSmall = siteForm.querySelector('[data-theme-radius-small]');
+      const radiusMedium = siteForm.querySelector('[data-theme-radius-medium]');
+      const radiusLarge = siteForm.querySelector('[data-theme-radius-large]');
+      const preview = siteForm.querySelector('[data-theme-preview]');
+      const themeFeedback = siteForm.querySelector('[data-theme-feedback]');
+      const applyButton = siteForm.querySelector('[data-theme-apply]');
+
+      const setThemeFeedback = (message, tone = 'muted') => {
+        if (!themeFeedback) return;
+        const color =
+          tone === 'success'
+            ? 'text-emerald-600'
+            : tone === 'error'
+              ? 'text-rose-600'
+              : 'text-slate-500';
+        themeFeedback.textContent = message || '';
+        themeFeedback.className = `text-sm ${color}`;
+      };
+
+      const syncPreview = () => {
+        if (!preview) return;
+        const colors = {
+          primary: colorHexInputs.primary?.value || '#9C6BFF',
+          secondary: colorHexInputs.secondary?.value || '#0EA5E9',
+          accent: colorHexInputs.accent?.value || '#F97316',
+        };
+        preview.style.setProperty('--color-primary', colors.primary);
+        preview.style.setProperty('--color-secondary', colors.secondary);
+        preview.style.setProperty('--color-accent', colors.accent);
+        preview.style.setProperty('--font-headings', headingSelect?.value || 'Inter, sans-serif');
+        preview.style.setProperty('--font-body', bodySelect?.value || 'Inter, sans-serif');
+        preview.style.setProperty('--radius-small', radiusSmall?.value || '8px');
+        preview.style.setProperty('--radius-medium', radiusMedium?.value || '16px');
+        preview.style.setProperty('--radius-large', radiusLarge?.value || '24px');
+        preview.style.borderRadius = radiusMedium?.value || '16px';
+      };
+
+      const setColorFields = (key, value) => {
+        if (colorInputs[key]) colorInputs[key].value = value;
+        if (colorHexInputs[key]) colorHexInputs[key].value = value;
+      };
+
+      Object.keys(colorInputs).forEach((key) => {
+        colorInputs[key]?.addEventListener('input', () => {
+          const val = colorInputs[key].value;
+          if (colorHexInputs[key]) colorHexInputs[key].value = val;
+          syncPreview();
+        });
+        colorHexInputs[key]?.addEventListener('input', () => {
+          const val = colorHexInputs[key].value;
+          if (colorInputs[key]) colorInputs[key].value = val;
+          syncPreview();
+        });
+      });
+      [headingSelect, bodySelect, radiusSmall, radiusMedium, radiusLarge].forEach((el) => {
+        el?.addEventListener('change', syncPreview);
+      });
+
+      const loadTheme = async () => {
+        if (!themeApi) return;
+        try {
+          const response = await fetch(themeApi, { headers: { Accept: 'application/json' } });
+          if (!response.ok) return;
+          const payload = await response.json().catch(() => ({}));
+          setColorFields('primary', payload.colors?.primary || '#9C6BFF');
+          setColorFields('secondary', payload.colors?.secondary || '#0EA5E9');
+          setColorFields('accent', payload.colors?.accent || '#F97316');
+          if (headingSelect) headingSelect.value = payload.typography?.headings || 'Inter, sans-serif';
+          if (bodySelect) bodySelect.value = payload.typography?.body || 'Inter, sans-serif';
+          if (radiusSmall) radiusSmall.value = payload.radius?.small || '8px';
+          if (radiusMedium) radiusMedium.value = payload.radius?.medium || '16px';
+          if (radiusLarge) radiusLarge.value = payload.radius?.large || '24px';
+          syncPreview();
+        } catch (err) {
+          console.error('[settings] load theme failed', err);
+        }
+      };
+
+      siteForm.addEventListener('submit', async (event) => {
+        // handled above
+      });
+
+      applyButton?.addEventListener('click', async (event) => {
+        event.preventDefault();
+        if (!themeApi) {
+          setThemeFeedback('Aucun site actif.', 'error');
+          return;
+        }
+        const payload = {
+          colors: {
+            primary: colorHexInputs.primary?.value || '#9C6BFF',
+            secondary: colorHexInputs.secondary?.value || '#0EA5E9',
+            accent: colorHexInputs.accent?.value || '#F97316',
+          },
+          typography: {
+            headings: headingSelect?.value || 'Inter, sans-serif',
+            body: bodySelect?.value || 'Inter, sans-serif',
+          },
+          radius: {
+            small: radiusSmall?.value || '8px',
+            medium: radiusMedium?.value || '16px',
+            large: radiusLarge?.value || '24px',
+          },
+        };
+        applyButton.disabled = true;
+        setThemeFeedback('');
+        try {
+          const response = await fetch(themeApi, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.success === false) {
+            throw new Error(result.message || 'Application du thème échouée.');
+          }
+          setThemeFeedback(result.message || 'Thème appliqué.', 'success');
+          syncPreview();
+        } catch (err) {
+          console.error('[settings] apply theme failed', err);
+          setThemeFeedback(err.message || 'Erreur lors de l’application du thème.', 'error');
+        } finally {
+          applyButton.disabled = false;
+        }
+      });
+
+      loadTheme();
+      syncPreview();
     }
   }
 

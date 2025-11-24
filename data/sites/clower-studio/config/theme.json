@@ -1,0 +1,17 @@
+{
+  "colors": {
+    "primary": "#9C6BFF",
+    "secondary": "#0EA5E9",
+    "accent": "#F97316",
+    "background": "#FFFFFF"
+  },
+  "typography": {
+    "headings": "Inter, sans-serif",
+    "body": "Inter, sans-serif"
+  },
+  "radius": {
+    "small": "8px",
+    "medium": "16px",
+    "large": "24px"
+  }
+}

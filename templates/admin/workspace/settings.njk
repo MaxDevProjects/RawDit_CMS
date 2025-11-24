@@ -109,6 +109,119 @@
       </div>
     </form>
   </section>
+
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+    <div class="space-y-1">
+      <p class="text-xs uppercase tracking-tight text-slate-500">Thème</p>
+      <h2 class="text-lg font-semibold text-slate-900">Thème global</h2>
+      <p class="text-sm text-slate-600">Couleurs, typos et rayons appliqués aux pages du site.</p>
+    </div>
+    <form data-theme-form class="space-y-5">
+      <div class="grid gap-4 md:grid-cols-3">
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Couleur primaire</span>
+          <div class="flex items-center gap-2">
+            <input type="color" data-theme-primary class="h-10 w-12 rounded" />
+            <input type="text" data-theme-primary-hex class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="#9C6BFF" />
+          </div>
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Secondaire</span>
+          <div class="flex items-center gap-2">
+            <input type="color" data-theme-secondary class="h-10 w-12 rounded" />
+            <input type="text" data-theme-secondary-hex class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="#0EA5E9" />
+          </div>
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Accent</span>
+          <div class="flex items-center gap-2">
+            <input type="color" data-theme-accent class="h-10 w-12 rounded" />
+            <input type="text" data-theme-accent-hex class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="#F97316" />
+          </div>
+        </label>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Typo titres</span>
+          <select data-theme-headings class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+            <option value="Inter, sans-serif">Inter</option>
+            <option value="'Outfit', sans-serif">Outfit</option>
+            <option value="'Poppins', sans-serif">Poppins</option>
+          </select>
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Typo texte</span>
+          <select data-theme-body class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+            <option value="Inter, sans-serif">Inter</option>
+            <option value="'Outfit', sans-serif">Outfit</option>
+            <option value="'Poppins', sans-serif">Poppins</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-3">
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Rayon petit</span>
+          <select data-theme-radius-small class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+            <option value="6px">6px</option>
+            <option value="8px">8px</option>
+            <option value="12px">12px</option>
+          </select>
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Rayon moyen</span>
+          <select data-theme-radius-medium class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+            <option value="12px">12px</option>
+            <option value="16px">16px</option>
+            <option value="20px">20px</option>
+          </select>
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Rayon large</span>
+          <select data-theme-radius-large class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+            <option value="20px">20px</option>
+            <option value="24px">24px</option>
+            <option value="28px">28px</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2 items-start">
+        <div class="space-y-3">
+          <p class="text-xs font-semibold text-slate-600">Aperçu</p>
+          <div
+            data-theme-preview
+            class="rounded-2xl border border-slate-200 bg-white p-4 space-y-3 transition-colors"
+            style="font-family: var(--font-body, Inter, sans-serif); --color-primary: #9C6BFF; --color-secondary: #0EA5E9; --color-accent: #F97316; border-radius: var(--radius-medium, 16px);"
+          >
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              <span style="color: var(--color-secondary);">Thème</span>
+            </div>
+            <h3 class="text-lg font-semibold" style="font-family: var(--font-headings, Inter, sans-serif); color: var(--color-primary);">Exemple de carte</h3>
+            <p class="text-sm text-slate-600">Texte d’aperçu utilisant la police corps, avec un bouton aux couleurs du thème.</p>
+            <button
+              type="button"
+              class="rounded-xl px-3 py-2 text-xs font-semibold text-white"
+              style="background: var(--color-primary);"
+            >
+              Bouton
+            </button>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <p data-theme-feedback role="status" class="text-sm text-slate-500"></p>
+          <button
+            type="submit"
+            data-theme-apply
+            class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+          >
+            Appliquer le thème
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
 {% endblock %}
 
 {% block sidebar_end %}
