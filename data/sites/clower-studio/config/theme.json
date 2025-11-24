@@ -1,9 +1,10 @@
 {
   "colors": {
-    "primary": "#9C6BFF",
-    "secondary": "#0EA5E9",
-    "accent": "#F97316",
-    "background": "#FFFFFF"
+    "primary": "violet-500",
+    "secondary": "indigo-400",
+    "accent": "emerald-500",
+    "background": "slate-50",
+    "text": "slate-900"
   },
   "typography": {
     "headings": "Inter, sans-serif",

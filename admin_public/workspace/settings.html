@@ -269,27 +269,23 @@
       <div class="grid gap-4 md:grid-cols-3">
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Couleur primaire</span>
-          <div class="flex items-center gap-2">
-            <input type="color" data-theme-primary class="h-10 w-12 rounded" />
-            <input type="text" data-theme-primary-hex class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="#9C6BFF" />
-          </div>
-          <div data-theme-palette-primary class="flex flex-wrap gap-1 pt-1"></div>
+          <select data-theme-primary class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
         </label>
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Secondaire</span>
-          <div class="flex items-center gap-2">
-            <input type="color" data-theme-secondary class="h-10 w-12 rounded" />
-            <input type="text" data-theme-secondary-hex class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="#0EA5E9" />
-          </div>
-          <div data-theme-palette-secondary class="flex flex-wrap gap-1 pt-1"></div>
+          <select data-theme-secondary class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
         </label>
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Accent</span>
-          <div class="flex items-center gap-2">
-            <input type="color" data-theme-accent class="h-10 w-12 rounded" />
-            <input type="text" data-theme-accent-hex class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="#F97316" />
-          </div>
-          <div data-theme-palette-accent class="flex flex-wrap gap-1 pt-1"></div>
+          <select data-theme-accent class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Fond</span>
+          <select data-theme-background class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-semibold text-slate-600">Texte</span>
+          <select data-theme-text class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
         </label>
       </div>
 

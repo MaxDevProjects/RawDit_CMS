@@ -3159,15 +3159,12 @@ document.addEventListener('DOMContentLoaded', () => {
       loadSiteConfig();
 
       // Theme handling
-      const colorInputs = {
+      const colorSelects = {
         primary: siteForm.querySelector('[data-theme-primary]'),
         secondary: siteForm.querySelector('[data-theme-secondary]'),
         accent: siteForm.querySelector('[data-theme-accent]'),
-      };
-      const colorHexInputs = {
-        primary: siteForm.querySelector('[data-theme-primary-hex]'),
-        secondary: siteForm.querySelector('[data-theme-secondary-hex]'),
-        accent: siteForm.querySelector('[data-theme-accent-hex]'),
+        background: siteForm.querySelector('[data-theme-background]'),
+        text: siteForm.querySelector('[data-theme-text]'),
       };
       const headingSelect = siteForm.querySelector('[data-theme-headings]');
       const bodySelect = siteForm.querySelector('[data-theme-body]');
@@ -3177,23 +3174,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const preview = siteForm.querySelector('[data-theme-preview]');
       const themeFeedback = siteForm.querySelector('[data-theme-feedback]');
       const applyButton = siteForm.querySelector('[data-theme-apply]');
-      const paletteContainers = {
-        primary: siteForm.querySelector('[data-theme-palette-primary]'),
-        secondary: siteForm.querySelector('[data-theme-palette-secondary]'),
-        accent: siteForm.querySelector('[data-theme-palette-accent]'),
-      };
-      const tailwindPalette = [
-        '#0EA5E9',
-        '#22D3EE',
-        '#10B981',
-        '#F97316',
-        '#F59E0B',
-        '#E11D48',
-        '#6366F1',
-        '#8B5CF6',
-        '#0F172A',
-        '#1E293B',
+      const tailwindHues = [
+        'slate','gray','zinc','neutral','stone','red','orange','amber','yellow','lime','green','emerald','teal','cyan','sky','blue','indigo','violet','purple','fuchsia','pink','rose'
       ];
+      const tailwindShades = ['50','100','200','300','400','500','600','700','800','900'];
+      const tailwindTokens = tailwindHues.flatMap((h)=>tailwindShades.map((s)=>`${h}-${s}`));
+
+      const fillColorOptions = () => {
+        Object.values(colorSelects).forEach((sel)=>{
+          if (!sel || sel.options.length) return;
+          tailwindTokens.forEach((token)=>{
+            const option=document.createElement('option');
+            option.value=token;
+            const [h,s]=token.split('-');
+            option.textContent=`${h.charAt(0).toUpperCase()+h.slice(1)} ${s}`;
+            sel.appendChild(option);
+          });
+        });
+      };
 
       const setThemeFeedback = (message, tone = 'muted') => {
         if (!themeFeedback) return;
@@ -3209,14 +3207,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const syncPreview = () => {
         if (!preview) return;
-        const colors = {
-          primary: colorHexInputs.primary?.value || '#9C6BFF',
-          secondary: colorHexInputs.secondary?.value || '#0EA5E9',
-          accent: colorHexInputs.accent?.value || '#F97316',
+        const tokenToHex = (token) => {
+          if (!token) return null;
+          const [h,s]=token.split('-');
+          const map = {
+            slate:'#e2e8f0',gray:'#d1d5db',zinc:'#d4d4d8',neutral:'#d4d4d4',stone:'#d6d3d1',
+            red:'#ef4444',orange:'#f97316',amber:'#f59e0b',yellow:'#eab308',lime:'#84cc16',
+            green:'#22c55e',emerald:'#10b981',teal:'#14b8a6',cyan:'#06b6d4',sky:'#0ea5e9',
+            blue:'#3b82f6',indigo:'#6366f1',violet:'#8b5cf6',purple:'#a855f7',fuchsia:'#d946ef',
+            pink:'#ec4899',rose:'#f43f5e'
+          };
+          const base=map[h];
+          if (!base) return null;
+          // rough shade tweak using opacity; not exact Tailwind palette but preview-friendly
+          const shadeNum=Number(s)||500;
+          const factor = Math.min(Math.max((shadeNum-50)/900,0),1);
+          const toRgb=(hex)=>hex.match(/[A-Fa-f0-9]{2}/g).map((v)=>parseInt(v,16));
+          const [r,g,b]=toRgb(base.replace('#',''));
+          const mix=(v)=>Math.round(255 - (255 - v)*factor);
+          return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
         };
-        preview.style.setProperty('--color-primary', colors.primary);
-        preview.style.setProperty('--color-secondary', colors.secondary);
-        preview.style.setProperty('--color-accent', colors.accent);
+        preview.style.setProperty('--color-primary', tokenToHex(colorSelects.primary?.value) || '#9C6BFF');
+        preview.style.setProperty('--color-secondary', tokenToHex(colorSelects.secondary?.value) || '#0EA5E9');
+        preview.style.setProperty('--color-accent', tokenToHex(colorSelects.accent?.value) || '#F97316');
+        preview.style.setProperty('--color-background', tokenToHex(colorSelects.background?.value) || '#FFFFFF');
+        preview.style.setProperty('--color-text', tokenToHex(colorSelects.text?.value) || '#0F172A');
         preview.style.setProperty('--font-headings', headingSelect?.value || 'Inter, sans-serif');
         preview.style.setProperty('--font-body', bodySelect?.value || 'Inter, sans-serif');
         preview.style.setProperty('--radius-small', radiusSmall?.value || '8px');
@@ -3226,41 +3241,11 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       const setColorFields = (key, value) => {
-        if (colorInputs[key]) colorInputs[key].value = value;
-        if (colorHexInputs[key]) colorHexInputs[key].value = value;
+        if (colorSelects[key]) colorSelects[key].value = value;
       };
 
-      const renderPalette = (key) => {
-        const container = paletteContainers[key];
-        if (!container) return;
-        container.innerHTML = '';
-        tailwindPalette.forEach((hex) => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className =
-            'h-7 w-7 rounded-full border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#9C6BFF]';
-          btn.style.background = hex;
-          btn.title = hex;
-          btn.addEventListener('click', () => {
-            setColorFields(key, hex);
-            syncPreview();
-          });
-          container.appendChild(btn);
-        });
-      };
-
-      Object.keys(colorInputs).forEach((key) => {
-        colorInputs[key]?.addEventListener('input', () => {
-          const val = colorInputs[key].value;
-          if (colorHexInputs[key]) colorHexInputs[key].value = val;
-          syncPreview();
-        });
-        colorHexInputs[key]?.addEventListener('input', () => {
-          const val = colorHexInputs[key].value;
-          if (colorInputs[key]) colorInputs[key].value = val;
-          syncPreview();
-        });
-        renderPalette(key);
+      Object.keys(colorSelects).forEach((key) => {
+        colorSelects[key]?.addEventListener('change', syncPreview);
       });
       [headingSelect, bodySelect, radiusSmall, radiusMedium, radiusLarge].forEach((el) => {
         el?.addEventListener('change', syncPreview);

@@ -15,6 +15,7 @@ import { ensureDir } from './lib/fs-utils.js';
 import { existsSync } from 'node:fs';
 import { createReadStream } from 'node:fs';
 import bcrypt from 'bcryptjs';
+import tailwindColors from 'tailwindcss/colors.js';
 
 const COOKIE_NAME = 'admin_session';
 const authService = new AuthService();
@@ -33,6 +34,34 @@ const DEPLOY_CONFIG_FILENAME = 'deploy.json';
 const DEPLOY_LOG_FILENAME = 'deploy-log.json';
 const SITE_CONFIG_FILENAME = 'site.json';
 const THEME_CONFIG_FILENAME = 'theme.json';
+const TAILWIND_HUES = [
+  'slate',
+  'gray',
+  'zinc',
+  'neutral',
+  'stone',
+  'red',
+  'orange',
+  'amber',
+  'yellow',
+  'lime',
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose',
+];
+const TAILWIND_SHADES = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+const ALLOWED_COLOR_TOKENS = TAILWIND_HUES.flatMap((hue) =>
+  TAILWIND_SHADES.map((shade) => `${hue}-${shade}`),
+);
 const ENV_ALLOW_FTP = process.env.ALLOW_FTP === 'true';
 const DEFAULT_COLLECTIONS = [
   {
@@ -483,6 +512,12 @@ async function buildSitePages(siteSlug) {
     .readFile(themeConfigPath, 'utf8')
     .then((raw) => JSON.parse(raw || '{}'))
     .catch(() => ({}));
+  const colorToHex = (token, fallback) => {
+    if (typeof token !== 'string') return fallback;
+    const [hue, shade] = token.split('-');
+    const color = tailwindColors[hue]?.[shade];
+    return color || fallback;
+  };
   const siteMeta = {
     title: siteConfig.name || siteRecord.name || 'Site',
     slug: siteRecord.slug || siteSlug,
@@ -505,10 +540,11 @@ async function buildSitePages(siteSlug) {
   // inject theme css variables
   const themeCss = [
     ':root {',
-    `  --color-primary: ${themeConfig.colors?.primary || '#9C6BFF'};`,
-    `  --color-secondary: ${themeConfig.colors?.secondary || '#0EA5E9'};`,
-    `  --color-accent: ${themeConfig.colors?.accent || '#F97316'};`,
-    `  --color-background: ${themeConfig.colors?.background || '#FFFFFF'};`,
+    `  --color-primary: ${colorToHex(themeConfig.colors?.primary, '#9C6BFF')};`,
+    `  --color-secondary: ${colorToHex(themeConfig.colors?.secondary, '#0EA5E9')};`,
+    `  --color-accent: ${colorToHex(themeConfig.colors?.accent, '#F97316')};`,
+    `  --color-background: ${colorToHex(themeConfig.colors?.background, '#FFFFFF')};`,
+    `  --color-text: ${colorToHex(themeConfig.colors?.text, '#0F172A')};`,
     `  --font-headings: ${themeConfig.typography?.headings || 'Inter, sans-serif'};`,
     `  --font-body: ${themeConfig.typography?.body || 'Inter, sans-serif'};`,
     `  --radius-small: ${themeConfig.radius?.small || '8px'};`,
@@ -1704,11 +1740,17 @@ async function start() {
     }
     const payload = req.body || {};
     const colors = {
-      primary: payload.colors?.primary || '#9C6BFF',
-      secondary: payload.colors?.secondary || '#0EA5E9',
-      accent: payload.colors?.accent || '#F97316',
-      background: payload.colors?.background || '#FFFFFF',
+      primary: payload.colors?.primary || 'violet-500',
+      secondary: payload.colors?.secondary || 'indigo-400',
+      accent: payload.colors?.accent || 'emerald-500',
+      background: payload.colors?.background || 'slate-50',
+      text: payload.colors?.text || 'slate-900',
     };
+    const colorTokens = Object.values(colors);
+    const invalidColor = colorTokens.find((token) => !ALLOWED_COLOR_TOKENS.includes(token));
+    if (invalidColor) {
+      return res.status(400).json({ message: `Couleur invalide: ${invalidColor}` });
+    }
     const typography = {
       headings: payload.typography?.headings || 'Inter, sans-serif',
       body: payload.typography?.body || 'Inter, sans-serif',
