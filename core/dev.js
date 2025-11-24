@@ -555,6 +555,16 @@ function testSftpConnection({ host, port }) {
   });
 }
 
+async function copyIfExists(source, dest) {
+  const stat = await fs.stat(source).catch(() => null);
+  if (stat?.isDirectory()) {
+    await ensureDir(path.dirname(dest));
+    await fs.cp(source, dest, { recursive: true });
+    return true;
+  }
+  return false;
+}
+
 async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
   const start = Date.now();
   const startedAt = new Date().toISOString();
@@ -581,14 +591,25 @@ async function runDeploy(siteSlug, { passwordOverride = null } = {}) {
   try {
     logLine('Build du site…');
     await buildAll({ clean: false });
-    const localSource = await getSiteOutputDir(siteSlug);
+    const siteSource = await getSiteOutputDir(siteSlug);
     const localDest = await ensureBuildOutput(siteSlug);
-    const sourceStats = localSource ? await fs.stat(localSource).catch(() => null) : null;
-    if (!localSource || !sourceStats || !sourceStats.isDirectory()) {
+    const siteStats = siteSource ? await fs.stat(siteSource).catch(() => null) : null;
+    if (!siteSource || !siteStats || !siteStats.isDirectory()) {
       throw new Error('Sources du site introuvables après build.');
     }
-    logLine(`Source locale détectée: ${localSource}`);
-    await fs.cp(localSource, localDest, { recursive: true });
+    logLine(`Source locale détectée: ${siteSource}`);
+    const copied = [];
+    // copie assets partagés
+    const assetsSource = path.join(paths.public, 'assets');
+    if (await copyIfExists(assetsSource, path.join(localDest, 'assets'))) {
+      copied.push('assets');
+    }
+    // copie seulement le site actif
+    const siteTargetRel = path.join('sites', sanitizeSiteSlug(siteSlug));
+    const siteTarget = path.join(localDest, siteTargetRel);
+    await copyIfExists(siteSource, siteTarget);
+    copied.push(siteTargetRel);
+    logLine(`Contenus copiés pour déploiement: ${copied.join(', ')}`);
     logLine('Build terminé');
     const entries = await collectFiles(localDest);
     const password = resolveDeployPassword(siteSlug, passwordOverride, config.password);
