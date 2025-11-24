@@ -38,5 +38,12 @@ export class AuthService {
       throw err;
     }
   }
-}
 
+  async getUsers() {
+    return this.loadUsers();
+  }
+
+  async saveUsers(users = []) {
+    await fs.writeFile(this.usersFile, JSON.stringify(users, null, 2), 'utf8');
+  }
+}
