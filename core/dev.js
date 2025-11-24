@@ -410,6 +410,19 @@ async function getSiteOutputDir(siteSlug) {
   for (const candidate of candidates) {
     const stat = await fs.stat(candidate).catch(() => null);
     if (stat?.isDirectory()) {
+      const hasIndex = await fs
+        .stat(path.join(candidate, 'index.html'))
+        .then((s) => s.isFile())
+        .catch(() => false);
+      if (hasIndex) {
+        return candidate;
+      }
+    }
+  }
+  // fallback to first existing even sans index
+  for (const candidate of candidates) {
+    const stat = await fs.stat(candidate).catch(() => null);
+    if (stat?.isDirectory()) {
       return candidate;
     }
   }
