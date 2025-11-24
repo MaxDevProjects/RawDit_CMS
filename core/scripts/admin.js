@@ -3013,6 +3013,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('[data-admin-password-form]');
     const siteForm = document.querySelector('[data-site-config-form]');
     const siteFeedback = document.querySelector('[data-site-config-feedback]');
+    const themeForm = document.querySelector('[data-theme-form]');
     const switchTab = (name) => {
       tabButtons.forEach((btn) => {
         const isActive = btn.dataset.settingsTab === name;
@@ -3102,6 +3103,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const siteConfigApi = safeSiteSlug
         ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/site`
         : null;
+    }
+
+    if (themeForm) {
+      const safeSiteSlug = stripLeadingSlash(
+        workspaceContext?.slugValue || storedSite.slug || '',
+      );
       const themeApi = safeSiteSlug
         ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/theme`
         : null;
@@ -3158,22 +3165,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
       loadSiteConfig();
 
-      // Theme handling
+    }
+
+    if (themeForm) {
       const colorSelects = {
-        primary: siteForm.querySelector('[data-theme-primary]'),
-        secondary: siteForm.querySelector('[data-theme-secondary]'),
-        accent: siteForm.querySelector('[data-theme-accent]'),
-        background: siteForm.querySelector('[data-theme-background]'),
-        text: siteForm.querySelector('[data-theme-text]'),
+        primary: themeForm.querySelector('[data-theme-primary]'),
+        secondary: themeForm.querySelector('[data-theme-secondary]'),
+        accent: themeForm.querySelector('[data-theme-accent]'),
+        background: themeForm.querySelector('[data-theme-background]'),
+        text: themeForm.querySelector('[data-theme-text]'),
       };
-      const headingSelect = siteForm.querySelector('[data-theme-headings]');
-      const bodySelect = siteForm.querySelector('[data-theme-body]');
-      const radiusSmall = siteForm.querySelector('[data-theme-radius-small]');
-      const radiusMedium = siteForm.querySelector('[data-theme-radius-medium]');
-      const radiusLarge = siteForm.querySelector('[data-theme-radius-large]');
-      const preview = siteForm.querySelector('[data-theme-preview]');
-      const themeFeedback = siteForm.querySelector('[data-theme-feedback]');
-      const applyButton = siteForm.querySelector('[data-theme-apply]');
+      const headingSelect = themeForm.querySelector('[data-theme-headings]');
+      const bodySelect = themeForm.querySelector('[data-theme-body]');
+      const radiusSmall = themeForm.querySelector('[data-theme-radius-small]');
+      const radiusMedium = themeForm.querySelector('[data-theme-radius-medium]');
+      const radiusLarge = themeForm.querySelector('[data-theme-radius-large]');
+      const preview = themeForm.querySelector('[data-theme-preview]');
+      const themeFeedback = themeForm.querySelector('[data-theme-feedback]');
+      const applyButton = themeForm.querySelector('[data-theme-apply]');
       const tailwindHues = [
         'slate','gray','zinc','neutral','stone','red','orange','amber','yellow','lime','green','emerald','teal','cyan','sky','blue','indigo','violet','purple','fuchsia','pink','rose'
       ];
@@ -3320,6 +3329,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
+      fillColorOptions();
       loadTheme();
       syncPreview();
     }
