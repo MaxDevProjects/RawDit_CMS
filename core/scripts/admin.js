@@ -3009,53 +3009,134 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initSettingsWorkspace() {
     const form = document.querySelector('[data-admin-password-form]');
+    const siteForm = document.querySelector('[data-site-config-form]');
+    const siteFeedback = document.querySelector('[data-site-config-feedback]');
     if (!form) {
-      return;
+      // still allow site form even if password form absent
     }
-    const feedback = form.querySelector('[data-admin-password-feedback]');
-    const submit = form.querySelector('[data-admin-password-submit]');
-    const setFeedback = (message, tone = 'muted') => {
-      if (!feedback) return;
-      const color =
-        tone === 'success'
-          ? 'text-emerald-600'
-          : tone === 'error'
-            ? 'text-rose-600'
-            : 'text-slate-500';
-      feedback.textContent = message || '';
-      feedback.className = `text-sm ${color}`;
-    };
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const formData = new FormData(form);
-      const currentPassword = formData.get('currentPassword') || '';
-      const newPassword = formData.get('newPassword') || '';
-      const confirmPassword = formData.get('confirmPassword') || '';
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        setFeedback('Complète tous les champs.', 'error');
-        return;
-      }
-      submit && (submit.disabled = true);
-      setFeedback('');
-      try {
-        const response = await fetch('/api/admin/password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload.success === false) {
-          throw new Error(payload.message || 'Impossible de mettre à jour le mot de passe.');
+    if (form) {
+      const feedback = form.querySelector('[data-admin-password-feedback]');
+      const submit = form.querySelector('[data-admin-password-submit]');
+      const setFeedback = (message, tone = 'muted') => {
+        if (!feedback) return;
+        const color =
+          tone === 'success'
+            ? 'text-emerald-600'
+            : tone === 'error'
+              ? 'text-rose-600'
+              : 'text-slate-500';
+        feedback.textContent = message || '';
+        feedback.className = `text-sm ${color}`;
+      };
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const currentPassword = formData.get('currentPassword') || '';
+        const newPassword = formData.get('newPassword') || '';
+        const confirmPassword = formData.get('confirmPassword') || '';
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          setFeedback('Complète tous les champs.', 'error');
+          return;
         }
-        setFeedback(payload.message || 'Mot de passe mis à jour.', 'success');
-        form.reset();
-      } catch (err) {
-        console.error('[settings] change password failed', err);
-        setFeedback(err.message || 'Erreur lors de la mise à jour.', 'error');
-      } finally {
-        submit && (submit.disabled = false);
-      }
-    });
+        submit && (submit.disabled = true);
+        setFeedback('');
+        try {
+          const response = await fetch('/api/admin/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok || payload.success === false) {
+            throw new Error(payload.message || 'Impossible de mettre à jour le mot de passe.');
+          }
+          setFeedback(payload.message || 'Mot de passe mis à jour.', 'success');
+          form.reset();
+        } catch (err) {
+          console.error('[settings] change password failed', err);
+          setFeedback(err.message || 'Erreur lors de la mise à jour.', 'error');
+        } finally {
+          submit && (submit.disabled = false);
+        }
+      });
+    }
+
+    if (siteForm) {
+      const nameInput = siteForm.querySelector('[data-site-name]');
+      const langSelect = siteForm.querySelector('[data-site-language]');
+      const taglineInput = siteForm.querySelector('[data-site-tagline]');
+      const saveButton = siteForm.querySelector('[data-site-save]');
+      const setSiteFeedback = (message, tone = 'muted') => {
+        if (!siteFeedback) return;
+        const color =
+          tone === 'success'
+            ? 'text-emerald-600'
+            : tone === 'error'
+              ? 'text-rose-600'
+              : 'text-slate-500';
+        siteFeedback.textContent = message || '';
+        siteFeedback.className = `text-sm ${color}`;
+      };
+
+      const safeSiteSlug = stripLeadingSlash(
+        workspaceContext?.slugValue || storedSite.slug || '',
+      );
+      const siteConfigApi = safeSiteSlug
+        ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/site`
+        : null;
+
+      const loadSiteConfig = async () => {
+        if (!siteConfigApi) return;
+        try {
+          const response = await fetch(siteConfigApi, { headers: { Accept: 'application/json' } });
+          if (!response.ok) return;
+          const payload = await response.json().catch(() => ({}));
+          if (nameInput) nameInput.value = payload.name || '';
+          if (langSelect) langSelect.value = payload.language || 'fr';
+          if (taglineInput) taglineInput.value = payload.tagline || '';
+        } catch (err) {
+          console.error('[settings] load site config failed', err);
+        }
+      };
+
+      siteForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!siteConfigApi) {
+          setSiteFeedback('Aucun site actif.', 'error');
+          return;
+        }
+        if (!nameInput?.value.trim()) {
+          setSiteFeedback('Nom requis.', 'error');
+          return;
+        }
+        saveButton && (saveButton.disabled = true);
+        setSiteFeedback('');
+        try {
+          const payload = {
+            name: nameInput?.value || '',
+            language: langSelect?.value || 'fr',
+            tagline: taglineInput?.value || '',
+          };
+          const response = await fetch(siteConfigApi, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.success === false) {
+            throw new Error(result.message || 'Sauvegarde impossible.');
+          }
+          setSiteFeedback(result.message || 'Paramètres enregistrés.', 'success');
+        } catch (err) {
+          console.error('[settings] save site config failed', err);
+          setSiteFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
+        } finally {
+          saveButton && (saveButton.disabled = false);
+        }
+      });
+
+      loadSiteConfig();
+    }
   }
 
   function initMediaWorkspace() {

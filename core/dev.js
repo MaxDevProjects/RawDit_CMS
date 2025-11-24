@@ -31,6 +31,7 @@ const SITES_DATA_ROOT = path.join(paths.data, 'sites');
 const PUBLIC_SITES_ROOT = path.join(paths.public, 'sites');
 const DEPLOY_CONFIG_FILENAME = 'deploy.json';
 const DEPLOY_LOG_FILENAME = 'deploy-log.json';
+const SITE_CONFIG_FILENAME = 'site.json';
 const ENV_ALLOW_FTP = process.env.ALLOW_FTP === 'true';
 const DEFAULT_COLLECTIONS = [
   {
@@ -371,6 +372,9 @@ function getDeployLogPath(siteSlug) {
   return path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', DEPLOY_LOG_FILENAME);
 }
 
+const getSiteConfigPath = (siteSlug) =>
+  path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', SITE_CONFIG_FILENAME);
+
 async function readDeployLog(siteSlug) {
   const filePath = getDeployLogPath(siteSlug);
   try {
@@ -397,6 +401,9 @@ async function appendDeployLog(siteSlug, entry, { max = 10 } = {}) {
 
 const getBuildOutputDir = (siteSlug) =>
   path.join(paths.root, 'build', 'sites', sanitizeSiteSlug(siteSlug));
+
+const getSiteConfigPath = (siteSlug) =>
+  path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', SITE_CONFIG_FILENAME);
 
 async function getSiteOutputDir(siteSlug) {
   const sites = await readSites();
@@ -466,6 +473,17 @@ async function buildSitePages(siteSlug) {
   }
   const sites = await readSites();
   const siteRecord = sites.find((s) => s.slug === normalizeSlug(siteSlug)) || {};
+  const siteConfigPath = getSiteConfigPath(siteSlug);
+  const siteConfig = await fs
+    .readFile(siteConfigPath, 'utf8')
+    .then((raw) => JSON.parse(raw || '{}'))
+    .catch(() => ({}));
+  const siteMeta = {
+    title: siteConfig.name || siteRecord.name || 'Site',
+    slug: siteRecord.slug || siteSlug,
+    language: siteConfig.language || 'fr',
+    tagline: siteConfig.tagline || '',
+  };
 
   const loader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCache: true });
   const env = new nunjucks.Environment(loader, { autoescape: true });
@@ -484,7 +502,7 @@ async function buildSitePages(siteSlug) {
     pages.map(async (page) => {
       const html = env.render('preview.njk', {
         page,
-        site: { title: siteRecord.name || 'Site', slug: siteRecord.slug || siteSlug },
+        site: siteMeta,
         collections: collectionMap,
       });
       const slugPath = (page.slug || '').replace(/^\//, '') || 'index';
@@ -1569,6 +1587,57 @@ async function start() {
         message: err.message || 'Déploiement échoué.',
         logs: err.deployEntry?.logs || [],
       });
+    }
+  });
+
+  app.get('/api/sites/:slug/config/site', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    const filePath = getSiteConfigPath(siteSlug);
+    try {
+      const raw = await fs.readFile(filePath, 'utf8').catch(() => '{}');
+      const config = JSON.parse(raw || '{}');
+      res.json({
+        name: config.name || '',
+        language: config.language || 'fr',
+        tagline: config.tagline || '',
+      });
+    } catch (err) {
+      console.error('[site config] load failed', err);
+      res.status(500).json({ message: 'Impossible de charger la configuration du site.' });
+    }
+  });
+
+  app.put('/api/sites/:slug/config/site', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    const payload = req.body || {};
+    const name = typeof payload.name === 'string' ? payload.name.trim() : '';
+    const language = typeof payload.language === 'string' ? payload.language.trim() : 'fr';
+    const tagline = typeof payload.tagline === 'string' ? payload.tagline.trim() : '';
+    if (!name) {
+      return res.status(400).json({ message: 'Le nom du site est requis.' });
+    }
+    const filePath = getSiteConfigPath(siteSlug);
+    try {
+      await ensureDir(path.dirname(filePath));
+      const config = {
+        name,
+        language: language || 'fr',
+        tagline,
+      };
+      await fs.writeFile(filePath, JSON.stringify(config, null, 2), 'utf8');
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] site config rebuild failed', err.message),
+      );
+      res.json({ success: true, ...config });
+    } catch (err) {
+      console.error('[site config] save failed', err);
+      res.status(500).json({ message: 'Impossible de sauvegarder la configuration du site.' });
     }
   });
 
