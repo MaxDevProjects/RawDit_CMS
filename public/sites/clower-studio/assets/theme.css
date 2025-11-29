@@ -1,0 +1,12 @@
+:root {
+  --color-primary: oklch(60.6% 0.25 292.717);
+  --color-secondary: oklch(67.3% 0.182 276.935);
+  --color-accent: oklch(69.6% 0.17 162.48);
+  --color-background: oklch(98.4% 0.003 247.858);
+  --color-text: oklch(20.8% 0.042 265.755);
+  --font-headings: Inter, sans-serif;
+  --font-body: Inter, sans-serif;
+  --radius-small: 8px;
+  --radius-medium: 16px;
+  --radius-large: 24px;
+}

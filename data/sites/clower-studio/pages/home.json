@@ -73,6 +73,26 @@
         "limit": 6
       },
       "collectionId": "testimonials"
+    },
+    {
+      "id": "home-form-mikj9lhv-873",
+      "label": "Formulaire de contact 1",
+      "type": "Form",
+      "status": "Brouillon",
+      "description": "Formulaire avec envoi vers un service externe.",
+      "props": [],
+      "settings": {
+        "formTitle": "Contactez-nous",
+        "actionUrl": "",
+        "method": "POST",
+        "serviceName": "",
+        "submitLabel": "Envoyer",
+        "successMessage": "Merci pour votre message !"
+      }
     }
-  ]
+  ],
+  "seo": {
+    "title": "",
+    "description": ""
+  }
 }
