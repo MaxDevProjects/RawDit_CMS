@@ -1066,6 +1066,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyTemplateBtn = document.querySelector('[data-copy-template]');
     const templateJson = document.querySelector('[data-template-json]');
     let importSelectedFiles = [];
+    // Delete page elements
+    const deletePageModal = document.querySelector('[data-delete-page-modal]');
+    const deletePageName = document.querySelector('[data-delete-page-name]');
+    const deletePageCancel = document.querySelector('[data-delete-page-cancel]');
+    const deletePageConfirm = document.querySelector('[data-delete-page-confirm]');
+    let pageToDelete = null;
     const siteKey =
       stripLeadingSlash(workspaceContext?.slugValue || storedSite.slug || 'default') || 'default';
     const siteSlugValue = workspaceContext?.slugValue || storedSite.slug || '';
@@ -1466,11 +1472,12 @@ document.addEventListener('DOMContentLoaded', () => {
         list.innerHTML = '';
         pages.forEach((page) => {
           const item = document.createElement('li');
+          item.className = 'flex items-center gap-1';
           const button = document.createElement('button');
           button.type = 'button';
           button.dataset.pageId = page.id;
           button.className = [
-            'w-full flex items-center justify-between gap-3 px-3 py-2 text-left transition',
+            'flex-1 flex items-center gap-3 px-3 py-2 text-left transition',
             activeId === page.id
               ? 'bg-[#9C6BFF]/10 text-slate-900 border border-[#9C6BFF]/40 rounded-xl shadow-sm'
               : 'text-slate-700 hover:bg-slate-50 rounded-xl',
@@ -1481,17 +1488,15 @@ document.addEventListener('DOMContentLoaded', () => {
             button.removeAttribute('aria-current');
           }
           button.innerHTML = `
-            <div class="flex items-center gap-3">
-              <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M6.5 4.5h7l4 4v11a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-                  <path d="M13.5 4.5v4a1 1 0 0 0 1 1h3" stroke="currentColor" stroke-width="1.4"/>
-                </svg>
-              </span>
-              <div class="flex flex-col">
-                <span class="text-sm font-semibold">${page.title}</span>
-                <span class="text-xs text-slate-500">${page.slug}</span>
-              </div>
+            <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6.5 4.5h7l4 4v11a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M13.5 4.5v4a1 1 0 0 0 1 1h3" stroke="currentColor" stroke-width="1.4"/>
+              </svg>
+            </span>
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold">${page.title}</span>
+              <span class="text-xs text-slate-500">${page.slug}</span>
             </div>
           `;
           button.addEventListener('click', () => {
@@ -1501,6 +1506,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
           item.appendChild(button);
+          // Bouton de suppression
+          const deleteBtn = document.createElement('button');
+          deleteBtn.type = 'button';
+          deleteBtn.className = 'flex-shrink-0 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition';
+          deleteBtn.title = 'Supprimer cette page';
+          deleteBtn.setAttribute('aria-label', `Supprimer ${page.title}`);
+          deleteBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14ZM10 11v6M14 11v6"/>
+            </svg>
+          `;
+          deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openDeletePageModal(page);
+          });
+          item.appendChild(deleteBtn);
           list.appendChild(item);
         });
       });
@@ -2123,6 +2144,73 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('[import] copy failed', err);
         showToast('Erreur copie');
       }
+    });
+
+    // === Delete page handlers ===
+    const openDeletePageModal = (page) => {
+      if (!deletePageModal || !page) return;
+      pageToDelete = page;
+      if (deletePageName) deletePageName.textContent = page.title || page.id;
+      deletePageModal.classList.remove('hidden');
+      deletePageModal.classList.add('flex');
+    };
+    const closeDeletePageModal = () => {
+      if (!deletePageModal) return;
+      deletePageModal.classList.add('hidden');
+      deletePageModal.classList.remove('flex');
+      pageToDelete = null;
+    };
+    const executeDeletePage = async () => {
+      if (!pagesApiBase || !pageToDelete) return;
+      const pageId = pageToDelete.id;
+      const pageTitle = pageToDelete.title || pageId;
+      if (deletePageConfirm) {
+        deletePageConfirm.disabled = true;
+        deletePageConfirm.textContent = 'Suppression...';
+      }
+      try {
+        const response = await fetch(`${pagesApiBase}/${encodeURIComponent(pageId)}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || 'Erreur serveur');
+        }
+        // Supprimer de la liste locale
+        pages = pages.filter((p) => p.id !== pageId);
+        // Si la page supprimée était active, sélectionner la première
+        if (activePageId === pageId) {
+          if (pages.length > 0) {
+            setActivePage(pages[0].id);
+          } else {
+            activePageId = null;
+            currentPage = null;
+            renderPageLists(pages, null);
+            renderBlockList(null);
+            blockDetailEmpty?.classList.remove('hidden');
+            blockEditor?.classList.add('hidden');
+            previewFrame && (previewFrame.srcdoc = getLoadingPreviewHtml());
+          }
+        } else {
+          renderPageLists(pages, activePageId);
+        }
+        closeDeletePageModal();
+        showToast(`Page "${pageTitle}" supprimée`);
+      } catch (err) {
+        console.error('[pages] delete failed', err);
+        showToast(err.message || 'Erreur suppression');
+      } finally {
+        if (deletePageConfirm) {
+          deletePageConfirm.disabled = false;
+          deletePageConfirm.textContent = 'Supprimer';
+        }
+      }
+    };
+    deletePageCancel?.addEventListener('click', closeDeletePageModal);
+    deletePageConfirm?.addEventListener('click', executeDeletePage);
+    deletePageModal?.addEventListener('click', (e) => {
+      if (e.target === deletePageModal) closeDeletePageModal();
     });
 
     blockLibraryToggle?.addEventListener('click', (event) => {

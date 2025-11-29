@@ -1335,6 +1335,43 @@ async function start() {
     }
   });
 
+  // DELETE /api/sites/:slug/pages/:pageId - Supprimer une page
+  app.delete('/api/sites/:slug/pages/:pageId', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const pageId = slugify(req.params.pageId || '');
+    if (!pageId) {
+      return res.status(400).json({ message: 'ID de page invalide.' });
+    }
+    try {
+      const pagesDir = path.resolve(`data/sites/${siteSlug}/pages`);
+      const pageFile = path.join(pagesDir, `${pageId}.json`);
+      // Vérifier que le fichier existe
+      if (!fs.existsSync(pageFile)) {
+        return res.status(404).json({ message: 'Page introuvable.' });
+      }
+      // Lire le contenu pour retourner le titre
+      let pageData;
+      try {
+        pageData = JSON.parse(fs.readFileSync(pageFile, 'utf-8'));
+      } catch (e) {
+        pageData = { title: pageId };
+      }
+      // Supprimer le fichier JSON
+      fs.unlinkSync(pageFile);
+      // Supprimer le fichier HTML généré si existant
+      const buildDir = path.resolve(`public/sites/${siteSlug}`);
+      const htmlFile = path.join(buildDir, `${pageId}.html`);
+      if (fs.existsSync(htmlFile)) {
+        fs.unlinkSync(htmlFile);
+      }
+      console.log(`[pages] deleted: ${siteSlug}/${pageId}`);
+      res.json({ success: true, deleted: pageId, title: pageData.title || pageId });
+    } catch (err) {
+      console.error('[pages] delete failed', err);
+      res.status(500).json({ message: 'Erreur lors de la suppression.' });
+    }
+  });
+
   app.get('/api/sites/:slug/collections', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
     try {
