@@ -1061,6 +1061,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const importResults = document.querySelector('[data-import-results]');
     const importResultsContent = document.querySelector('[data-import-results-content]');
     const importSubmit = document.querySelector('[data-import-submit]');
+    const importTabs = document.querySelectorAll('[data-import-tab]');
+    const importPanels = document.querySelectorAll('[data-import-panel]');
+    const copyTemplateBtn = document.querySelector('[data-copy-template]');
+    const templateJson = document.querySelector('[data-template-json]');
     let importSelectedFiles = [];
     const siteKey =
       stripLeadingSlash(workspaceContext?.slugValue || storedSite.slug || 'default') || 'default';
@@ -2087,6 +2091,39 @@ document.addEventListener('DOMContentLoaded', () => {
       handleImportFiles(e.dataTransfer.files);
     });
     importSubmit?.addEventListener('click', executeImport);
+    // Import tabs
+    importTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const targetPanel = tab.dataset.importTab;
+        importTabs.forEach((t) => {
+          if (t.dataset.importTab === targetPanel) {
+            t.classList.add('bg-[#9C6BFF]', 'text-white');
+            t.classList.remove('border', 'border-slate-200', 'text-slate-700');
+          } else {
+            t.classList.remove('bg-[#9C6BFF]', 'text-white');
+            t.classList.add('border', 'border-slate-200', 'text-slate-700');
+          }
+        });
+        importPanels.forEach((p) => {
+          if (p.dataset.importPanel === targetPanel) {
+            p.classList.remove('hidden');
+          } else {
+            p.classList.add('hidden');
+          }
+        });
+      });
+    });
+    copyTemplateBtn?.addEventListener('click', async () => {
+      if (!templateJson) return;
+      const text = templateJson.textContent || '';
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Template copié !');
+      } catch (err) {
+        console.error('[import] copy failed', err);
+        showToast('Erreur copie');
+      }
+    });
 
     blockLibraryToggle?.addEventListener('click', (event) => {
       event.stopPropagation();
