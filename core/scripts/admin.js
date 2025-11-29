@@ -3103,15 +3103,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const siteConfigApi = safeSiteSlug
         ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/site`
         : null;
-    }
-
-    if (themeForm) {
-      const safeSiteSlug = stripLeadingSlash(
-        workspaceContext?.slugValue || storedSite.slug || '',
-      );
-      const themeApi = safeSiteSlug
-        ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/theme`
-        : null;
 
       const loadSiteConfig = async () => {
         if (!siteConfigApi) return;
@@ -3164,10 +3155,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       loadSiteConfig();
-
     }
 
     if (themeForm) {
+      const safeSiteSlug = stripLeadingSlash(
+        workspaceContext?.slugValue || storedSite.slug || '',
+      );
+      const themeApi = safeSiteSlug
+        ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/theme`
+        : null;
+
       const colorSelects = {
         primary: themeForm.querySelector('[data-theme-primary]'),
         secondary: themeForm.querySelector('[data-theme-secondary]'),
