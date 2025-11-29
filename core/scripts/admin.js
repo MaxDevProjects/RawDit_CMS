@@ -1050,6 +1050,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const addPageCancel = document.querySelector('[data-add-page-cancel]');
     const addPageError = document.querySelector('[data-add-page-error]');
     const addPageSubmitButton = addPageForm?.querySelector('[type="submit"]');
+    // Import JSON elements
+    const importToggle = document.querySelector('[data-import-pages-toggle]');
+    const importModal = document.querySelector('[data-import-modal]');
+    const importCloseButtons = document.querySelectorAll('[data-import-modal-close]');
+    const importDropzone = document.querySelector('[data-import-dropzone]');
+    const importFileInput = document.querySelector('[data-import-file-input]');
+    const importFileList = document.querySelector('[data-import-file-list]');
+    const importFileNames = document.querySelector('[data-import-file-names]');
+    const importResults = document.querySelector('[data-import-results]');
+    const importResultsContent = document.querySelector('[data-import-results-content]');
+    const importSubmit = document.querySelector('[data-import-submit]');
+    let importSelectedFiles = [];
     const siteKey =
       stripLeadingSlash(workspaceContext?.slugValue || storedSite.slug || 'default') || 'default';
     const siteSlugValue = workspaceContext?.slugValue || storedSite.slug || '';
@@ -1930,6 +1942,152 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    // === Import JSON handlers ===
+    const openImportModal = () => {
+      if (!importModal) return;
+      importModal.classList.remove('hidden');
+      importModal.classList.add('flex');
+      importSelectedFiles = [];
+      updateImportFileList();
+      if (importResults) importResults.classList.add('hidden');
+      if (importResultsContent) importResultsContent.innerHTML = '';
+      if (importSubmit) importSubmit.disabled = true;
+    };
+    const closeImportModal = () => {
+      if (!importModal) return;
+      importModal.classList.add('hidden');
+      importModal.classList.remove('flex');
+      importSelectedFiles = [];
+    };
+    const updateImportFileList = () => {
+      if (!importFileList || !importFileNames) return;
+      if (importSelectedFiles.length === 0) {
+        importFileList.classList.add('hidden');
+        if (importSubmit) importSubmit.disabled = true;
+        return;
+      }
+      importFileList.classList.remove('hidden');
+      importFileNames.innerHTML = importSelectedFiles
+        .map((f) => `<li class="flex items-center gap-2"><span class="text-lg">📄</span>${f.name}</li>`)
+        .join('');
+      if (importSubmit) importSubmit.disabled = false;
+    };
+    const handleImportFiles = (files) => {
+      const jsonFiles = Array.from(files).filter(
+        (f) => f.type === 'application/json' || f.name.endsWith('.json')
+      );
+      if (jsonFiles.length === 0) {
+        showToast('Aucun fichier JSON valide.');
+        return;
+      }
+      importSelectedFiles = jsonFiles;
+      updateImportFileList();
+    };
+    const executeImport = async () => {
+      if (!pagesApiBase || importSelectedFiles.length === 0) return;
+      if (importSubmit) {
+        importSubmit.disabled = true;
+        importSubmit.textContent = 'Import...';
+      }
+      try {
+        const pagesData = [];
+        for (const file of importSelectedFiles) {
+          const text = await file.text();
+          try {
+            const parsed = JSON.parse(text);
+            // Support single page or array of pages
+            if (Array.isArray(parsed)) {
+              pagesData.push(...parsed);
+            } else {
+              pagesData.push(parsed);
+            }
+          } catch (parseErr) {
+            showToast(`Erreur JSON dans ${file.name}`);
+            console.error('[import] parse error', file.name, parseErr);
+          }
+        }
+        if (pagesData.length === 0) {
+          showToast('Aucune page valide à importer.');
+          return;
+        }
+        const response = await fetch(`${pagesApiBase}/import`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(pagesData),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || 'Erreur serveur');
+        }
+        // Show results
+        if (importResults && importResultsContent) {
+          importResults.classList.remove('hidden');
+          let html = '';
+          if (result.imported && result.imported.length > 0) {
+            html += `<p class="text-green-700">✓ ${result.imported.length} page(s) importée(s)</p>`;
+            html += '<ul class="ml-4 text-xs text-slate-600">';
+            result.imported.forEach((p) => {
+              html += `<li>${p.title} (${p.action === 'updated' ? 'mise à jour' : 'créée'})</li>`;
+            });
+            html += '</ul>';
+          }
+          if (result.errors && result.errors.length > 0) {
+            html += `<p class="text-rose-600 mt-2">✗ ${result.errors.length} erreur(s)</p>`;
+            html += '<ul class="ml-4 text-xs text-rose-500">';
+            result.errors.forEach((e) => {
+              html += `<li>${e.title}: ${e.error}</li>`;
+            });
+            html += '</ul>';
+          }
+          importResultsContent.innerHTML = html;
+        }
+        // Reload pages list
+        if (result.imported && result.imported.length > 0) {
+          const freshPages = await fetchPagesFromServer();
+          pages = freshPages;
+          renderPageLists(pages, activePageId);
+          if (pages.length > 0 && !activePageId) {
+            setActivePage(pages[0].id);
+          }
+          showToast(`${result.imported.length} page(s) importée(s)`);
+        }
+        importSelectedFiles = [];
+        updateImportFileList();
+      } catch (err) {
+        console.error('[import] failed', err);
+        showToast(err.message || 'Erreur import');
+      } finally {
+        if (importSubmit) {
+          importSubmit.disabled = false;
+          importSubmit.textContent = 'Importer';
+        }
+      }
+    };
+    importToggle?.addEventListener('click', openImportModal);
+    importCloseButtons.forEach((btn) => btn.addEventListener('click', closeImportModal));
+    importModal?.addEventListener('click', (e) => {
+      if (e.target === importModal) closeImportModal();
+    });
+    importFileInput?.addEventListener('change', (e) => {
+      handleImportFiles(e.target.files);
+    });
+    importDropzone?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      importDropzone.classList.add('border-[#9C6BFF]', 'bg-[#9C6BFF]/10');
+    });
+    importDropzone?.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      importDropzone.classList.remove('border-[#9C6BFF]', 'bg-[#9C6BFF]/10');
+    });
+    importDropzone?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      importDropzone.classList.remove('border-[#9C6BFF]', 'bg-[#9C6BFF]/10');
+      handleImportFiles(e.dataTransfer.files);
+    });
+    importSubmit?.addEventListener('click', executeImport);
+
     blockLibraryToggle?.addEventListener('click', (event) => {
       event.stopPropagation();
       toggleBlockLibrary();

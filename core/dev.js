@@ -1256,6 +1256,85 @@ async function start() {
     }
   });
 
+  // US X – Import JSON pages
+  app.post('/api/sites/:slug/pages/import', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const pagesData = req.body;
+    if (!Array.isArray(pagesData) || pagesData.length === 0) {
+      return res.status(400).json({ message: 'Aucune page à importer.' });
+    }
+    const results = { imported: [], errors: [] };
+    const validatePageStructure = (page) => {
+      if (!page || typeof page !== 'object') return 'Structure invalide';
+      if (typeof page.title !== 'string' || !page.title.trim()) return 'Titre manquant';
+      if (page.blocks && !Array.isArray(page.blocks)) return 'Blocs invalides';
+      return null;
+    };
+    try {
+      const existingPages = await readPagesForSite(siteSlug);
+      const existingById = new Map(existingPages.map((p) => [p.id, p]));
+      const existingBySlug = new Map(existingPages.map((p) => [p.slug, p]));
+
+      for (const pageData of pagesData) {
+        const validationError = validatePageStructure(pageData);
+        if (validationError) {
+          results.errors.push({ title: pageData.title || '(sans titre)', error: validationError });
+          continue;
+        }
+        const title = pageData.title.trim();
+        const slug = normalizePageSlugValue(pageData.slug || title);
+        if (!slug) {
+          results.errors.push({ title, error: 'Slug invalide' });
+          continue;
+        }
+        // Determine ID: use provided id, or find by slug, or generate new
+        let pageId = pageData.id ? slugify(pageData.id) : null;
+        if (!pageId) {
+          const existingBySlugPage = existingBySlug.get(slug);
+          pageId = existingBySlugPage ? existingBySlugPage.id : generatePageIdFromSlug(slug, title);
+        }
+        // Handle ID collision if creating new page
+        if (!existingById.has(pageId) && !existingBySlug.has(slug)) {
+          const idSet = new Set(existingPages.map((p) => p.id));
+          while (idSet.has(pageId)) {
+            pageId = `${pageId}-${Math.floor(Math.random() * 1000)}`;
+          }
+        }
+        const seoData = pageData.seo || {};
+        const importedPage = {
+          id: pageId,
+          title,
+          slug,
+          description: typeof pageData.description === 'string' ? pageData.description : '',
+          badges: Array.isArray(pageData.badges) ? pageData.badges : [],
+          blocks: Array.isArray(pageData.blocks) ? pageData.blocks : [],
+          seo: {
+            title: typeof seoData.title === 'string' ? seoData.title.trim() : '',
+            description: typeof seoData.description === 'string' ? seoData.description.trim() : '',
+          },
+        };
+        try {
+          await writePageForSite(siteSlug, importedPage);
+          const isUpdate = existingById.has(pageId) || existingBySlug.has(slug);
+          results.imported.push({ id: pageId, title, slug, action: isUpdate ? 'updated' : 'created' });
+          // Update maps for subsequent pages
+          existingById.set(pageId, importedPage);
+          existingBySlug.set(slug, importedPage);
+        } catch (writeErr) {
+          results.errors.push({ title, error: writeErr.message });
+        }
+      }
+      // Rebuild after all imports
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] import rebuild failed', err.message),
+      );
+      res.json(results);
+    } catch (err) {
+      console.error('[pages] import failed', err);
+      res.status(500).json({ message: 'Erreur lors de l\'import.' });
+    }
+  });
+
   app.get('/api/sites/:slug/collections', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
     try {

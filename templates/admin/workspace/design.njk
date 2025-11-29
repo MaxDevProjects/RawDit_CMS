@@ -194,6 +194,15 @@
           Ajouter une page
         </button>
 
+        <button
+          type="button"
+          data-import-pages-toggle
+          class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          <span class="text-lg leading-none">📥</span>
+          Importer JSON
+        </button>
+
         <form data-add-page-form class="hidden space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div class="flex items-center justify-between gap-2">
             <p class="text-sm font-semibold text-slate-800">Nouvelle page</p>
@@ -706,6 +715,79 @@
         class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
       >
         Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale import JSON -->
+<div
+  data-import-modal
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="import-modal-title"
+>
+  <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-4">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h2 id="import-modal-title" class="text-lg font-semibold text-slate-900">
+          Importer des pages JSON
+        </h2>
+        <p class="text-sm text-slate-600">
+          Glisse-dépose un ou plusieurs fichiers JSON, ou clique pour sélectionner.
+        </p>
+      </div>
+      <button
+        type="button"
+        data-import-modal-close
+        class="text-slate-500 hover:text-slate-900 text-sm"
+        aria-label="Fermer"
+      >
+        ✕
+      </button>
+    </div>
+    <div
+      data-import-dropzone
+      class="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center transition hover:border-[#9C6BFF] hover:bg-[#9C6BFF]/5"
+    >
+      <span class="text-4xl">📄</span>
+      <p class="text-sm font-medium text-slate-700">Glisse tes fichiers ici</p>
+      <p class="text-xs text-slate-500">ou</p>
+      <label class="cursor-pointer rounded-lg bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]">
+        Parcourir
+        <input
+          type="file"
+          data-import-file-input
+          accept=".json,application/json"
+          multiple
+          class="hidden"
+        />
+      </label>
+    </div>
+    <div data-import-file-list class="hidden space-y-2">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Fichiers sélectionnés</p>
+      <ul data-import-file-names class="space-y-1 text-sm text-slate-700"></ul>
+    </div>
+    <div data-import-results class="hidden space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Résultats</p>
+      <div data-import-results-content class="text-sm text-slate-700"></div>
+    </div>
+    <div class="flex items-center justify-end gap-2">
+      <button
+        type="button"
+        data-import-modal-close
+        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900"
+      >
+        Fermer
+      </button>
+      <button
+        type="button"
+        data-import-submit
+        disabled
+        class="inline-flex items-center rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#8654f5] disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Importer
       </button>
     </div>
   </div>
