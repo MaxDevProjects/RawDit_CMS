@@ -1467,6 +1467,69 @@ document.addEventListener('DOMContentLoaded', () => {
         blockList.appendChild(item);
       });
     };
+
+    // === Delete page handlers (defined before renderPageLists) ===
+    const openDeletePageModal = (page) => {
+      if (!deletePageModal || !page) return;
+      pageToDelete = page;
+      if (deletePageName) deletePageName.textContent = page.title || page.id;
+      deletePageModal.classList.remove('hidden');
+      deletePageModal.classList.add('flex');
+    };
+    const closeDeletePageModal = () => {
+      if (!deletePageModal) return;
+      deletePageModal.classList.add('hidden');
+      deletePageModal.classList.remove('flex');
+      pageToDelete = null;
+    };
+    const executeDeletePage = async () => {
+      if (!pagesApiBase || !pageToDelete) return;
+      const pageId = pageToDelete.id;
+      const pageTitle = pageToDelete.title || pageId;
+      if (deletePageConfirm) {
+        deletePageConfirm.disabled = true;
+        deletePageConfirm.textContent = 'Suppression...';
+      }
+      try {
+        const response = await fetch(`${pagesApiBase}/${encodeURIComponent(pageId)}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || 'Erreur serveur');
+        }
+        // Supprimer de la liste locale
+        pages = pages.filter((p) => p.id !== pageId);
+        // Si la page supprimée était active, sélectionner la première
+        if (activePageId === pageId) {
+          if (pages.length > 0) {
+            setActivePage(pages[0].id);
+          } else {
+            activePageId = null;
+            currentPage = null;
+            renderPageLists(pages, null);
+            renderBlockList(null);
+            blockDetailEmpty?.classList.remove('hidden');
+            blockEditor?.classList.add('hidden');
+            previewFrame && (previewFrame.srcdoc = getLoadingPreviewHtml());
+          }
+        } else {
+          renderPageLists(pages, activePageId);
+        }
+        closeDeletePageModal();
+        showToast(`Page "${pageTitle}" supprimée`);
+      } catch (err) {
+        console.error('[pages] delete failed', err);
+        showToast(err.message || 'Erreur suppression');
+      } finally {
+        if (deletePageConfirm) {
+          deletePageConfirm.disabled = false;
+          deletePageConfirm.textContent = 'Supprimer';
+        }
+      }
+    };
+
     const renderPageLists = (pages, activeId) => {
       pageLists.forEach((list) => {
         list.innerHTML = '';
@@ -2146,67 +2209,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // === Delete page handlers ===
-    const openDeletePageModal = (page) => {
-      if (!deletePageModal || !page) return;
-      pageToDelete = page;
-      if (deletePageName) deletePageName.textContent = page.title || page.id;
-      deletePageModal.classList.remove('hidden');
-      deletePageModal.classList.add('flex');
-    };
-    const closeDeletePageModal = () => {
-      if (!deletePageModal) return;
-      deletePageModal.classList.add('hidden');
-      deletePageModal.classList.remove('flex');
-      pageToDelete = null;
-    };
-    const executeDeletePage = async () => {
-      if (!pagesApiBase || !pageToDelete) return;
-      const pageId = pageToDelete.id;
-      const pageTitle = pageToDelete.title || pageId;
-      if (deletePageConfirm) {
-        deletePageConfirm.disabled = true;
-        deletePageConfirm.textContent = 'Suppression...';
-      }
-      try {
-        const response = await fetch(`${pagesApiBase}/${encodeURIComponent(pageId)}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.message || 'Erreur serveur');
-        }
-        // Supprimer de la liste locale
-        pages = pages.filter((p) => p.id !== pageId);
-        // Si la page supprimée était active, sélectionner la première
-        if (activePageId === pageId) {
-          if (pages.length > 0) {
-            setActivePage(pages[0].id);
-          } else {
-            activePageId = null;
-            currentPage = null;
-            renderPageLists(pages, null);
-            renderBlockList(null);
-            blockDetailEmpty?.classList.remove('hidden');
-            blockEditor?.classList.add('hidden');
-            previewFrame && (previewFrame.srcdoc = getLoadingPreviewHtml());
-          }
-        } else {
-          renderPageLists(pages, activePageId);
-        }
-        closeDeletePageModal();
-        showToast(`Page "${pageTitle}" supprimée`);
-      } catch (err) {
-        console.error('[pages] delete failed', err);
-        showToast(err.message || 'Erreur suppression');
-      } finally {
-        if (deletePageConfirm) {
-          deletePageConfirm.disabled = false;
-          deletePageConfirm.textContent = 'Supprimer';
-        }
-      }
-    };
+    // Delete page modal listeners
     deletePageCancel?.addEventListener('click', closeDeletePageModal);
     deletePageConfirm?.addEventListener('click', executeDeletePage);
     deletePageModal?.addEventListener('click', (e) => {
