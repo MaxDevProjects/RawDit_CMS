@@ -576,6 +576,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewOpenButton = document.querySelector('[data-preview-open]');
     const previewStatus = document.querySelector('[data-preview-status]');
     const previewHighlightOverlay = document.querySelector('[data-preview-highlight]');
+    // SEO panel elements
+    const seoToggleButton = document.querySelector('[data-seo-toggle]');
+    const seoPanel = document.querySelector('[data-seo-panel]');
+    const seoCloseButton = document.querySelector('[data-seo-close]');
+    const seoForm = document.querySelector('[data-seo-form]');
+    const seoTitleInput = document.querySelector('[data-seo-title]');
+    const seoDescriptionInput = document.querySelector('[data-seo-description]');
+    const seoFeedback = document.querySelector('[data-seo-feedback]');
+    const seoSaveButton = document.querySelector('[data-seo-save]');
     const blockList = document.querySelector('[data-blocks-list]');
     const blockListEmpty = document.querySelector('[data-blocks-empty]');
     const blockCountBadge = document.querySelector('[data-block-count]');
@@ -1716,6 +1725,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const normalizePageData = (page) => ({
       ...page,
       blocks: (page.blocks || []).map((block) => normalizeBlockData(block)),
+      seo: {
+        title: (page.seo?.title || '').trim(),
+        description: (page.seo?.description || '').trim(),
+      },
     });
 
     const loadDesignCollections = async () => {
@@ -1943,6 +1956,61 @@ document.addEventListener('DOMContentLoaded', () => {
       doc.write(latestPreviewHtml || getLoadingPreviewHtml());
       doc.close();
     });
+
+    // SEO panel logic
+    const toggleSeoPanel = (show) => {
+      if (!seoPanel) return;
+      if (show) {
+        seoPanel.classList.remove('hidden');
+        // Populate fields with current page SEO data
+        if (currentPage) {
+          seoTitleInput && (seoTitleInput.value = currentPage.seo?.title || '');
+          seoDescriptionInput && (seoDescriptionInput.value = currentPage.seo?.description || '');
+        }
+      } else {
+        seoPanel.classList.add('hidden');
+      }
+    };
+    const setSeoFeedback = (message, tone = 'muted') => {
+      if (!seoFeedback) return;
+      const color = tone === 'success' ? 'text-emerald-600' : tone === 'error' ? 'text-rose-600' : 'text-slate-500';
+      seoFeedback.textContent = message || '';
+      seoFeedback.className = `text-sm ${color}`;
+    };
+    seoToggleButton?.addEventListener('click', () => {
+      const isVisible = seoPanel && !seoPanel.classList.contains('hidden');
+      toggleSeoPanel(!isVisible);
+    });
+    seoCloseButton?.addEventListener('click', () => toggleSeoPanel(false));
+    seoForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!currentPage) {
+        setSeoFeedback('Aucune page active.', 'error');
+        return;
+      }
+      seoSaveButton && (seoSaveButton.disabled = true);
+      setSeoFeedback('');
+      try {
+        const seoData = {
+          title: (seoTitleInput?.value || '').trim(),
+          description: (seoDescriptionInput?.value || '').trim(),
+        };
+        const updatedPage = { ...currentPage, seo: seoData };
+        const saved = await savePageToServer(updatedPage);
+        if (saved) {
+          currentPage = saved;
+          setSeoFeedback('SEO enregistré.', 'success');
+          showToast('SEO mis à jour');
+          refreshPreview(currentPage);
+        }
+      } catch (err) {
+        console.error('[seo] save failed', err);
+        setSeoFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
+      } finally {
+        seoSaveButton && (seoSaveButton.disabled = false);
+      }
+    });
+
     const handleBlockDragStart = (event) => {
       const item = event.target.closest('[data-block-item]');
       if (!item || !isDesktopReorder()) {

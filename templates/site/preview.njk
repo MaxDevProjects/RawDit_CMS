@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prévisualisation – {{ page.title or 'Page' }}</title>
+    {% set seoTitle = page.seo.title if page.seo and page.seo.title else page.title %}
+    {% set seoDescription = page.seo.description if page.seo and page.seo.description else '' %}
+    <title>{{ seoTitle or 'Page' }} – {{ site.title or 'Site' }}</title>
+    {% if seoDescription %}
+    <meta name="description" content="{{ seoDescription }}" />
+    {% endif %}
     {% set slugPath = '' %}
     {% if site and site.slug %}
       {% set slugPath = site.slug %}

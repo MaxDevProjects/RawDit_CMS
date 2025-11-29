@@ -231,6 +231,13 @@
         </div>
       </div>
       <div class="flex items-center gap-2 text-xs">
+        <button
+          type="button"
+          data-seo-toggle
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 font-semibold text-slate-700 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          SEO
+        </button>
         <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-600">
           <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
           Preview en direct
@@ -243,6 +250,60 @@
           Ouvrir la page
         </button>
       </div>
+    </div>
+
+    <!-- Section SEO dépliable -->
+    <div data-seo-panel class="hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-[11px] uppercase tracking-tight text-slate-500">Référencement (SEO)</p>
+          <p class="text-sm font-semibold text-slate-900">Métadonnées de la page</p>
+        </div>
+        <button
+          type="button"
+          data-seo-close
+          class="text-slate-400 hover:text-slate-600"
+          aria-label="Fermer le panneau SEO"
+        >
+          ✕
+        </button>
+      </div>
+      <form data-seo-form class="space-y-4">
+        <div class="space-y-1">
+          <label for="seo-title" class="block text-sm font-medium text-slate-700">Titre SEO</label>
+          <input
+            type="text"
+            id="seo-title"
+            name="seo-title"
+            data-seo-title
+            placeholder="Titre affiché dans l'onglet du navigateur et les résultats de recherche"
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/20"
+          />
+          <p class="text-xs text-slate-500">Laissez vide pour utiliser le titre de la page.</p>
+        </div>
+        <div class="space-y-1">
+          <label for="seo-description" class="block text-sm font-medium text-slate-700">Meta description</label>
+          <textarea
+            id="seo-description"
+            name="seo-description"
+            data-seo-description
+            rows="3"
+            placeholder="Description affichée dans les résultats de recherche Google"
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/20"
+          ></textarea>
+          <p class="text-xs text-slate-500">Idéalement entre 150 et 160 caractères.</p>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <span data-seo-feedback class="text-sm text-slate-500"></span>
+          <button
+            type="submit"
+            data-seo-save
+            class="rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8B5CF6] disabled:opacity-50"
+          >
+            Enregistrer SEO
+          </button>
+        </div>
+      </form>
     </div>
 
     <div class="rounded-3xl border border-slate-200 bg-slate-100 p-4">

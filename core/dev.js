@@ -100,6 +100,7 @@ async function ensurePagesDir(siteSlug) {
 }
 
 function normalizePageRecord(page = {}) {
+  const seo = page.seo || {};
   return {
     id: page.id,
     title: (typeof page.title === 'string' && page.title.trim()) || 'Page',
@@ -107,6 +108,10 @@ function normalizePageRecord(page = {}) {
     description: page.description || '',
     badges: Array.isArray(page.badges) ? page.badges : [],
     blocks: Array.isArray(page.blocks) ? page.blocks : [],
+    seo: {
+      title: typeof seo.title === 'string' ? seo.title.trim() : '',
+      description: typeof seo.description === 'string' ? seo.description.trim() : '',
+    },
   };
 }
 
@@ -1227,6 +1232,7 @@ async function start() {
       if (existingPages.some((page) => page.slug === normalizedSlug && page.id !== safePageId)) {
         return res.status(400).json({ message: 'Ce slug est déjà utilisé.' });
       }
+      const seoPayload = payload.seo || {};
       const updatedPage = {
         id: safePageId,
         title,
@@ -1234,6 +1240,10 @@ async function start() {
         description: payload.description || '',
         badges: Array.isArray(payload.badges) ? payload.badges : [],
         blocks: Array.isArray(payload.blocks) ? payload.blocks : [],
+        seo: {
+          title: typeof seoPayload.title === 'string' ? seoPayload.title.trim() : '',
+          description: typeof seoPayload.description === 'string' ? seoPayload.description.trim() : '',
+        },
       };
       const saved = await writePageForSite(siteSlug, updatedPage);
       await buildSitePages(siteSlug).catch((err) =>
