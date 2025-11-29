@@ -205,12 +205,81 @@
               </div>
             {% endif %}
           </section>
+        {% elif type == 'form' or type == 'formulaire' or raw_type == 'Form' %}
+          {% set formTitle = settings.formTitle or 'Contactez-nous' %}
+          {% set actionUrl = settings.actionUrl or '#' %}
+          {% set method = settings.method or 'POST' %}
+          {% set submitLabel = settings.submitLabel or 'Envoyer' %}
+          <section
+            data-preview-block="{{ block.id }}"
+            class="bg-gradient-to-br from-violet-50 to-white rounded-2xl border border-violet-100 p-8 space-y-6"
+          >
+            <div>
+              <h3 class="text-2xl font-bold text-slate-900">{{ formTitle }}</h3>
+              <p class="text-sm text-slate-500">{{ block.description or 'Envoyez-nous un message.' }}</p>
+            </div>
+            <form action="{{ actionUrl }}" method="{{ method }}" class="space-y-4">
+              <div class="grid gap-4 md:grid-cols-2">
+                <label class="block space-y-1">
+                  <span class="text-sm font-medium text-slate-700">Nom</span>
+                  <input type="text" name="name" required
+                    class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                    placeholder="Votre nom" />
+                </label>
+                <label class="block space-y-1">
+                  <span class="text-sm font-medium text-slate-700">Email</span>
+                  <input type="email" name="email" required
+                    class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                    placeholder="votre@email.com" />
+                </label>
+              </div>
+              <label class="block space-y-1">
+                <span class="text-sm font-medium text-slate-700">Message</span>
+                <textarea name="message" rows="4" required
+                  class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                  placeholder="Votre message..."></textarea>
+              </label>
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-slate-400">
+                  {% if settings.serviceName %}Service : {{ settings.serviceName }}{% endif %}
+                </p>
+                <button type="submit"
+                  class="rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 focus:ring-2 focus:ring-violet-300">
+                  {{ submitLabel }}
+                </button>
+              </div>
+            </form>
+          </section>
+        {% elif type == 'newsletterembed' or type == 'newsletter' or raw_type == 'NewsletterEmbed' %}
+          {% set nlTitle = settings.title or 'Restez informé' %}
+          {% set embedCode = settings.embedCode or '' %}
+          <section
+            data-preview-block="{{ block.id }}"
+            class="bg-gradient-to-br from-sky-50 to-white rounded-2xl border border-sky-100 p-8 space-y-4"
+          >
+            <div>
+              <h3 class="text-2xl font-bold text-slate-900">{{ nlTitle }}</h3>
+              <p class="text-sm text-slate-500">{{ block.description or 'Inscrivez-vous à notre newsletter.' }}</p>
+              {% if settings.serviceName %}
+                <p class="text-xs text-slate-400 mt-1">Via {{ settings.serviceName }}</p>
+              {% endif %}
+            </div>
+            {% if embedCode %}
+              <div class="newsletter-embed rounded-xl overflow-hidden">
+                {{ embedCode | safe }}
+              </div>
+            {% else %}
+              <div class="rounded-xl border border-dashed border-sky-200 bg-sky-50/50 p-6 text-center text-sm text-slate-500">
+                Collez le code embed de votre service newsletter dans les paramètres du bloc.
+              </div>
+            {% endif %}
+          </section>
         {% else %}
           <section
             data-preview-block="{{ block.id }}"
             class="bg-white rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500"
           >
-            Ce type de bloc (“{{ block.type or 'Bloc' }}”) n’a pas encore de preview dédiée.
+            Ce type de bloc ("{{ block.type or 'Bloc' }}") n'a pas encore de preview dédiée.
           </section>
         {% endif %}
       {% else %}

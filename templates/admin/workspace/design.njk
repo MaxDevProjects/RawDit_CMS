@@ -530,6 +530,108 @@
           </label>
         </div>
 
+        <!-- Section Form (Formulaire de contact) -->
+        <div data-editor-section="form" class="hidden space-y-4">
+          <div>
+            <p class="text-xs uppercase tracking-tight text-slate-500">Formulaire de contact</p>
+            <p class="text-[11px] text-slate-500">Ce formulaire enverra les données vers un service externe.</p>
+          </div>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Titre du formulaire</span>
+            <input
+              type="text"
+              name="form-title"
+              placeholder="Contactez-nous"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            />
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">URL d'action (endpoint)</span>
+            <input
+              type="url"
+              name="form-action-url"
+              placeholder="https://api.switchcontact.com/..."
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            />
+            <p class="text-[10px] text-slate-400">URL vers laquelle les données seront envoyées.</p>
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Méthode</span>
+              <select
+                name="form-method"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              >
+                <option value="POST">POST</option>
+                <option value="GET">GET</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Service</span>
+              <input
+                type="text"
+                name="form-service-name"
+                placeholder="SwitchContact, Formspree…"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              />
+            </label>
+          </div>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Label du bouton</span>
+            <input
+              type="text"
+              name="form-submit-label"
+              placeholder="Envoyer"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            />
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Message de succès</span>
+            <input
+              type="text"
+              name="form-success-message"
+              placeholder="Merci pour votre message !"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            />
+          </label>
+        </div>
+
+        <!-- Section Newsletter / Embed -->
+        <div data-editor-section="newsletter" class="hidden space-y-4">
+          <div>
+            <p class="text-xs uppercase tracking-tight text-slate-500">Newsletter / Embed</p>
+            <p class="text-[11px] text-slate-500">Intégrez un formulaire newsletter externe (Brevo, Mailchimp, etc.).</p>
+          </div>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Titre de la section</span>
+            <input
+              type="text"
+              name="newsletter-title"
+              placeholder="Restez informé"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            />
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Nom du service</span>
+            <input
+              type="text"
+              name="newsletter-service-name"
+              placeholder="Brevo, Mailchimp, ConvertKit…"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            />
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Code embed (HTML)</span>
+            <textarea
+              name="newsletter-embed-code"
+              rows="5"
+              placeholder="<iframe src='...'></iframe> ou code HTML fourni par le service"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            ></textarea>
+            <p class="text-[10px] text-slate-400">Collez ici le code HTML/iframe fourni par votre service newsletter.</p>
+          </label>
+        </div>
+
           <div class="flex items-center justify-end gap-2">
             <button
               type="button"

@@ -660,6 +660,27 @@ document.addEventListener('DOMContentLoaded', () => {
           limit: 'collection-grid-limit',
         },
       },
+      form: {
+        section: 'form',
+        labelField: 'formTitle',
+        fields: {
+          formTitle: 'form-title',
+          actionUrl: 'form-action-url',
+          method: 'form-method',
+          serviceName: 'form-service-name',
+          submitLabel: 'form-submit-label',
+          successMessage: 'form-success-message',
+        },
+      },
+      newsletterembed: {
+        section: 'newsletter',
+        labelField: 'title',
+        fields: {
+          title: 'newsletter-title',
+          serviceName: 'newsletter-service-name',
+          embedCode: 'newsletter-embed-code',
+        },
+      },
     };
     const blockTypeAliases = {
       texte: 'paragraphe',
@@ -674,6 +695,12 @@ document.addEventListener('DOMContentLoaded', () => {
       collection: 'collectiongrid',
       collectiongrid: 'collectiongrid',
       'collection-grid': 'collectiongrid',
+      form: 'form',
+      formulaire: 'form',
+      contact: 'form',
+      newsletterembed: 'newsletterembed',
+      newsletter: 'newsletterembed',
+      embed: 'newsletterembed',
     };
     const updateGroupMiniPreview = (mobileValue, desktopValue) => {
       if (!groupPreviewMobile || !groupPreviewDesktop) {
@@ -1118,6 +1145,31 @@ document.addEventListener('DOMContentLoaded', () => {
         settings: {
           collectionId: '',
           limit: 6,
+        },
+      },
+      form: {
+        type: 'Form',
+        label: 'Formulaire de contact',
+        description: 'Formulaire avec envoi vers un service externe.',
+        status: 'Brouillon',
+        settings: {
+          formTitle: 'Contactez-nous',
+          actionUrl: '',
+          method: 'POST',
+          serviceName: '',
+          submitLabel: 'Envoyer',
+          successMessage: 'Merci pour votre message !',
+        },
+      },
+      newsletterembed: {
+        type: 'NewsletterEmbed',
+        label: 'Newsletter / Embed',
+        description: 'Intégration d\'un formulaire newsletter externe (Brevo, Mailchimp…).',
+        status: 'Brouillon',
+        settings: {
+          title: 'Restez informé',
+          serviceName: '',
+          embedCode: '',
         },
       },
     };
