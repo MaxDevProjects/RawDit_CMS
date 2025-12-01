@@ -690,6 +690,8 @@
   </section>
 {% endblock %}
 
+{% block modals %}
+<!-- Modale suppression bloc -->
 <div
   data-block-delete-modal
   class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4"
@@ -699,7 +701,7 @@
   <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl space-y-4">
     <div class="space-y-1">
       <h2 class="text-lg font-semibold text-slate-900">Supprimer ce bloc ?</h2>
-      <p class="text-sm text-slate-600">Cette action est immédiate dans l’éditeur.</p>
+      <p class="text-sm text-slate-600">Cette action est immédiate dans l'éditeur.</p>
     </div>
     <div class="flex items-center justify-end gap-2">
       <button
@@ -712,6 +714,38 @@
       <button
         type="button"
         data-block-delete-confirm
+        class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+      >
+        Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale suppression page -->
+<div
+  data-delete-page-modal
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="delete-page-modal-title"
+>
+  <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl space-y-4">
+    <div class="space-y-1">
+      <h2 id="delete-page-modal-title" class="text-lg font-semibold text-slate-900">Supprimer cette page ?</h2>
+      <p class="text-sm text-slate-600">La page <strong data-delete-page-name class="text-slate-900"></strong> sera définitivement supprimée.</p>
+    </div>
+    <div class="flex items-center justify-end gap-2">
+      <button
+        type="button"
+        data-delete-page-cancel
+        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+      >
+        Annuler
+      </button>
+      <button
+        type="button"
+        data-delete-page-confirm
         class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
       >
         Supprimer
@@ -853,3 +887,5 @@
     </div>
   </div>
 </div>
+{% endblock %}
+

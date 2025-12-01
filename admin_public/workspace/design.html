@@ -853,6 +853,205 @@
       </div>
     </div>
 
+    
+<!-- Modale suppression bloc -->
+<div
+  data-block-delete-modal
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl space-y-4">
+    <div class="space-y-1">
+      <h2 class="text-lg font-semibold text-slate-900">Supprimer ce bloc ?</h2>
+      <p class="text-sm text-slate-600">Cette action est immédiate dans l'éditeur.</p>
+    </div>
+    <div class="flex items-center justify-end gap-2">
+      <button
+        type="button"
+        data-block-delete-cancel
+        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+      >
+        Annuler
+      </button>
+      <button
+        type="button"
+        data-block-delete-confirm
+        class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+      >
+        Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale suppression page -->
+<div
+  data-delete-page-modal
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="delete-page-modal-title"
+>
+  <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl space-y-4">
+    <div class="space-y-1">
+      <h2 id="delete-page-modal-title" class="text-lg font-semibold text-slate-900">Supprimer cette page ?</h2>
+      <p class="text-sm text-slate-600">La page <strong data-delete-page-name class="text-slate-900"></strong> sera définitivement supprimée.</p>
+    </div>
+    <div class="flex items-center justify-end gap-2">
+      <button
+        type="button"
+        data-delete-page-cancel
+        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+      >
+        Annuler
+      </button>
+      <button
+        type="button"
+        data-delete-page-confirm
+        class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+      >
+        Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale import JSON -->
+<div data-import-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
+  <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl space-y-4">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h2 id="import-modal-title" class="text-lg font-semibold text-slate-900">Importer des pages JSON</h2>
+        <p class="text-sm text-slate-600">Glisse-dépose un ou plusieurs fichiers JSON, ou clique pour sélectionner.</p>
+      </div>
+      <button type="button" data-import-modal-close class="text-slate-500 hover:text-slate-900 text-sm" aria-label="Fermer">✕</button>
+    </div>
+    <div class="flex gap-2">
+      <button type="button" data-import-tab="upload" class="px-3 py-1.5 text-sm font-semibold rounded-lg bg-[#9C6BFF] text-white">Importer</button>
+      <button type="button" data-import-tab="template" class="px-3 py-1.5 text-sm font-semibold rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50">Template JSON</button>
+    </div>
+    <div data-import-panel="upload">
+      <div data-import-dropzone class="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center transition hover:border-[#9C6BFF] hover:bg-[#9C6BFF]/5">
+        <span class="text-4xl">📄</span>
+        <p class="text-sm font-medium text-slate-700">Glisse tes fichiers ici</p>
+        <p class="text-xs text-slate-500">ou</p>
+        <label class="cursor-pointer rounded-lg bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]">
+          Parcourir
+          <input type="file" data-import-file-input accept=".json,application/json" multiple class="hidden" />
+        </label>
+      </div>
+      <div data-import-file-list class="hidden space-y-2 mt-3">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Fichiers sélectionnés</p>
+        <ul data-import-file-names class="space-y-1 text-sm text-slate-700"></ul>
+      </div>
+      <div data-import-results class="hidden space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 mt-3">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Résultats</p>
+        <div data-import-results-content class="text-sm text-slate-700"></div>
+      </div>
+    </div>
+    <div data-import-panel="template" class="hidden">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Template avec tous les types de blocs</p>
+        <button type="button" data-copy-template class="text-xs font-semibold text-[#9C6BFF] hover:underline">📋 Copier</button>
+      </div>
+      <pre data-template-json class="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 overflow-x-auto max-h-[50vh] overflow-y-auto"><code>{
+  "title": "Ma page exemple",
+  "slug": "ma-page-exemple",
+  "description": "Description de la page",
+  "seo": {
+    "title": "Titre SEO personnalisé",
+    "description": "Meta description pour les moteurs de recherche"
+  },
+  "blocks": [
+    {
+      "id": "hero-1",
+      "type": "Hero",
+      "label": "Hero principal",
+      "settings": {
+        "title": "Bienvenue sur notre site",
+        "subtitle": "Une accroche percutante",
+        "ctaLabel": "Découvrir",
+        "ctaUrl": "/services",
+        "image": "/assets/hero.jpg",
+        "align": "center"
+      }
+    },
+    {
+      "id": "paragraph-1",
+      "type": "Paragraphe",
+      "label": "Introduction",
+      "settings": {
+        "title": "Notre histoire",
+        "content": "Texte du paragraphe...",
+        "align": "left"
+      }
+    },
+    {
+      "id": "image-1",
+      "type": "Image",
+      "label": "Photo équipe",
+      "settings": {
+        "src": "/assets/team.jpg",
+        "alt": "Notre équipe",
+        "showCaption": true,
+        "caption": "L'équipe au complet"
+      }
+    },
+    {
+      "id": "group-1",
+      "type": "Groupe",
+      "label": "Grille services",
+      "settings": {
+        "layout": "grid",
+        "columnsMobile": "1",
+        "columnsDesktop": "3"
+      }
+    },
+    {
+      "id": "collection-1",
+      "type": "CollectionGrid",
+      "label": "Nos projets",
+      "settings": {
+        "collectionId": "projets",
+        "limit": 6
+      }
+    },
+    {
+      "id": "form-1",
+      "type": "Form",
+      "label": "Contact",
+      "settings": {
+        "formTitle": "Contactez-nous",
+        "actionUrl": "https://formspree.io/f/xxxxx",
+        "method": "POST",
+        "serviceName": "Formspree",
+        "submitLabel": "Envoyer",
+        "successMessage": "Merci !"
+      }
+    },
+    {
+      "id": "newsletter-1",
+      "type": "NewsletterEmbed",
+      "label": "Newsletter",
+      "settings": {
+        "title": "Restez informé",
+        "serviceName": "Brevo",
+        "embedCode": "&lt;form...&gt;Code HTML du formulaire&lt;/form&gt;"
+      }
+    }
+  ]
+}</code></pre>
+      <p class="text-xs text-slate-500 mt-2">💡 Tu peux importer une seule page ou un tableau de pages <code class="bg-slate-100 px-1 rounded">[{...}, {...}]</code></p>
+    </div>
+    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+      <button type="button" data-import-modal-close class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900">Fermer</button>
+      <button type="button" data-import-submit disabled class="inline-flex items-center rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-medium text-white hover:bg-[#8654f5] disabled:opacity-50 disabled:cursor-not-allowed">Importer</button>
+    </div>
+  </div>
+</div>
+
+
     <script src="/admin/assets/admin.js" defer></script>
     
   </body>
