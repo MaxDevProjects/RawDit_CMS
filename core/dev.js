@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
+import fsSync from 'node:fs';
 import { createServer, createConnection } from 'node:net';
 import ipaddr from 'ipaddr.js';
 import { spawn } from 'node:child_process';
@@ -1338,31 +1339,34 @@ async function start() {
   // DELETE /api/sites/:slug/pages/:pageId - Supprimer une page
   app.delete('/api/sites/:slug/pages/:pageId', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
-    const pageId = slugify(req.params.pageId || '');
+    // Ne pas slugifier le pageId car il peut contenir des caractères spéciaux valides
+    const pageId = (req.params.pageId || '').trim();
+    console.log(`[pages] DELETE request: slug=${siteSlug}, pageId=${pageId}`);
     if (!pageId) {
       return res.status(400).json({ message: 'ID de page invalide.' });
     }
     try {
       const pagesDir = path.resolve(`data/sites/${siteSlug}/pages`);
       const pageFile = path.join(pagesDir, `${pageId}.json`);
+      console.log(`[pages] Checking file: ${pageFile}`);
       // Vérifier que le fichier existe
-      if (!fs.existsSync(pageFile)) {
+      if (!fsSync.existsSync(pageFile)) {
         return res.status(404).json({ message: 'Page introuvable.' });
       }
       // Lire le contenu pour retourner le titre
       let pageData;
       try {
-        pageData = JSON.parse(fs.readFileSync(pageFile, 'utf-8'));
+        pageData = JSON.parse(fsSync.readFileSync(pageFile, 'utf-8'));
       } catch (e) {
         pageData = { title: pageId };
       }
       // Supprimer le fichier JSON
-      fs.unlinkSync(pageFile);
+      fsSync.unlinkSync(pageFile);
       // Supprimer le fichier HTML généré si existant
       const buildDir = path.resolve(`public/sites/${siteSlug}`);
       const htmlFile = path.join(buildDir, `${pageId}.html`);
-      if (fs.existsSync(htmlFile)) {
-        fs.unlinkSync(htmlFile);
+      if (fsSync.existsSync(htmlFile)) {
+        fsSync.unlinkSync(htmlFile);
       }
       console.log(`[pages] deleted: ${siteSlug}/${pageId}`);
       res.json({ success: true, deleted: pageId, title: pageData.title || pageId });

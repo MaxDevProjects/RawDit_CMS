@@ -23,5 +23,10 @@
     "username": "admin",
     "createdAt": 1764579868001,
     "currentSiteSlug": "/clower-studio"
+  },
+  "748caeb56d96a15953b78e6b70db9ab2f2ed6ae5ef57e92d65886cbe6e7a716d": {
+    "username": "admin",
+    "createdAt": 1764584597312,
+    "currentSiteSlug": "/clower-studio"
   }
 }
