@@ -604,6 +604,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const blockFormSections = blockForm
       ? Array.from(blockForm.querySelectorAll('[data-editor-section]'))
       : [];
+    // Onglets Contenu / Apparence
+    const blockTabs = document.querySelectorAll('[data-block-tab]');
+    let activeBlockTab = 'content';
+
+    // Fonction pour switcher entre les onglets Contenu/Apparence
+    const switchBlockTab = (tabName) => {
+      activeBlockTab = tabName;
+      // Mettre à jour les styles des boutons d'onglet
+      blockTabs.forEach((tab) => {
+        const isActive = tab.dataset.blockTab === tabName;
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        if (isActive) {
+          tab.classList.add('text-[#9C6BFF]');
+          tab.classList.remove('text-slate-500', 'hover:text-slate-700');
+          tab.classList.add('after:absolute', 'after:bottom-0', 'after:left-0', 'after:right-0', 'after:h-0.5', 'after:bg-[#9C6BFF]');
+        } else {
+          tab.classList.remove('text-[#9C6BFF]');
+          tab.classList.add('text-slate-500', 'hover:text-slate-700');
+          tab.classList.remove('after:absolute', 'after:bottom-0', 'after:left-0', 'after:right-0', 'after:h-0.5', 'after:bg-[#9C6BFF]');
+        }
+      });
+      // Afficher/masquer les panels dans la section active
+      const activeSection = blockForm?.querySelector('[data-editor-section]:not(.hidden)');
+      if (activeSection) {
+        const panels = activeSection.querySelectorAll('[data-block-panel]');
+        panels.forEach((panel) => {
+          if (panel.dataset.blockPanel === tabName) {
+            panel.classList.remove('hidden');
+          } else {
+            panel.classList.add('hidden');
+          }
+        });
+      }
+    };
+
+    // Event listeners pour les onglets
+    blockTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        switchBlockTab(tab.dataset.blockTab);
+      });
+    });
+
     const collectionSelect = blockForm?.querySelector('[name="collection-grid-collection"]');
     const collectionSelectionInfo = blockForm?.querySelector(
       '[data-collection-selection-info]',
@@ -847,6 +889,8 @@ document.addEventListener('DOMContentLoaded', () => {
           section.classList.add('hidden');
         }
       });
+      // Réinitialiser sur l'onglet Contenu
+      switchBlockTab('content');
       if (config.section === 'collection') {
         const desiredValue = block.collectionId || block.settings?.collectionId || '';
         updateCollectionSelectOptions(desiredValue);

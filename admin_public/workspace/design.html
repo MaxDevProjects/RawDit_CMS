@@ -510,26 +510,46 @@
           <p class="text-xs uppercase tracking-tight text-slate-500">Bloc sélectionné</p>
           <p class="text-base font-semibold text-slate-900" data-block-editor-block-name>—</p>
           <p class="text-xs text-slate-500">Type : <span data-block-editor-block-type>—</span></p>
-          <p data-block-editor-unsupported class="hidden text-sm text-slate-500">Ce type de bloc n’est pas encore éditable.</p>
+          <p data-block-editor-unsupported class="hidden text-sm text-slate-500">Ce type de bloc n'est pas encore éditable.</p>
+        </div>
+
+        <!-- Onglets Contenu / Apparence -->
+        <div class="flex gap-1 border-b border-slate-200" role="tablist" aria-label="Édition du bloc">
+          <button
+            type="button"
+            data-block-tab="content"
+            role="tab"
+            aria-selected="true"
+            aria-controls="block-panel-content"
+            class="relative px-4 py-2 text-sm font-semibold text-[#9C6BFF] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#9C6BFF]"
+          >
+            Contenu
+          </button>
+          <button
+            type="button"
+            data-block-tab="appearance"
+            role="tab"
+            aria-selected="false"
+            aria-controls="block-panel-appearance"
+            class="relative px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"
+          >
+            Apparence
+          </button>
         </div>
 
         <form data-block-form class="hidden space-y-5">
           <div data-editor-section="paragraph" class="hidden space-y-4">
-            <div>
-              <p class="text-xs uppercase tracking-tight text-slate-500">Contenu</p>
-              <div class="space-y-2">
-                <label class="space-y-1 block">
-                  <span class="text-xs font-medium text-slate-600">Titre</span>
-                  <input type="text" name="paragraph-title" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
-                </label>
-                <label class="space-y-1 block">
-                  <span class="text-xs font-medium text-slate-600">Contenu</span>
-                  <textarea name="paragraph-content" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
-                </label>
-              </div>
+            <div data-block-panel="content" class="space-y-2">
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Titre</span>
+                <input type="text" name="paragraph-title" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Contenu</span>
+                <textarea name="paragraph-content" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
+              </label>
             </div>
-            <div>
-              <p class="text-xs uppercase tracking-tight text-slate-500">Apparence</p>
+            <div data-block-panel="appearance" class="hidden space-y-2">
               <label class="space-y-1 block">
                 <span class="text-xs font-medium text-slate-600">Alignement</span>
                 <select name="paragraph-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
@@ -542,9 +562,7 @@
           </div>
 
           <div data-editor-section="hero" class="hidden space-y-4">
-            <div>
-              <p class="text-xs uppercase tracking-tight text-slate-500">Contenu</p>
-              <div class="space-y-2">
+            <div data-block-panel="content" class="space-y-2">
                 <label class="space-y-1 block">
                   <span class="text-xs font-medium text-slate-600">Titre principal</span>
                   <input type="text" name="hero-title" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
@@ -563,16 +581,14 @@
                     <input type="text" name="hero-cta-url" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
                   </label>
                 </div>
-              </div>
             </div>
-            <div class="space-y-2">
-              <p class="text-xs uppercase tracking-tight text-slate-500">Médias & Layout</p>
+            <div data-block-panel="appearance" class="hidden space-y-2">
               <label class="space-y-1 block">
                 <span class="text-xs font-medium text-slate-600">Image</span>
                 <input type="text" name="hero-image" placeholder="URL ou média" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
               </label>
               <label class="space-y-1 block">
-                <span class="text-xs font-medium text-slate-600">Position de l’image</span>
+                <span class="text-xs font-medium text-slate-600">Position de l'image</span>
                 <select name="hero-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
                   <option value="center">Centrée</option>
                   <option value="left">Image à gauche</option>
@@ -583,7 +599,7 @@
           </div>
 
           <div data-editor-section="image" class="hidden space-y-4">
-            <div class="space-y-2">
+            <div data-block-panel="content" class="space-y-2">
               <label class="space-y-1 block">
                 <span class="text-xs font-medium text-slate-600">Source de l’image</span>
                 <input type="text" name="image-src" placeholder="https://..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
@@ -601,10 +617,16 @@
                 <input type="text" name="image-caption" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
               </label>
             </div>
+            <div data-block-panel="appearance" class="hidden space-y-2">
+              <p class="text-xs text-slate-500 italic">Aucune option d'apparence pour ce bloc.</p>
+            </div>
           </div>
 
         <div data-editor-section="group" class="hidden space-y-4">
-          <div class="space-y-2">
+          <div data-block-panel="content" class="space-y-2">
+            <p class="text-xs text-slate-500 italic">Les blocs enfants de ce groupe sont éditables individuellement.</p>
+          </div>
+          <div data-block-panel="appearance" class="hidden space-y-2">
             <p class="text-xs uppercase tracking-tight text-slate-500">Disposition responsive</p>
             <p class="text-[11px] text-slate-500">Ex&nbsp;: 1 colonne sur mobile, 3 sur desktop.</p>
             <div class="grid gap-2 sm:grid-cols-2">
@@ -625,28 +647,27 @@
                 </select>
               </label>
             </div>
-          </div>
-          <div class="rounded-xl border border-dashed border-slate-200 px-3 py-2">
-            <div class="flex justify-between text-[11px] text-slate-500 mb-1">
-              <span>Mobile</span>
-              <span>Desktop</span>
-            </div>
-            <div class="flex items-center gap-4 text-slate-400">
-              <div class="flex-1">
-                <div data-group-preview-mobile class="flex gap-1"></div>
+            <div class="rounded-xl border border-dashed border-slate-200 px-3 py-2">
+              <div class="flex justify-between text-[11px] text-slate-500 mb-1">
+                <span>Mobile</span>
+                <span>Desktop</span>
               </div>
-              <svg class="h-4 w-4 text-slate-300" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.21 16.56a.75.75 0 01-1.06 0A.75.75 0 016.21 15.5l5.47-5.5-5.47-5.5a.75.75 0 111.06-1.06l6 6a.75.75 0 010 1.06l-6 6z" clip-rule="evenodd"/>
-              </svg>
-              <div class="flex-1">
-                <div data-group-preview-desktop class="flex gap-1"></div>
-              </div>
+              <div class="flex items-center gap-4 text-slate-400">
+                <div class="flex-1">
+                  <div data-group-preview-mobile class="flex gap-1"></div>
+                </div>
+                <svg class="h-4 w-4 text-slate-300" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.21 16.56a.75.75 0 01-1.06 0A.75.75 0 016.21 15.5l5.47-5.5-5.47-5.5a.75.75 0 111.06-1.06l6 6a.75.75 0 010 1.06l-6 6z" clip-rule="evenodd"/>
+                </svg>
+                <div class="flex-1">
+                  <div data-group-preview-desktop class="flex gap-1"></div>
+                </div>
             </div>
           </div>
         </div>
 
         <div data-editor-section="collection" class="hidden space-y-4">
-          <div>
+          <div data-block-panel="content">
             <p class="text-xs uppercase tracking-tight text-slate-500">Source de données</p>
             <p class="text-[11px] text-slate-500">Cette grille affichera automatiquement les items de la collection choisie.</p>
           </div>
@@ -675,108 +696,118 @@
               value="6"
             />
           </label>
+          </div>
+          <div data-block-panel="appearance" class="hidden space-y-2">
+            <p class="text-xs text-slate-500 italic">Aucune option d'apparence pour ce bloc.</p>
+          </div>
         </div>
 
         <!-- Section Form (Formulaire de contact) -->
         <div data-editor-section="form" class="hidden space-y-4">
-          <div>
+          <div data-block-panel="content" class="space-y-3">
             <p class="text-xs uppercase tracking-tight text-slate-500">Formulaire de contact</p>
             <p class="text-[11px] text-slate-500">Ce formulaire enverra les données vers un service externe.</p>
-          </div>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Titre du formulaire</span>
-            <input
-              type="text"
-              name="form-title"
-              placeholder="Contactez-nous"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-            />
-          </label>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">URL d'action (endpoint)</span>
-            <input
-              type="url"
-              name="form-action-url"
-              placeholder="https://api.switchcontact.com/..."
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-            />
-            <p class="text-[10px] text-slate-400">URL vers laquelle les données seront envoyées.</p>
-          </label>
-          <div class="grid grid-cols-2 gap-3">
             <label class="space-y-1 block">
-              <span class="text-xs font-medium text-slate-600">Méthode</span>
-              <select
-                name="form-method"
-                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-              >
-                <option value="POST">POST</option>
-                <option value="GET">GET</option>
-              </select>
-            </label>
-            <label class="space-y-1 block">
-              <span class="text-xs font-medium text-slate-600">Service</span>
+              <span class="text-xs font-medium text-slate-600">Titre du formulaire</span>
               <input
                 type="text"
-                name="form-service-name"
-                placeholder="SwitchContact, Formspree…"
+                name="form-title"
+                placeholder="Contactez-nous"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              />
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">URL d'action (endpoint)</span>
+              <input
+                type="url"
+                name="form-action-url"
+                placeholder="https://api.switchcontact.com/..."
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              />
+              <p class="text-[10px] text-slate-400">URL vers laquelle les données seront envoyées.</p>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Méthode</span>
+                <select
+                  name="form-method"
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+                >
+                  <option value="POST">POST</option>
+                  <option value="GET">GET</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Service</span>
+                <input
+                  type="text"
+                  name="form-service-name"
+                  placeholder="SwitchContact, Formspree…"
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+                />
+              </label>
+            </div>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Label du bouton</span>
+              <input
+                type="text"
+                name="form-submit-label"
+                placeholder="Envoyer"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              />
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Message de succès</span>
+              <input
+                type="text"
+                name="form-success-message"
+                placeholder="Merci pour votre message !"
                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
               />
             </label>
           </div>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Label du bouton</span>
-            <input
-              type="text"
-              name="form-submit-label"
-              placeholder="Envoyer"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-            />
-          </label>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Message de succès</span>
-            <input
-              type="text"
-              name="form-success-message"
-              placeholder="Merci pour votre message !"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-            />
-          </label>
+          <div data-block-panel="appearance" class="hidden space-y-2">
+            <p class="text-xs text-slate-500 italic">Aucune option d'apparence pour ce bloc.</p>
+          </div>
         </div>
 
         <!-- Section Newsletter / Embed -->
         <div data-editor-section="newsletter" class="hidden space-y-4">
-          <div>
+          <div data-block-panel="content" class="space-y-3">
             <p class="text-xs uppercase tracking-tight text-slate-500">Newsletter / Embed</p>
             <p class="text-[11px] text-slate-500">Intégrez un formulaire newsletter externe (Brevo, Mailchimp, etc.).</p>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Titre de la section</span>
+              <input
+                type="text"
+                name="newsletter-title"
+                placeholder="Restez informé"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              />
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Nom du service</span>
+              <input
+                type="text"
+                name="newsletter-service-name"
+                placeholder="Brevo, Mailchimp, ConvertKit…"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              />
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Code embed (HTML)</span>
+              <textarea
+                name="newsletter-embed-code"
+                rows="5"
+                placeholder="<iframe src='...'></iframe> ou code HTML fourni par le service"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              ></textarea>
+              <p class="text-[10px] text-slate-400">Collez ici le code HTML/iframe fourni par votre service newsletter.</p>
+            </label>
           </div>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Titre de la section</span>
-            <input
-              type="text"
-              name="newsletter-title"
-              placeholder="Restez informé"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-            />
-          </label>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Nom du service</span>
-            <input
-              type="text"
-              name="newsletter-service-name"
-              placeholder="Brevo, Mailchimp, ConvertKit…"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-            />
-          </label>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Code embed (HTML)</span>
-            <textarea
-              name="newsletter-embed-code"
-              rows="5"
-              placeholder="<iframe src='...'></iframe> ou code HTML fourni par le service"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-            ></textarea>
-            <p class="text-[10px] text-slate-400">Collez ici le code HTML/iframe fourni par votre service newsletter.</p>
-          </label>
+          <div data-block-panel="appearance" class="hidden space-y-2">
+            <p class="text-xs text-slate-500 italic">Aucune option d'apparence pour ce bloc.</p>
+          </div>
         </div>
 
           <div class="flex items-center justify-end gap-2">
