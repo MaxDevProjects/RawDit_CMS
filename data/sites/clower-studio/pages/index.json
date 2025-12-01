@@ -1,0 +1,156 @@
+{
+  "id": "index",
+  "title": "Clower Studio – Des sites & apps web pour l’éducation et les projets engagés",
+  "slug": "/index",
+  "description": "Développeur–designer freelance spécialisé dans les projets éducatifs, enfance, parentalité, santé et impact. Sites et applications web sur mesure, éco-conçus et humains.",
+  "badges": [],
+  "blocks": [
+    {
+      "id": "hero-home",
+      "type": "Hero",
+      "label": "Hero principal",
+      "settings": {
+        "title": "Des sites & apps web sur mesure pour les projets qui prennent soin des enfants, des familles et du vivant.",
+        "subtitle": "Je m’appelle Maxime, développeur–designer freelance. Avec Clower Studio, j’accompagne les projets éducatifs, les pros de l’enfance, de la parentalité, de la santé et les acteurs engagés à créer des outils web clairs, responsables et vraiment utiles.",
+        "ctaLabel": "Parler de votre projet",
+        "ctaUrl": "/contact",
+        "image": "/assets/hero-clower-studio.jpg",
+        "align": "left",
+        "display": "flex",
+        "direction": "row",
+        "gap": "xl",
+        "rounded": "2xl",
+        "shadow": "xl",
+        "background": "surface-soft",
+        "paddingY": "xl",
+        "paddingX": "lg"
+      },
+      "props": []
+    },
+    {
+      "id": "paragraph-home-intro",
+      "type": "Paragraphe",
+      "label": "Un studio web indépendant, au service des projets qui ont du sens",
+      "settings": {
+        "title": "Un studio web indépendant, au service des projets qui ont du sens",
+        "content": "Je conçois et développe des sites et applications web sur mesure pour des projets qui font bouger les lignes : écoles, associations, structures autour de l’enfance et de la parentalité, professionnels de santé, initiatives à impact. Mon rôle : transformer vos idées en outils concrets, simples à utiliser, beaux à regarder et agréables à maintenir.",
+        "align": "left",
+        "maxWidth": "lg"
+      },
+      "props": [],
+      "description": "Je conçois et développe des sites et applications web sur mesure pour des projets qui font bouger les lignes : écoles, associations, structures autour de l’enfance et de la parentalité, professionnels de santé, initiatives à impact. Mon rôle : transformer vos idées en outils concrets, simples à utiliser, beaux à regarder et agréables à maintenir."
+    },
+    {
+      "id": "group-home-services",
+      "type": "Groupe",
+      "label": "Bloc – Aperçu des services",
+      "settings": {
+        "layout": "grid",
+        "display": "grid",
+        "columnsMobile": "1",
+        "columnsDesktop": "3",
+        "gap": "lg",
+        "rounded": "2xl",
+        "shadow": "md",
+        "background": "surface-neutral-soft",
+        "padding": "lg"
+      },
+      "props": []
+    },
+    {
+      "id": "paragraph-home-services",
+      "type": "Paragraphe",
+      "label": "Aperçu services",
+      "settings": {
+        "title": "Ce que nous pouvons construire ensemble",
+        "content": "• Des sites vitrines clairs et chaleureux pour présenter votre structure.\n• Des plateformes ou applications web pédagogiques pour mieux accompagner vos publics.\n• Des refontes et des améliorations techniques pour rendre vos outils plus rapides, plus accessibles et plus responsables.\n\nToujours avec un même fil conducteur : partir de vos usages réels, de vos contraintes de terrain et de vos objectifs, plutôt que d’empiler des fonctionnalités.",
+        "align": "left",
+        "maxWidth": "lg"
+      },
+      "props": []
+    },
+    {
+      "id": "collection-home-projects",
+      "type": "CollectionGrid",
+      "label": "Projets mis en avant",
+      "settings": {
+        "collectionId": "projets",
+        "limit": 3,
+        "layout": "grid",
+        "columnsMobile": "1",
+        "columnsDesktop": "3",
+        "gap": "lg",
+        "cardRounded": "xl",
+        "cardShadow": "md",
+        "cardBackground": "surface",
+        "showExcerpt": true,
+        "showTag": true
+      },
+      "props": [],
+      "collectionId": "projets"
+    },
+    {
+      "id": "paragraph-home-method",
+      "type": "Paragraphe",
+      "label": "Méthode – Aperçu",
+      "settings": {
+        "title": "Une collaboration claire, du premier appel à la mise en ligne",
+        "content": "On commence par un échange sans jargon pour comprendre votre contexte, vos publics et vos priorités. Ensuite, on co-construit un premier périmètre réaliste (MVP), on travaille l’architecture, l’UX et le design, puis je développe le projet en restant en contact régulier avec vous. L’idée : que vous sachiez à tout moment où on en est et pourquoi on fait les choses dans cet ordre-là.",
+        "align": "left",
+        "maxWidth": "lg"
+      },
+      "props": []
+    },
+    {
+      "id": "image-home-maxime",
+      "type": "Image",
+      "label": "Portrait Maxime",
+      "settings": {
+        "src": "/assets/maxime-clower-studio.jpg",
+        "alt": "Maxime G. Martin, développeur–designer freelance – Clower Studio",
+        "showCaption": true,
+        "caption": "Derrière Clower Studio, il y a un humain : Maxime, développeur–designer, papa, et passionné par l’éducation et le numérique responsable.",
+        "rounded": "2xl",
+        "shadow": "lg"
+      },
+      "props": []
+    },
+    {
+      "id": "newsletter-home",
+      "type": "NewsletterEmbed",
+      "label": "Newsletter / Ressources",
+      "settings": {
+        "title": "Recevoir des ressources autour du web éducatif et responsable",
+        "serviceName": "Brevo",
+        "embedCode": "<form>Formulaire d’inscription à la newsletter Clower Studio (Brevo)</form>",
+        "rounded": "2xl",
+        "shadow": "md",
+        "background": "surface-soft",
+        "padding": "lg"
+      },
+      "props": []
+    },
+    {
+      "id": "form-home-contact",
+      "type": "Form",
+      "label": "Contact rapide",
+      "settings": {
+        "formTitle": "Parlons de votre projet",
+        "actionUrl": "https://formspree.io/f/xxxxx",
+        "method": "POST",
+        "serviceName": "Formspree",
+        "submitLabel": "Envoyer mon message",
+        "successMessage": "Merci pour votre message ! Je reviens vers vous rapidement pour faire le point sur votre projet.",
+        "rounded": "2xl",
+        "shadow": "lg",
+        "background": "surface",
+        "padding": "lg"
+      },
+      "props": []
+    }
+  ],
+  "seo": {
+    "title": "Clower Studio – Développement & design web pour projets éducatifs et engagés",
+    "description": "Clower Studio accompagne les écoles, associations, pros de l’enfance, de la parentalité et de la santé avec des sites et applications web sur mesure, performants, éco-conçus et pensés pour l’humain."
+  }
+}
