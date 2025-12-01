@@ -549,13 +549,38 @@
                 <textarea name="paragraph-content" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
               </label>
             </div>
-            <div data-block-panel="appearance" class="hidden space-y-2">
+            <div data-block-panel="appearance" class="hidden space-y-3">
               <label class="space-y-1 block">
-                <span class="text-xs font-medium text-slate-600">Alignement</span>
+                <span class="text-xs font-medium text-slate-600">Alignement texte</span>
                 <select name="paragraph-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-                  <option value="left">Gauche</option>
-                  <option value="center">Centre</option>
-                  <option value="right">Droite</option>
+                  <option value="text-left">Gauche</option>
+                  <option value="text-center">Centre</option>
+                  <option value="text-right">Droite</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Taille du titre</span>
+                <select name="paragraph-title-size" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="text-lg">Petit (lg)</option>
+                  <option value="text-xl">Moyen (xl)</option>
+                  <option value="text-2xl">Grand (2xl)</option>
+                  <option value="text-3xl">Très grand (3xl)</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Taille du texte</span>
+                <select name="paragraph-text-size" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="text-sm">Petit (sm)</option>
+                  <option value="text-base">Normal (base)</option>
+                  <option value="text-lg">Grand (lg)</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Espacement vertical</span>
+                <select name="paragraph-spacing" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="space-y-2">Serré</option>
+                  <option value="space-y-4">Normal</option>
+                  <option value="space-y-6">Aéré</option>
                 </select>
               </label>
             </div>
@@ -582,17 +607,51 @@
                   </label>
                 </div>
             </div>
-            <div data-block-panel="appearance" class="hidden space-y-2">
+            <div data-block-panel="appearance" class="hidden space-y-3">
               <label class="space-y-1 block">
-                <span class="text-xs font-medium text-slate-600">Image</span>
+                <span class="text-xs font-medium text-slate-600">Image de fond</span>
                 <input type="text" name="hero-image" placeholder="URL ou média" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
               </label>
               <label class="space-y-1 block">
-                <span class="text-xs font-medium text-slate-600">Position de l'image</span>
-                <select name="hero-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-                  <option value="center">Centrée</option>
-                  <option value="left">Image à gauche</option>
-                  <option value="right">Image à droite</option>
+                <span class="text-xs font-medium text-slate-600">Position image/texte</span>
+                <select name="hero-layout" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="flex-col">Image au-dessus</option>
+                  <option value="flex-row">Image à gauche</option>
+                  <option value="flex-row-reverse">Image à droite</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Hauteur de section</span>
+                <select name="hero-height" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="min-h-[50vh]">Moyenne (50%)</option>
+                  <option value="min-h-[75vh]">Grande (75%)</option>
+                  <option value="min-h-screen">Plein écran</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Alignement du contenu</span>
+                <select name="hero-content-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="items-start">Haut</option>
+                  <option value="items-center">Centre</option>
+                  <option value="items-end">Bas</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Overlay image</span>
+                <select name="hero-overlay" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="bg-black/0">Aucun</option>
+                  <option value="bg-black/30">Léger (30%)</option>
+                  <option value="bg-black/50">Moyen (50%)</option>
+                  <option value="bg-black/70">Fort (70%)</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Taille du titre</span>
+                <select name="hero-title-size" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="text-3xl">Moyen (3xl)</option>
+                  <option value="text-4xl">Grand (4xl)</option>
+                  <option value="text-5xl">Très grand (5xl)</option>
+                  <option value="text-6xl">Énorme (6xl)</option>
                 </select>
               </label>
             </div>
@@ -617,8 +676,44 @@
                 <input type="text" name="image-caption" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
               </label>
             </div>
-            <div data-block-panel="appearance" class="hidden space-y-2">
-              <p class="text-xs text-slate-500 italic">Aucune option d'apparence pour ce bloc.</p>
+            <div data-block-panel="appearance" class="hidden space-y-3">
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+                <select name="image-rounded" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="rounded-none">Aucun</option>
+                  <option value="rounded-lg">Léger (lg)</option>
+                  <option value="rounded-xl">Moyen (xl)</option>
+                  <option value="rounded-2xl">Fort (2xl)</option>
+                  <option value="rounded-full">Cercle</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Ombre</span>
+                <select name="image-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="shadow-none">Aucune</option>
+                  <option value="shadow-md">Légère (md)</option>
+                  <option value="shadow-lg">Moyenne (lg)</option>
+                  <option value="shadow-xl">Forte (xl)</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Largeur maximale</span>
+                <select name="image-max-width" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="max-w-sm">Petite (sm)</option>
+                  <option value="max-w-md">Moyenne (md)</option>
+                  <option value="max-w-lg">Grande (lg)</option>
+                  <option value="max-w-xl">Très grande (xl)</option>
+                  <option value="max-w-full">Pleine largeur</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Alignement</span>
+                <select name="image-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="mx-auto">Centré</option>
+                  <option value="ml-0 mr-auto">Gauche</option>
+                  <option value="ml-auto mr-0">Droite</option>
+                </select>
+              </label>
             </div>
           </div>
 
@@ -626,27 +721,44 @@
           <div data-block-panel="content" class="space-y-2">
             <p class="text-xs text-slate-500 italic">Les blocs enfants de ce groupe sont éditables individuellement.</p>
           </div>
-          <div data-block-panel="appearance" class="hidden space-y-2">
-            <p class="text-xs uppercase tracking-tight text-slate-500">Disposition responsive</p>
-            <p class="text-[11px] text-slate-500">Ex&nbsp;: 1 colonne sur mobile, 3 sur desktop.</p>
+          <div data-block-panel="appearance" class="hidden space-y-3">
+            <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Disposition responsive</p>
+            <p class="text-[11px] text-slate-500 mb-2">Ex&nbsp;: 1 colonne sur mobile, 3 sur desktop.</p>
             <div class="grid gap-2 sm:grid-cols-2">
               <label class="space-y-1 block">
                 <span class="text-xs font-medium text-slate-600">Colonnes mobile</span>
                 <select name="group-columns-mobile" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-                  <option value="1">1 colonne</option>
-                  <option value="2">2 colonnes</option>
+                  <option value="grid-cols-1">1 colonne</option>
+                  <option value="grid-cols-2">2 colonnes</option>
                 </select>
               </label>
               <label class="space-y-1 block">
                 <span class="text-xs font-medium text-slate-600">Colonnes desktop</span>
                 <select name="group-columns-desktop" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-                  <option value="1">1 colonne</option>
-                  <option value="2">2 colonnes</option>
-                  <option value="3">3 colonnes</option>
-                  <option value="4">4 colonnes</option>
+                  <option value="md:grid-cols-1">1 colonne</option>
+                  <option value="md:grid-cols-2">2 colonnes</option>
+                  <option value="md:grid-cols-3">3 colonnes</option>
+                  <option value="md:grid-cols-4">4 colonnes</option>
                 </select>
               </label>
             </div>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Espacement (gap)</span>
+              <select name="group-gap" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="gap-2">Serré (2)</option>
+                <option value="gap-4">Normal (4)</option>
+                <option value="gap-6">Aéré (6)</option>
+                <option value="gap-8">Large (8)</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Alignement des items</span>
+              <select name="group-items-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="items-start">Haut</option>
+                <option value="items-center">Centre</option>
+                <option value="items-stretch">Étiré</option>
+              </select>
+            </label>
             <div class="rounded-xl border border-dashed border-slate-200 px-3 py-2">
               <div class="flex justify-between text-[11px] text-slate-500 mb-1">
                 <span>Mobile</span>
@@ -697,8 +809,40 @@
             />
           </label>
           </div>
-          <div data-block-panel="appearance" class="hidden space-y-2">
-            <p class="text-xs text-slate-500 italic">Aucune option d'apparence pour ce bloc.</p>
+          <div data-block-panel="appearance" class="hidden space-y-3">
+            <div class="grid gap-2 sm:grid-cols-2">
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Colonnes mobile</span>
+                <select name="collection-columns-mobile" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="grid-cols-1">1 colonne</option>
+                  <option value="grid-cols-2">2 colonnes</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Colonnes desktop</span>
+                <select name="collection-columns-desktop" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="md:grid-cols-2">2 colonnes</option>
+                  <option value="md:grid-cols-3">3 colonnes</option>
+                  <option value="md:grid-cols-4">4 colonnes</option>
+                </select>
+              </label>
+            </div>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Espacement (gap)</span>
+              <select name="collection-gap" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="gap-4">Normal (4)</option>
+                <option value="gap-6">Aéré (6)</option>
+                <option value="gap-8">Large (8)</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Style des cartes</span>
+              <select name="collection-card-rounded" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="rounded-none">Carrées</option>
+                <option value="rounded-lg">Arrondies (lg)</option>
+                <option value="rounded-xl">Très arrondies (xl)</option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -766,8 +910,39 @@
               />
             </label>
           </div>
-          <div data-block-panel="appearance" class="hidden space-y-2">
-            <p class="text-xs text-slate-500 italic">Aucune option d'apparence pour ce bloc.</p>
+          <div data-block-panel="appearance" class="hidden space-y-3">
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Largeur maximale</span>
+              <select name="form-max-width" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="max-w-sm">Petite (sm)</option>
+                <option value="max-w-md">Moyenne (md)</option>
+                <option value="max-w-lg">Grande (lg)</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Alignement</span>
+              <select name="form-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="mx-auto">Centré</option>
+                <option value="ml-0 mr-auto">Gauche</option>
+                <option value="ml-auto mr-0">Droite</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Style du bouton</span>
+              <select name="form-button-rounded" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="rounded">Léger</option>
+                <option value="rounded-lg">Arrondi (lg)</option>
+                <option value="rounded-full">Pilule</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Espacement des champs</span>
+              <select name="form-spacing" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="space-y-3">Serré</option>
+                <option value="space-y-4">Normal</option>
+                <option value="space-y-6">Aéré</option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -805,8 +980,39 @@
               <p class="text-[10px] text-slate-400">Collez ici le code HTML/iframe fourni par votre service newsletter.</p>
             </label>
           </div>
-          <div data-block-panel="appearance" class="hidden space-y-2">
-            <p class="text-xs text-slate-500 italic">Aucune option d'apparence pour ce bloc.</p>
+          <div data-block-panel="appearance" class="hidden space-y-3">
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Largeur maximale</span>
+              <select name="newsletter-max-width" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="max-w-md">Moyenne (md)</option>
+                <option value="max-w-lg">Grande (lg)</option>
+                <option value="max-w-xl">Très grande (xl)</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Alignement</span>
+              <select name="newsletter-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="mx-auto">Centré</option>
+                <option value="ml-0 mr-auto">Gauche</option>
+                <option value="ml-auto mr-0">Droite</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Padding interne</span>
+              <select name="newsletter-padding" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="p-4">Serré (4)</option>
+                <option value="p-6">Normal (6)</option>
+                <option value="p-8">Large (8)</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Fond</span>
+              <select name="newsletter-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="bg-transparent">Transparent</option>
+                <option value="bg-slate-50">Gris clair</option>
+                <option value="bg-slate-100">Gris</option>
+              </select>
+            </label>
           </div>
         </div>
 

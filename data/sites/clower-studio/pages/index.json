@@ -8,7 +8,7 @@
     {
       "id": "hero-home",
       "type": "Hero",
-      "label": "Hero principal",
+      "label": "Des sites & apps web sur mesure pour les projets qui prennent soin des enfants, des familles et du vivant.",
       "settings": {
         "title": "Des sites & apps web sur mesure pour les projets qui prennent soin des enfants, des familles et du vivant.",
         "subtitle": "Je m’appelle Maxime, développeur–designer freelance. Avec Clower Studio, j’accompagne les projets éducatifs, les pros de l’enfance, de la parentalité, de la santé et les acteurs engagés à créer des outils web clairs, responsables et vraiment utiles.",
@@ -23,9 +23,15 @@
         "shadow": "xl",
         "background": "surface-soft",
         "paddingY": "xl",
-        "paddingX": "lg"
+        "paddingX": "lg",
+        "layout": "flex-col",
+        "height": "min-h-[75vh]",
+        "contentAlign": "items-center",
+        "overlay": "bg-black/50",
+        "titleSize": "text-5xl"
       },
-      "props": []
+      "props": [],
+      "description": "Je m’appelle Maxime, développeur–designer freelance. Avec Clower Studio, j’accompagne les projets éducatifs, les pros de l’enfance, de la parentalité, de la santé et les acteurs engagés à créer des outils web clairs, responsables et vraiment utiles."
     },
     {
       "id": "paragraph-home-intro",

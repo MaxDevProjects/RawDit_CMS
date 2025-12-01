@@ -10,6 +10,7 @@ import express from 'express';
 import nunjucks from 'nunjucks';
 import { paths } from './lib/paths.js';
 import { buildAll } from './build.js';
+import { buildCss } from './lib/css-builder.js';
 import { AuthService } from './lib/auth-service.js';
 import { SessionStore } from './lib/session-store.js';
 import { ensureDir } from './lib/fs-utils.js';
@@ -575,6 +576,14 @@ async function buildSitePages(siteSlug) {
       await fs.writeFile(prettyPath, html, 'utf8');
     }),
   );
+
+  // Rebuild CSS Tailwind pour le site (pour prendre en compte les nouvelles classes)
+  try {
+    await buildCss('site');
+    console.log(`[build] CSS site rebuilt for ${siteSlug}`);
+  } catch (cssErr) {
+    console.warn(`[build] CSS rebuild failed for ${siteSlug}:`, cssErr.message);
+  }
 }
 
 function validateDeployInput(payload) {

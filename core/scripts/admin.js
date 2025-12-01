@@ -663,8 +663,13 @@ document.addEventListener('DOMContentLoaded', () => {
           subtitle: 'hero-subtitle',
           ctaLabel: 'hero-cta-label',
           ctaUrl: 'hero-cta-url',
+          // Apparence
           image: 'hero-image',
-          align: 'hero-align',
+          layout: 'hero-layout',
+          height: 'hero-height',
+          contentAlign: 'hero-content-align',
+          overlay: 'hero-overlay',
+          titleSize: 'hero-title-size',
         },
       },
       paragraphe: {
@@ -674,7 +679,11 @@ document.addEventListener('DOMContentLoaded', () => {
         fields: {
           title: 'paragraph-title',
           content: 'paragraph-content',
+          // Apparence
           align: 'paragraph-align',
+          titleSize: 'paragraph-title-size',
+          textSize: 'paragraph-text-size',
+          spacing: 'paragraph-spacing',
         },
       },
       image: {
@@ -685,14 +694,21 @@ document.addEventListener('DOMContentLoaded', () => {
           alt: 'image-alt',
           showCaption: 'image-caption-toggle',
           caption: 'image-caption',
+          // Apparence
+          rounded: 'image-rounded',
+          shadow: 'image-shadow',
+          maxWidth: 'image-max-width',
+          align: 'image-align',
         },
       },
       groupe: {
         section: 'group',
         fields: {
-          layout: 'group-layout',
+          // Apparence
           columnsMobile: 'group-columns-mobile',
           columnsDesktop: 'group-columns-desktop',
+          gap: 'group-gap',
+          itemsAlign: 'group-items-align',
         },
       },
       collectiongrid: {
@@ -700,6 +716,11 @@ document.addEventListener('DOMContentLoaded', () => {
         fields: {
           collectionId: 'collection-grid-collection',
           limit: 'collection-grid-limit',
+          // Apparence
+          columnsMobile: 'collection-columns-mobile',
+          columnsDesktop: 'collection-columns-desktop',
+          gap: 'collection-gap',
+          cardRounded: 'collection-card-rounded',
         },
       },
       form: {
@@ -712,6 +733,11 @@ document.addEventListener('DOMContentLoaded', () => {
           serviceName: 'form-service-name',
           submitLabel: 'form-submit-label',
           successMessage: 'form-success-message',
+          // Apparence
+          maxWidth: 'form-max-width',
+          align: 'form-align',
+          buttonRounded: 'form-button-rounded',
+          spacing: 'form-spacing',
         },
       },
       newsletterembed: {
@@ -721,6 +747,11 @@ document.addEventListener('DOMContentLoaded', () => {
           title: 'newsletter-title',
           serviceName: 'newsletter-service-name',
           embedCode: 'newsletter-embed-code',
+          // Apparence
+          maxWidth: 'newsletter-max-width',
+          align: 'newsletter-align',
+          padding: 'newsletter-padding',
+          bg: 'newsletter-bg',
         },
       },
     };
