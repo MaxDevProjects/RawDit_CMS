@@ -9,6 +9,12 @@
     {% if seoDescription %}
     <meta name="description" content="{{ seoDescription }}" />
     {% endif %}
+    {# US9.B1 - noindex meta for non-indexed pages #}
+    {% set globalIndexDefault = site.seo.indexAllPagesByDefault if site.seo and site.seo.indexAllPagesByDefault is defined else true %}
+    {% set pageIndexed = page.seo.indexed if page.seo and page.seo.indexed is defined else globalIndexDefault %}
+    {% if not pageIndexed %}
+    <meta name="robots" content="noindex, nofollow" />
+    {% endif %}
     {% set slugPath = '' %}
     {% if site and site.slug %}
       {% set slugPath = site.slug %}
@@ -26,6 +32,10 @@
     {% endif %}
     <link rel="stylesheet" href="{{ assetBase }}/theme.css" />
     <link rel="stylesheet" href="{{ assetBase }}/site.css" />
+    {# US9.B2 - Analytics head code injection #}
+    {% if site.analytics and site.analytics.headCode %}
+    {{ site.analytics.headCode | safe }}
+    {% endif %}
   </head>
   <body class="font-['Inter'] text-slate-900">
     {% set collectionMap = collections or {} %}
@@ -288,5 +298,9 @@
         </section>
       {% endfor %}
     </main>
+    {# US9.B2 - Analytics body end code injection #}
+    {% if site.analytics and site.analytics.bodyEndCode %}
+    {{ site.analytics.bodyEndCode | safe }}
+    {% endif %}
   </body>
 </html>

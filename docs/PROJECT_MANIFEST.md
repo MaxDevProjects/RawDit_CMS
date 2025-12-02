@@ -271,6 +271,76 @@ ClowerEdit = CMS statique éco-conçu pour créer des sites :
 
 ---
 
+### Bonus SEO
+
+#### US9.B1 – Gestion indexation & robots.txt
+
+> En tant que créateur, je peux décider quelles pages doivent être indexées ou non, et le CMS génère un fichier robots.txt cohérent au déploiement.
+
+**Critères fonctionnels :**
+
+- Dans Paramètres > SEO global, ajouter une option :
+  - checkbox : "Indexer toutes les pages par défaut".
+- Dans le panneau SEO de chaque page (EPIC 9), ajouter une case à cocher "Indexer cette page".
+- Logique :
+  - Par défaut, une nouvelle page hérite du réglage global.
+  - Si une page a une préférence explicite (indexer / ne pas indexer), cette préférence prime sur le réglage global.
+- Lors du build + déploiement :
+  - Générer un fichier `robots.txt` dans le dossier public.
+  - Contenu minimum :
+    - ligne `User-agent: *`
+    - lignes `Disallow: /slug-de-la-page` pour chaque page marquée comme non indexable.
+  - Pour les pages non indexées, ajouter aussi une meta : `<meta name="robots" content="noindex">` dans le head de la page.
+
+**Détails UI :**
+
+- Paramètres > SEO global :
+  - section "Indexation" avec la checkbox "Indexer toutes les pages par défaut".
+  - texte d'aide : "Les nouvelles pages seront indexées automatiquement. Tu peux exclure une page individuellement dans son onglet SEO."
+- SEO par page :
+  - sous Titre SEO / Meta description, checkbox "Indexer cette page".
+  - texte d'aide : "Si décoché, la page sera exclue de l'indexation (robots.txt + meta robots)."
+
+**Stockage :**
+
+- Config site : `seo.indexAllPagesByDefault` (boolean, défaut `true`).
+- Page JSON : `seo.indexed` (true/false/null) – null = héritage du réglage global.
+
+---
+
+#### US9.B2 – Analytics & Scripts tiers
+
+> En tant que créateur, je peux ajouter des scripts d'analytics (GA, Matomo, etc.) sans toucher au code, pour suivre les visites de mon site.
+
+**Critères fonctionnels :**
+
+- Dans Paramètres (ou Paramètres > SEO), ajouter une section "Analytics & scripts".
+- Deux zones de code :
+  - "Code à insérer dans `<head>`"
+  - "Code à insérer avant `</body>`"
+- Ces snippets sont stockés dans la config du site (JSON).
+- Lors du build des pages :
+  - si un code head est renseigné → injecter tel quel dans la balise `<head>` de toutes les pages du site.
+  - si un code body_end est renseigné → injecter tel quel juste avant la fermeture `</body>` de toutes les pages.
+- Par défaut (champs vides) : aucun script n'est injecté.
+
+**Détails UI :**
+
+- Paramètres > Analytics & scripts :
+  - Titre "Analytics & scripts".
+  - Texte d'intro : "Ajoute ici les scripts fournis par ton outil d'analytics (Google Analytics, Matomo, etc.). Ils seront injectés dans les pages générées."
+  - textarea monospace pour "Code à insérer dans `<head>`".
+  - textarea monospace pour "Code à insérer avant `</body>`".
+  - bouton "Enregistrer les scripts".
+  - petit texte d'avertissement "Astuce sobriété : n'ajoute que les scripts réellement nécessaires. Ils sont chargés sur toutes les pages du site."
+
+**Stockage :**
+
+- Config site : `analytics.headCode` (string, défaut vide).
+- Config site : `analytics.bodyEndCode` (string, défaut vide).
+
+---
+
 ## EPIC 10 – Accessibilité de l’admin
 
 ### US10.1 – Navigation au clavier

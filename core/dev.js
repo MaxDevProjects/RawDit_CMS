@@ -566,7 +566,7 @@ async function buildSitePages(siteSlug) {
     pages.map(async (page) => {
       const html = env.render('preview.njk', {
         page,
-        site: siteMeta,
+        site: { ...siteMeta, seo: siteConfig.seo, analytics: siteConfig.analytics },
         collections: collectionMap,
         theme: themeConfig,
       });
@@ -576,6 +576,31 @@ async function buildSitePages(siteSlug) {
       await fs.writeFile(prettyPath, html, 'utf8');
     }),
   );
+
+  // US9.B1 - Generate robots.txt with Disallow for non-indexed pages
+  const globalIndexDefault = siteConfig.seo?.indexAllPagesByDefault !== false;
+  const nonIndexedPages = pages.filter((page) => {
+    const pageIndexed = page.seo?.indexed;
+    // Use page setting if defined, otherwise use global default
+    if (typeof pageIndexed === 'boolean') {
+      return !pageIndexed;
+    }
+    return !globalIndexDefault;
+  });
+
+  const robotsLines = ['User-agent: *', ''];
+  if (nonIndexedPages.length > 0) {
+    nonIndexedPages.forEach((page) => {
+      const slug = (page.slug || '').replace(/^\//, '');
+      robotsLines.push(`Disallow: /${slug}`);
+    });
+  } else {
+    robotsLines.push('Disallow:');
+  }
+  robotsLines.push('');
+
+  await fs.writeFile(path.join(siteRoot, 'robots.txt'), robotsLines.join('\n'), 'utf8');
+  console.log(`[build] robots.txt generated for ${siteSlug}`);
 
   // Rebuild CSS Tailwind pour le site (pour prendre en compte les nouvelles classes)
   try {

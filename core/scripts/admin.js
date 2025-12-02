@@ -583,6 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const seoForm = document.querySelector('[data-seo-form]');
     const seoTitleInput = document.querySelector('[data-seo-title]');
     const seoDescriptionInput = document.querySelector('[data-seo-description]');
+    const seoIndexedCheckbox = document.querySelector('[data-seo-indexed]');
     const seoFeedback = document.querySelector('[data-seo-feedback]');
     const seoSaveButton = document.querySelector('[data-seo-save]');
     const blockList = document.querySelector('[data-blocks-list]');
@@ -2379,6 +2380,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentPage) {
           seoTitleInput && (seoTitleInput.value = currentPage.seo?.title || '');
           seoDescriptionInput && (seoDescriptionInput.value = currentPage.seo?.description || '');
+          // indexed: true by default if not explicitly set to false
+          seoIndexedCheckbox && (seoIndexedCheckbox.checked = currentPage.seo?.indexed !== false);
         }
       } else {
         seoPanel.classList.add('hidden');
@@ -2407,6 +2410,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const seoData = {
           title: (seoTitleInput?.value || '').trim(),
           description: (seoDescriptionInput?.value || '').trim(),
+          indexed: seoIndexedCheckbox?.checked ?? true,
         };
         const updatedPage = { ...currentPage, seo: seoData };
         const saved = await savePageToServer(updatedPage);
@@ -3810,6 +3814,167 @@ document.addEventListener('DOMContentLoaded', () => {
       fillColorOptions();
       loadTheme();
       syncPreview();
+    }
+
+    // SEO Config form (US9.B1)
+    const seoConfigForm = document.querySelector('[data-seo-config-form]');
+    if (seoConfigForm) {
+      const indexAllCheckbox = seoConfigForm.querySelector('[data-seo-index-all]');
+      const seoConfigFeedback = seoConfigForm.querySelector('[data-seo-config-feedback]');
+      const seoSaveButton = seoConfigForm.querySelector('[data-seo-save]');
+
+      const safeSiteSlug = stripLeadingSlash(
+        workspaceContext?.slugValue || storedSite.slug || '',
+      );
+      const siteConfigApi = safeSiteSlug
+        ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/site`
+        : null;
+
+      const setSeoFeedback = (message, tone = 'muted') => {
+        if (!seoConfigFeedback) return;
+        const color =
+          tone === 'success'
+            ? 'text-emerald-600'
+            : tone === 'error'
+              ? 'text-rose-600'
+              : 'text-slate-500';
+        seoConfigFeedback.textContent = message || '';
+        seoConfigFeedback.className = `text-sm ${color}`;
+      };
+
+      const loadSeoConfig = async () => {
+        if (!siteConfigApi) return;
+        try {
+          const response = await fetch(siteConfigApi, { headers: { Accept: 'application/json' } });
+          if (!response.ok) return;
+          const payload = await response.json().catch(() => ({}));
+          const indexAll = payload.seo?.indexAllPagesByDefault !== false;
+          if (indexAllCheckbox) indexAllCheckbox.checked = indexAll;
+        } catch (err) {
+          console.error('[settings] load seo config failed', err);
+        }
+      };
+
+      seoConfigForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!siteConfigApi) {
+          setSeoFeedback('Aucun site actif.', 'error');
+          return;
+        }
+        seoSaveButton && (seoSaveButton.disabled = true);
+        setSeoFeedback('');
+        try {
+          // First load current config to preserve other fields
+          const currentRes = await fetch(siteConfigApi, { headers: { Accept: 'application/json' } });
+          const currentConfig = currentRes.ok ? await currentRes.json().catch(() => ({})) : {};
+
+          const payload = {
+            ...currentConfig,
+            seo: {
+              ...(currentConfig.seo || {}),
+              indexAllPagesByDefault: indexAllCheckbox?.checked ?? true,
+            },
+          };
+          const response = await fetch(siteConfigApi, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.success === false) {
+            throw new Error(result.message || 'Sauvegarde impossible.');
+          }
+          setSeoFeedback(result.message || 'Paramètres SEO enregistrés.', 'success');
+        } catch (err) {
+          console.error('[settings] save seo config failed', err);
+          setSeoFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
+        } finally {
+          seoSaveButton && (seoSaveButton.disabled = false);
+        }
+      });
+
+      loadSeoConfig();
+    }
+
+    // Analytics form (US9.B2)
+    const analyticsForm = document.querySelector('[data-analytics-form]');
+    if (analyticsForm) {
+      const headTextarea = analyticsForm.querySelector('[data-analytics-head]');
+      const bodyTextarea = analyticsForm.querySelector('[data-analytics-body]');
+      const analyticsFeedback = analyticsForm.querySelector('[data-analytics-feedback]');
+      const analyticsSaveButton = analyticsForm.querySelector('[data-analytics-save]');
+
+      const safeSiteSlug = stripLeadingSlash(
+        workspaceContext?.slugValue || storedSite.slug || '',
+      );
+      const siteConfigApi = safeSiteSlug
+        ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/site`
+        : null;
+
+      const setAnalyticsFeedback = (message, tone = 'muted') => {
+        if (!analyticsFeedback) return;
+        const color =
+          tone === 'success'
+            ? 'text-emerald-600'
+            : tone === 'error'
+              ? 'text-rose-600'
+              : 'text-slate-500';
+        analyticsFeedback.textContent = message || '';
+        analyticsFeedback.className = `text-sm ${color}`;
+      };
+
+      const loadAnalyticsConfig = async () => {
+        if (!siteConfigApi) return;
+        try {
+          const response = await fetch(siteConfigApi, { headers: { Accept: 'application/json' } });
+          if (!response.ok) return;
+          const payload = await response.json().catch(() => ({}));
+          if (headTextarea) headTextarea.value = payload.analytics?.headCode || '';
+          if (bodyTextarea) bodyTextarea.value = payload.analytics?.bodyEndCode || '';
+        } catch (err) {
+          console.error('[settings] load analytics config failed', err);
+        }
+      };
+
+      analyticsForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!siteConfigApi) {
+          setAnalyticsFeedback('Aucun site actif.', 'error');
+          return;
+        }
+        analyticsSaveButton && (analyticsSaveButton.disabled = true);
+        setAnalyticsFeedback('');
+        try {
+          // First load current config to preserve other fields
+          const currentRes = await fetch(siteConfigApi, { headers: { Accept: 'application/json' } });
+          const currentConfig = currentRes.ok ? await currentRes.json().catch(() => ({})) : {};
+
+          const payload = {
+            ...currentConfig,
+            analytics: {
+              headCode: headTextarea?.value || '',
+              bodyEndCode: bodyTextarea?.value || '',
+            },
+          };
+          const response = await fetch(siteConfigApi, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.success === false) {
+            throw new Error(result.message || 'Sauvegarde impossible.');
+          }
+          setAnalyticsFeedback(result.message || 'Scripts enregistrés.', 'success');
+        } catch (err) {
+          console.error('[settings] save analytics config failed', err);
+          setAnalyticsFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
+        } finally {
+          analyticsSaveButton && (analyticsSaveButton.disabled = false);
+        }
+      });
+
+      loadAnalyticsConfig();
     }
   }
 

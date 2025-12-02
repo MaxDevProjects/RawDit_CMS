@@ -324,6 +324,24 @@
           ></textarea>
           <p class="text-xs text-slate-500">Idéalement entre 150 et 160 caractères.</p>
         </div>
+        <div class="space-y-1 pt-2 border-t border-slate-100">
+          <label class="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="seo-indexed"
+              name="seo-indexed"
+              data-seo-indexed
+              class="mt-0.5 rounded border-slate-300 text-[#9C6BFF] focus:ring-[#9C6BFF]"
+              checked
+            />
+            <div class="space-y-1">
+              <span class="text-sm font-medium text-slate-700">Indexer cette page</span>
+              <p class="text-xs text-slate-500">
+                Si décoché, la page sera exclue de l'indexation (robots.txt + meta robots).
+              </p>
+            </div>
+          </label>
+        </div>
         <div class="flex items-center justify-between gap-2">
           <span data-seo-feedback class="text-sm text-slate-500"></span>
           <button

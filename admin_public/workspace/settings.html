@@ -155,6 +155,22 @@
         >
           Thème
         </button>
+        <button
+          type="button"
+          data-settings-tab="seo"
+          class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          aria-selected="false"
+        >
+          SEO
+        </button>
+        <button
+          type="button"
+          data-settings-tab="analytics"
+          class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          aria-selected="false"
+        >
+          Analytics
+        </button>
       </div>
     </div>
 
@@ -369,6 +385,87 @@
         </div>
       </div>
     </form>
+      </section>
+
+      <!-- SEO Panel -->
+      <section data-settings-panel="seo" class="space-y-6 hidden">
+        <div class="space-y-1">
+          <p class="text-xs uppercase tracking-tight text-slate-500">SEO</p>
+          <h2 class="text-lg font-semibold text-slate-900">Indexation globale</h2>
+          <p class="text-sm text-slate-600">
+            Gère le comportement d'indexation par défaut de tes pages.
+          </p>
+        </div>
+        <form data-seo-config-form class="space-y-4 max-w-xl">
+          <label class="flex items-start gap-3">
+            <input
+              type="checkbox"
+              data-seo-index-all
+              class="mt-0.5 rounded border-slate-300 text-[#9C6BFF] focus:ring-[#9C6BFF]"
+              checked
+            />
+            <div class="space-y-1">
+              <span class="text-sm font-semibold text-slate-700">Indexer toutes les pages par défaut</span>
+              <p class="text-xs text-slate-500">
+                Les nouvelles pages seront indexées automatiquement. Tu peux exclure une page individuellement dans son onglet SEO.
+              </p>
+            </div>
+          </label>
+          <div class="flex items-center justify-between gap-3 pt-2">
+            <p data-seo-config-feedback role="status" class="text-sm text-slate-500"></p>
+            <button
+              type="submit"
+              data-seo-save
+              class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+            >
+              Enregistrer
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Analytics Panel -->
+      <section data-settings-panel="analytics" class="space-y-6 hidden">
+        <div class="space-y-1">
+          <p class="text-xs uppercase tracking-tight text-slate-500">Analytics</p>
+          <h2 class="text-lg font-semibold text-slate-900">Analytics & scripts</h2>
+          <p class="text-sm text-slate-600">
+            Ajoute ici les scripts fournis par ton outil d'analytics (Google Analytics, Matomo, etc.). Ils seront injectés dans les pages générées.
+          </p>
+        </div>
+        <form data-analytics-form class="space-y-5 max-w-2xl">
+          <label class="space-y-2 block">
+            <span class="text-xs font-semibold text-slate-600">Code à insérer dans &lt;head&gt;</span>
+            <textarea
+              rows="6"
+              data-analytics-head
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-xs focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              placeholder="<!-- Ex: Google Tag Manager, meta balises -->"
+            ></textarea>
+          </label>
+          <label class="space-y-2 block">
+            <span class="text-xs font-semibold text-slate-600">Code à insérer avant &lt;/body&gt;</span>
+            <textarea
+              rows="6"
+              data-analytics-body
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-xs focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              placeholder="<!-- Ex: scripts de tracking, chatbots -->"
+            ></textarea>
+          </label>
+          <p class="text-xs text-slate-400">
+            💡 Astuce sobriété : n'ajoute que les scripts réellement nécessaires. Ils sont chargés sur toutes les pages du site.
+          </p>
+          <div class="flex items-center justify-between gap-3">
+            <p data-analytics-feedback role="status" class="text-sm text-slate-500"></p>
+            <button
+              type="submit"
+              data-analytics-save
+              class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+            >
+              Enregistrer les scripts
+            </button>
+          </div>
+        </form>
       </section>
     </div>
   </div>
