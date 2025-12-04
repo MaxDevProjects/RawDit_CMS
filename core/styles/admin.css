@@ -13,3 +13,23 @@ body {
   padding: 1.5rem;
   box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.15);
 }
+
+/* Drag & Drop blocks */
+[data-block-item] {
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease, 
+              border-color 0.15s ease, padding 0.15s ease;
+}
+
+[data-block-item][draggable="true"] {
+  cursor: grab;
+}
+
+[data-block-item][draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Animation for drop zone indicator */
+[data-block-item].border-t-4,
+[data-block-item].border-b-4 {
+  transition: padding 0.1s ease, border-color 0.1s ease;
+}

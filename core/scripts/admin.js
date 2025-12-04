@@ -654,6 +654,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const blockFormCancel = document.querySelector('[data-block-form-cancel]');
     const groupPreviewMobile = blockForm?.querySelector('[data-group-preview-mobile]');
     const groupPreviewDesktop = blockForm?.querySelector('[data-group-preview-desktop]');
+    const collectionPreviewMobile = blockForm?.querySelector('[data-collection-preview-mobile]');
+    const collectionPreviewDesktop = blockForm?.querySelector('[data-collection-preview-desktop]');
     const blockTypeForms = {
       hero: {
         section: 'hero',
@@ -671,6 +673,10 @@ document.addEventListener('DOMContentLoaded', () => {
           contentAlign: 'hero-content-align',
           overlay: 'hero-overlay',
           titleSize: 'hero-title-size',
+          // Card style
+          bg: 'hero-bg',
+          borderRadius: 'hero-border-radius',
+          shadow: 'hero-shadow',
         },
       },
       paragraphe: {
@@ -685,6 +691,10 @@ document.addEventListener('DOMContentLoaded', () => {
           titleSize: 'paragraph-title-size',
           textSize: 'paragraph-text-size',
           spacing: 'paragraph-spacing',
+          // Card style
+          bg: 'paragraph-bg',
+          borderRadius: 'paragraph-border-radius',
+          shadow: 'paragraph-shadow',
         },
       },
       image: {
@@ -700,6 +710,9 @@ document.addEventListener('DOMContentLoaded', () => {
           shadow: 'image-shadow',
           maxWidth: 'image-max-width',
           align: 'image-align',
+          // Card style
+          bg: 'image-bg',
+          borderRadius: 'image-border-radius',
         },
       },
       groupe: {
@@ -710,6 +723,10 @@ document.addEventListener('DOMContentLoaded', () => {
           columnsDesktop: 'group-columns-desktop',
           gap: 'group-gap',
           itemsAlign: 'group-items-align',
+          // Card style
+          bg: 'group-bg',
+          borderRadius: 'group-border-radius',
+          shadow: 'group-shadow',
         },
       },
       collectiongrid: {
@@ -721,7 +738,12 @@ document.addEventListener('DOMContentLoaded', () => {
           columnsMobile: 'collection-columns-mobile',
           columnsDesktop: 'collection-columns-desktop',
           gap: 'collection-gap',
+          itemsAlign: 'collection-items-align',
           cardRounded: 'collection-card-rounded',
+          // Card style
+          bg: 'collection-bg',
+          borderRadius: 'collection-border-radius',
+          shadow: 'collection-shadow',
         },
       },
       form: {
@@ -739,6 +761,10 @@ document.addEventListener('DOMContentLoaded', () => {
           align: 'form-align',
           buttonRounded: 'form-button-rounded',
           spacing: 'form-spacing',
+          // Card style
+          bg: 'form-bg',
+          borderRadius: 'form-border-radius',
+          shadow: 'form-shadow',
         },
       },
       newsletterembed: {
@@ -753,6 +779,9 @@ document.addEventListener('DOMContentLoaded', () => {
           align: 'newsletter-align',
           padding: 'newsletter-padding',
           bg: 'newsletter-bg',
+          // Card style
+          borderRadius: 'newsletter-border-radius',
+          shadow: 'newsletter-shadow',
         },
       },
     };
@@ -786,6 +815,17 @@ document.addEventListener('DOMContentLoaded', () => {
           .join('');
       groupPreviewMobile.innerHTML = renderBoxes(mobileValue);
       groupPreviewDesktop.innerHTML = renderBoxes(desktopValue);
+    };
+    const updateCollectionMiniPreview = (mobileValue, desktopValue) => {
+      if (!collectionPreviewMobile || !collectionPreviewDesktop) {
+        return;
+      }
+      const renderBoxes = (count) =>
+        Array.from({ length: Number(count) || 1 })
+          .map(() => '<span class="block h-2 w-full rounded-full bg-violet-300"></span>')
+          .join('');
+      collectionPreviewMobile.innerHTML = renderBoxes(mobileValue);
+      collectionPreviewDesktop.innerHTML = renderBoxes(desktopValue);
     };
     const fetchPagesFromServer = async () => {
       if (!pagesApiBase) {
@@ -949,6 +989,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const desktopValue =
           blockForm.querySelector('[name="group-columns-desktop"]')?.value || '3';
         updateGroupMiniPreview(mobileValue, desktopValue);
+      }
+      if (config.section === 'collection') {
+        const mobileValue =
+          blockForm.querySelector('[name="collection-columns-mobile"]')?.value || '1';
+        const desktopValue =
+          blockForm.querySelector('[name="collection-columns-desktop"]')?.value || '3';
+        updateCollectionMiniPreview(mobileValue, desktopValue);
       }
     };
     const collectFormValues = (config) => {
@@ -1437,9 +1484,10 @@ document.addEventListener('DOMContentLoaded', () => {
         item.dataset.blockId = block.id;
         item.setAttribute('role', 'option');
         item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        item.setAttribute('draggable', 'true');
         item.tabIndex = 0;
         item.className = [
-          'relative flex items-center gap-3 rounded-2xl border px-3 py-2 text-left transition',
+          'relative flex items-center gap-3 rounded-2xl border px-3 py-2 text-left transition group',
           isActive
             ? 'bg-slate-100 border-[#9C6BFF]/40 shadow-sm'
             : 'border-slate-200 hover:border-[#9C6BFF]/40',
@@ -1454,8 +1502,9 @@ document.addEventListener('DOMContentLoaded', () => {
         content.className = 'flex flex-1 items-center gap-3';
         const handle = document.createElement('div');
         handle.className =
-          'hidden lg:flex cursor-grab flex-shrink-0 items-center text-lg text-slate-400';
-        handle.innerHTML = '&#8801;';
+          'hidden lg:flex cursor-grab active:cursor-grabbing flex-shrink-0 items-center text-lg text-slate-400 hover:text-slate-600 transition-colors select-none';
+        handle.innerHTML = '⋮⋮';
+        handle.setAttribute('title', 'Glisser pour réordonner');
         content.appendChild(handle);
 
         const textWrapper = document.createElement('div');
@@ -1728,6 +1777,28 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const [moved] = blocks.splice(fromIndex, 1);
       blocks.splice(toIndex, 0, moved);
+      updateCurrentPageBlocks(blocks);
+      setActivePage(currentPage.id, { preserveBlock: true });
+      setActiveBlock(moved.id);
+    }
+    function reorderBlocksWithPosition(sourceId, targetId, position) {
+      if (!currentPage || !sourceId || !targetId || sourceId === targetId) {
+        return;
+      }
+      const blocks = [...(currentPage.blocks || [])];
+      const fromIndex = blocks.findIndex((block) => block.id === sourceId);
+      let toIndex = blocks.findIndex((block) => block.id === targetId);
+      if (fromIndex < 0 || toIndex < 0) {
+        return;
+      }
+      const [moved] = blocks.splice(fromIndex, 1);
+      // Ajuster l'index si nécessaire après la suppression
+      if (fromIndex < toIndex) {
+        toIndex--;
+      }
+      // Insérer avant ou après la cible
+      const insertIndex = position === 'before' ? toIndex : toIndex + 1;
+      blocks.splice(insertIndex, 0, moved);
       updateCurrentPageBlocks(blocks);
       setActivePage(currentPage.id, { preserveBlock: true });
       setActiveBlock(moved.id);
@@ -2341,6 +2412,13 @@ document.addEventListener('DOMContentLoaded', () => {
           blockForm.querySelector('[name="group-columns-desktop"]')?.value || '3';
         updateGroupMiniPreview(mobileValue, desktopValue);
       }
+      if (target.name === 'collection-columns-mobile' || target.name === 'collection-columns-desktop') {
+        const mobileValue =
+          blockForm.querySelector('[name="collection-columns-mobile"]')?.value || '1';
+        const desktopValue =
+          blockForm.querySelector('[name="collection-columns-desktop"]')?.value || '3';
+        updateCollectionMiniPreview(mobileValue, desktopValue);
+      }
     });
     collectionSelect?.addEventListener('change', (event) => {
       const target = event.target;
@@ -2431,20 +2509,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleBlockDragStart = (event) => {
       const item = event.target.closest('[data-block-item]');
       if (!item || !isDesktopReorder()) {
+        event.preventDefault();
         return;
       }
       dragSourceId = item.dataset.blockId || null;
       if (!dragSourceId) {
+        event.preventDefault();
         return;
       }
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', dragSourceId);
-      item.classList.add('opacity-50');
+      // Style du bloc en cours de drag
+      requestAnimationFrame(() => {
+        item.classList.add('opacity-50', 'scale-[0.98]', 'shadow-lg', 'ring-2', 'ring-[#9C6BFF]');
+      });
     };
     const clearDragIndicators = () => {
       blockList
         ?.querySelectorAll('[data-block-item]')
-        .forEach((node) => node.classList.remove('opacity-50', 'ring-2', 'ring-[#9C6BFF]/50'));
+        .forEach((node) => {
+          node.classList.remove(
+            'opacity-50', 'scale-[0.98]', 'shadow-lg', 'ring-2', 'ring-[#9C6BFF]',
+            'border-t-4', 'border-b-4', 'border-t-[#9C6BFF]', 'border-b-[#9C6BFF]',
+            'pt-6', 'pb-6'
+          );
+        });
     };
     const handleBlockDragEnd = () => {
       dragSourceId = null;
@@ -2459,14 +2548,38 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       event.preventDefault();
-      target.classList.add('ring-2', 'ring-[#9C6BFF]/50');
+      event.dataTransfer.dropEffect = 'move';
+      // Détermine si on drop avant ou après
+      const rect = target.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      const isAbove = event.clientY < midY;
+      // Nettoie les autres indicateurs
+      blockList?.querySelectorAll('[data-block-item]').forEach((node) => {
+        if (node !== target && node.dataset.blockId !== dragSourceId) {
+          node.classList.remove('border-t-4', 'border-b-4', 'border-t-[#9C6BFF]', 'border-b-[#9C6BFF]', 'pt-6', 'pb-6');
+        }
+      });
+      // Applique l'indicateur de position
+      target.classList.remove('border-t-4', 'border-b-4', 'border-t-[#9C6BFF]', 'border-b-[#9C6BFF]', 'pt-6', 'pb-6');
+      if (isAbove) {
+        target.classList.add('border-t-4', 'border-t-[#9C6BFF]', 'pt-6');
+      } else {
+        target.classList.add('border-b-4', 'border-b-[#9C6BFF]', 'pb-6');
+      }
+      target.dataset.dropPosition = isAbove ? 'before' : 'after';
     };
     const handleBlockDragLeave = (event) => {
       const target = event.target.closest('[data-block-item]');
       if (!target) {
         return;
       }
-      target.classList.remove('ring-2', 'ring-[#9C6BFF]/50');
+      // Vérifie si on quitte vraiment l'élément (pas juste vers un enfant)
+      const relatedTarget = event.relatedTarget;
+      if (relatedTarget && target.contains(relatedTarget)) {
+        return;
+      }
+      target.classList.remove('border-t-4', 'border-b-4', 'border-t-[#9C6BFF]', 'border-b-[#9C6BFF]', 'pt-6', 'pb-6');
+      delete target.dataset.dropPosition;
     };
     const handleBlockDrop = (event) => {
       if (!dragSourceId || !isDesktopReorder()) {
@@ -2475,13 +2588,14 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       const target = event.target.closest('[data-block-item]');
       const source = dragSourceId;
+      const dropPosition = target?.dataset.dropPosition || 'after';
       dragSourceId = null;
       clearDragIndicators();
       const targetId = target?.dataset.blockId || null;
-      if (!targetId) {
+      if (!targetId || source === targetId) {
         return;
       }
-      reorderBlocks(source, targetId);
+      reorderBlocksWithPosition(source, targetId, dropPosition);
     };
     let dragSourceId = null;
     blockList?.addEventListener('dragstart', handleBlockDragStart);

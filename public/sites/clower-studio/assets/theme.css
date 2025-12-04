@@ -1,7 +1,7 @@
 :root {
-  --color-primary: oklch(60.6% 0.25 292.717);
-  --color-secondary: oklch(67.3% 0.182 276.935);
-  --color-accent: oklch(69.6% 0.17 162.48);
+  --color-primary: oklch(37.2% 0.044 257.287);
+  --color-secondary: oklch(70.4% 0.04 256.788);
+  --color-accent: oklch(20.8% 0.042 265.755);
   --color-background: oklch(98.4% 0.003 247.858);
   --color-text: oklch(20.8% 0.042 265.755);
   --font-headings: Inter, sans-serif;

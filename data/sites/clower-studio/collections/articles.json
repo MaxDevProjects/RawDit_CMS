@@ -5,14 +5,20 @@
       "title": "Sobriété numérique : check-list atelier",
       "status": "Publié",
       "summary": "Une méthode en 5 étapes pour cadrer vos ateliers design.",
-      "slug": "/blog/sobriete-numerique"
+      "slug": "/blog-sobriete-numerique",
+      "content": "",
+      "image": "/sites/clower-studio/media/capture-d-ecran-2025-10-30-182720.png",
+      "updatedAt": "2025-12-04T14:20:01.599Z"
     },
     {
       "id": "art-2",
       "title": "Design systems frugaux",
       "status": "Publié",
       "summary": "Comment factoriser vos composants Tailwind pour rester léger.",
-      "slug": "/blog/design-system-frugal"
+      "slug": "/blog-design-system-frugal",
+      "content": "",
+      "image": "/sites/clower-studio/media/capture-d-ecran-2025-10-30-182720.png",
+      "updatedAt": "2025-12-04T14:20:13.586Z"
     }
   ]
 }

@@ -14,21 +14,23 @@
         "subtitle": "Je m’appelle Maxime, développeur–designer freelance. Avec Clower Studio, j’accompagne les projets éducatifs, les pros de l’enfance, de la parentalité, de la santé et les acteurs engagés à créer des outils web clairs, responsables et vraiment utiles.",
         "ctaLabel": "Parler de votre projet",
         "ctaUrl": "/contact",
-        "image": "/assets/hero-clower-studio.jpg",
+        "image": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80",
         "align": "left",
         "display": "flex",
         "direction": "row",
         "gap": "xl",
         "rounded": "2xl",
-        "shadow": "xl",
+        "shadow": "shadow-none",
         "background": "surface-soft",
         "paddingY": "xl",
         "paddingX": "lg",
         "layout": "flex-col",
-        "height": "min-h-[75vh]",
+        "height": "min-h-[50vh]",
         "contentAlign": "items-center",
-        "overlay": "bg-black/50",
-        "titleSize": "text-5xl"
+        "overlay": "bg-black/0",
+        "titleSize": "text-3xl",
+        "bg": "bg-sky-50",
+        "borderRadius": "rounded-none"
       },
       "props": [],
       "description": "Je m’appelle Maxime, développeur–designer freelance. Avec Clower Studio, j’accompagne les projets éducatifs, les pros de l’enfance, de la parentalité, de la santé et les acteurs engagés à créer des outils web clairs, responsables et vraiment utiles."
@@ -40,40 +42,56 @@
       "settings": {
         "title": "Un studio web indépendant, au service des projets qui ont du sens",
         "content": "Je conçois et développe des sites et applications web sur mesure pour des projets qui font bouger les lignes : écoles, associations, structures autour de l’enfance et de la parentalité, professionnels de santé, initiatives à impact. Mon rôle : transformer vos idées en outils concrets, simples à utiliser, beaux à regarder et agréables à maintenir.",
-        "align": "left",
-        "maxWidth": "lg"
+        "align": "text-left",
+        "maxWidth": "lg",
+        "titleSize": "text-3xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4",
+        "bg": "bg-transparent",
+        "borderRadius": "rounded-none",
+        "shadow": "shadow-none"
       },
       "props": [],
       "description": "Je conçois et développe des sites et applications web sur mesure pour des projets qui font bouger les lignes : écoles, associations, structures autour de l’enfance et de la parentalité, professionnels de santé, initiatives à impact. Mon rôle : transformer vos idées en outils concrets, simples à utiliser, beaux à regarder et agréables à maintenir."
     },
     {
-      "id": "group-home-services",
-      "type": "Groupe",
-      "label": "Bloc – Aperçu des services",
-      "settings": {
-        "layout": "grid",
-        "display": "grid",
-        "columnsMobile": "1",
-        "columnsDesktop": "3",
-        "gap": "lg",
-        "rounded": "2xl",
-        "shadow": "md",
-        "background": "surface-neutral-soft",
-        "padding": "lg"
-      },
-      "props": []
-    },
-    {
       "id": "paragraph-home-services",
       "type": "Paragraphe",
-      "label": "Aperçu services",
+      "label": "Ce que nous pouvons construire ensemble",
       "settings": {
         "title": "Ce que nous pouvons construire ensemble",
         "content": "• Des sites vitrines clairs et chaleureux pour présenter votre structure.\n• Des plateformes ou applications web pédagogiques pour mieux accompagner vos publics.\n• Des refontes et des améliorations techniques pour rendre vos outils plus rapides, plus accessibles et plus responsables.\n\nToujours avec un même fil conducteur : partir de vos usages réels, de vos contraintes de terrain et de vos objectifs, plutôt que d’empiler des fonctionnalités.",
-        "align": "left",
-        "maxWidth": "lg"
+        "align": "text-left",
+        "maxWidth": "lg",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-6",
+        "bg": "bg-transparent",
+        "borderRadius": "rounded-none",
+        "shadow": "shadow-none"
       },
-      "props": []
+      "props": [],
+      "description": "• Des sites vitrines clairs et chaleureux pour présenter votre structure.\n• Des plateformes ou applications web pédagogiques pour mieux accompagner vos publics.\n• Des refontes et des améliorations techniques pour rendre vos outils plus rapides, plus accessibles et plus responsables.\n\nToujours avec un même fil conducteur : partir de vos usages réels, de vos contraintes de terrain et de vos objectifs, plutôt que d’empiler des fonctionnalités."
+    },
+    {
+      "id": "index-collectiongrid-mirixpkp-434",
+      "label": "Grille de contenus 2",
+      "type": "CollectionGrid",
+      "status": "Brouillon",
+      "description": "Affiche automatiquement les items d’une collection.",
+      "props": [],
+      "settings": {
+        "collectionId": "projects",
+        "limit": 6,
+        "columnsMobile": "",
+        "columnsDesktop": "",
+        "gap": "",
+        "cardRounded": "",
+        "bg": "",
+        "borderRadius": "",
+        "shadow": ""
+      },
+      "collectionId": "projects"
     },
     {
       "id": "collection-home-projects",
@@ -110,14 +128,18 @@
     {
       "id": "image-home-maxime",
       "type": "Image",
-      "label": "Portrait Maxime",
+      "label": "Maxime G. Martin, développeur–designer freelance – Clower Studio",
       "settings": {
-        "src": "/assets/maxime-clower-studio.jpg",
+        "src": "/sites/clower-studio/media/capture-d-ecran-2025-10-30-182720.png",
         "alt": "Maxime G. Martin, développeur–designer freelance – Clower Studio",
         "showCaption": true,
         "caption": "Derrière Clower Studio, il y a un humain : Maxime, développeur–designer, papa, et passionné par l’éducation et le numérique responsable.",
-        "rounded": "2xl",
-        "shadow": "lg"
+        "rounded": "rounded-none",
+        "shadow": "shadow-none",
+        "maxWidth": "max-w-full",
+        "align": "mx-auto",
+        "bg": "",
+        "borderRadius": "rounded-none"
       },
       "props": []
     },
@@ -139,7 +161,7 @@
     {
       "id": "form-home-contact",
       "type": "Form",
-      "label": "Contact rapide",
+      "label": "Parlons de votre projet",
       "settings": {
         "formTitle": "Parlons de votre projet",
         "actionUrl": "https://formspree.io/f/xxxxx",
@@ -148,9 +170,15 @@
         "submitLabel": "Envoyer mon message",
         "successMessage": "Merci pour votre message ! Je reviens vers vous rapidement pour faire le point sur votre projet.",
         "rounded": "2xl",
-        "shadow": "lg",
+        "shadow": "shadow-none",
         "background": "surface",
-        "padding": "lg"
+        "padding": "lg",
+        "maxWidth": "max-w-lg",
+        "align": "ml-0 mr-auto",
+        "buttonRounded": "rounded-lg",
+        "spacing": "space-y-4",
+        "bg": "",
+        "borderRadius": "rounded-none"
       },
       "props": []
     }

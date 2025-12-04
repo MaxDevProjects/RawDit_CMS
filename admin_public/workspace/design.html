@@ -478,7 +478,7 @@
         </div>
         <div data-preview-status class="hidden text-emerald-600">À jour</div>
       </div>
-      <div class="relative rounded-[34px] bg-gradient-to-b from-slate-50 to-slate-100 shadow-lg border border-slate-200">
+      <div class="relative rounded-[34px] bg-gradient-to-b from-slate-50 to-slate-100 shadow-lg border border-slate-200 sticky top-1 bottom-1">
         <div class="absolute inset-x-1 top-1 mx-auto h-6 w-36 rounded-full bg-slate-200/70"></div>
         <div class="mt-7 rounded-[30px] border border-slate-200 bg-white overflow-hidden" data-page-preview-shell>
           <iframe
@@ -506,7 +506,7 @@
 
       </main>
 
-      <aside class="space-y-4">
+      <aside class="space-y-4 sticky top-8" aria-label="Panneau latéral">
         
   <section class="bg-white rounded-2xl border border-slate-200 shadow-sm">
     <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
@@ -601,6 +601,50 @@
                   <option value="space-y-6">Aéré</option>
                 </select>
               </label>
+              
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Style de la card</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Fond</span>
+        <select name="paragraph-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="bg-white">Blanc</option>
+          <option value="bg-slate-50">Gris très clair</option>
+          <option value="bg-slate-100">Gris clair</option>
+          <option value="bg-slate-200">Gris</option>
+          <option value="bg-violet-50">Violet clair</option>
+          <option value="bg-violet-100">Violet</option>
+          <option value="bg-sky-50">Bleu clair</option>
+          <option value="bg-emerald-50">Vert clair</option>
+          <option value="bg-amber-50">Ambre clair</option>
+          <option value="bg-rose-50">Rose clair</option>
+          <option value="bg-transparent">Transparent</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+        <select name="paragraph-border-radius" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="rounded-none">Aucun</option>
+          <option value="rounded-lg">Léger (lg)</option>
+          <option value="rounded-xl">Moyen (xl)</option>
+          <option value="rounded-2xl">Fort (2xl)</option>
+          <option value="rounded-3xl">Très fort (3xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Ombre</span>
+        <select name="paragraph-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="shadow-none">Aucune</option>
+          <option value="shadow-sm">Légère (sm)</option>
+          <option value="shadow-md">Moyenne (md)</option>
+          <option value="shadow-lg">Forte (lg)</option>
+          <option value="shadow-xl">Très forte (xl)</option>
+          <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
             </div>
           </div>
 
@@ -672,6 +716,50 @@
                   <option value="text-6xl">Énorme (6xl)</option>
                 </select>
               </label>
+              
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Style de la card</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Fond</span>
+        <select name="hero-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="bg-white">Blanc</option>
+          <option value="bg-slate-50">Gris très clair</option>
+          <option value="bg-slate-100">Gris clair</option>
+          <option value="bg-slate-200">Gris</option>
+          <option value="bg-violet-50">Violet clair</option>
+          <option value="bg-violet-100">Violet</option>
+          <option value="bg-sky-50">Bleu clair</option>
+          <option value="bg-emerald-50">Vert clair</option>
+          <option value="bg-amber-50">Ambre clair</option>
+          <option value="bg-rose-50">Rose clair</option>
+          <option value="bg-transparent">Transparent</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+        <select name="hero-border-radius" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="rounded-none">Aucun</option>
+          <option value="rounded-lg">Léger (lg)</option>
+          <option value="rounded-xl">Moyen (xl)</option>
+          <option value="rounded-2xl">Fort (2xl)</option>
+          <option value="rounded-3xl">Très fort (3xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Ombre</span>
+        <select name="hero-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="shadow-none">Aucune</option>
+          <option value="shadow-sm">Légère (sm)</option>
+          <option value="shadow-md">Moyenne (md)</option>
+          <option value="shadow-lg">Forte (lg)</option>
+          <option value="shadow-xl">Très forte (xl)</option>
+          <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
             </div>
           </div>
 
@@ -732,6 +820,50 @@
                   <option value="ml-auto mr-0">Droite</option>
                 </select>
               </label>
+              
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Style de la card</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Fond</span>
+        <select name="image-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="bg-white">Blanc</option>
+          <option value="bg-slate-50">Gris très clair</option>
+          <option value="bg-slate-100">Gris clair</option>
+          <option value="bg-slate-200">Gris</option>
+          <option value="bg-violet-50">Violet clair</option>
+          <option value="bg-violet-100">Violet</option>
+          <option value="bg-sky-50">Bleu clair</option>
+          <option value="bg-emerald-50">Vert clair</option>
+          <option value="bg-amber-50">Ambre clair</option>
+          <option value="bg-rose-50">Rose clair</option>
+          <option value="bg-transparent">Transparent</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+        <select name="image-border-radius" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="rounded-none">Aucun</option>
+          <option value="rounded-lg">Léger (lg)</option>
+          <option value="rounded-xl">Moyen (xl)</option>
+          <option value="rounded-2xl">Fort (2xl)</option>
+          <option value="rounded-3xl">Très fort (3xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Ombre</span>
+        <select name="image-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="shadow-none">Aucune</option>
+          <option value="shadow-sm">Légère (sm)</option>
+          <option value="shadow-md">Moyenne (md)</option>
+          <option value="shadow-lg">Forte (lg)</option>
+          <option value="shadow-xl">Très forte (xl)</option>
+          <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
             </div>
           </div>
 
@@ -794,40 +926,87 @@
                 </div>
             </div>
           </div>
+          
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Style de la card</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Fond</span>
+        <select name="group-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="bg-white">Blanc</option>
+          <option value="bg-slate-50">Gris très clair</option>
+          <option value="bg-slate-100">Gris clair</option>
+          <option value="bg-slate-200">Gris</option>
+          <option value="bg-violet-50">Violet clair</option>
+          <option value="bg-violet-100">Violet</option>
+          <option value="bg-sky-50">Bleu clair</option>
+          <option value="bg-emerald-50">Vert clair</option>
+          <option value="bg-amber-50">Ambre clair</option>
+          <option value="bg-rose-50">Rose clair</option>
+          <option value="bg-transparent">Transparent</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+        <select name="group-border-radius" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="rounded-none">Aucun</option>
+          <option value="rounded-lg">Léger (lg)</option>
+          <option value="rounded-xl">Moyen (xl)</option>
+          <option value="rounded-2xl">Fort (2xl)</option>
+          <option value="rounded-3xl">Très fort (3xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Ombre</span>
+        <select name="group-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="shadow-none">Aucune</option>
+          <option value="shadow-sm">Légère (sm)</option>
+          <option value="shadow-md">Moyenne (md)</option>
+          <option value="shadow-lg">Forte (lg)</option>
+          <option value="shadow-xl">Très forte (xl)</option>
+          <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
         </div>
 
         <div data-editor-section="collection" class="hidden space-y-4">
-          <div data-block-panel="content">
-            <p class="text-xs uppercase tracking-tight text-slate-500">Source de données</p>
-            <p class="text-[11px] text-slate-500">Cette grille affichera automatiquement les items de la collection choisie.</p>
-          </div>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Collection</span>
-            <select
-              name="collection-grid-collection"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-            >
-              <option value="">Aucune collection disponible</option>
-            </select>
-            <p
-              data-collection-selection-info
-              class="mt-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500"
-            >
-              Sélectionnez une collection pour afficher ses informations.
-            </p>
-          </label>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Nombre max d’items</span>
-            <input
-              type="number"
-              min="1"
-              name="collection-grid-limit"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
-              value="6"
-            />
-          </label>
+          <div data-block-panel="content" class="space-y-3">
+            <div>
+              <p class="text-xs uppercase tracking-tight text-slate-500">Source de données</p>
+              <p class="text-[11px] text-slate-500">Cette grille affichera automatiquement les items de la collection choisie.</p>
+            </div>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Collection</span>
+              <select
+                name="collection-grid-collection"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              >
+                <option value="">Aucune collection disponible</option>
+              </select>
+              <p
+                data-collection-selection-info
+                class="mt-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500"
+              >
+                Sélectionnez une collection pour afficher ses informations.
+              </p>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Nombre max d'items</span>
+              <input
+                type="number"
+                min="1"
+                name="collection-grid-limit"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+                value="6"
+              />
+            </label>
           </div>
           <div data-block-panel="appearance" class="hidden space-y-3">
+            <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Disposition responsive</p>
+            <p class="text-[11px] text-slate-500 mb-2">Ex&nbsp;: 1 colonne sur mobile, 3 sur desktop.</p>
             <div class="grid gap-2 sm:grid-cols-2">
               <label class="space-y-1 block">
                 <span class="text-xs font-medium text-slate-600">Colonnes mobile</span>
@@ -854,13 +1033,83 @@
               </select>
             </label>
             <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Alignement des items</span>
+              <select name="collection-items-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="items-start">Haut</option>
+                <option value="items-center">Centre</option>
+                <option value="items-stretch">Étiré</option>
+              </select>
+            </label>
+            <label class="space-y-1 block">
               <span class="text-xs font-medium text-slate-600">Style des cartes</span>
               <select name="collection-card-rounded" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
                 <option value="rounded-none">Carrées</option>
                 <option value="rounded-lg">Arrondies (lg)</option>
                 <option value="rounded-xl">Très arrondies (xl)</option>
+                <option value="rounded-2xl">Très arrondies (2xl)</option>
               </select>
             </label>
+            <div class="rounded-xl border border-dashed border-slate-200 px-3 py-2">
+              <div class="flex justify-between text-[11px] text-slate-500 mb-1">
+                <span>Mobile</span>
+                <span>Desktop</span>
+              </div>
+              <div class="flex items-center gap-4 text-slate-400">
+                <div class="flex-1">
+                  <div data-collection-preview-mobile class="flex gap-1"></div>
+                </div>
+                <svg class="h-4 w-4 text-slate-300" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.21 16.56a.75.75 0 01-1.06 0A.75.75 0 016.21 15.5l5.47-5.5-5.47-5.5a.75.75 0 111.06-1.06l6 6a.75.75 0 010 1.06l-6 6z" clip-rule="evenodd"/>
+                </svg>
+                <div class="flex-1">
+                  <div data-collection-preview-desktop class="flex gap-1"></div>
+                </div>
+              </div>
+            </div>
+            
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Style de la card</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Fond</span>
+        <select name="collection-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="bg-white">Blanc</option>
+          <option value="bg-slate-50">Gris très clair</option>
+          <option value="bg-slate-100">Gris clair</option>
+          <option value="bg-slate-200">Gris</option>
+          <option value="bg-violet-50">Violet clair</option>
+          <option value="bg-violet-100">Violet</option>
+          <option value="bg-sky-50">Bleu clair</option>
+          <option value="bg-emerald-50">Vert clair</option>
+          <option value="bg-amber-50">Ambre clair</option>
+          <option value="bg-rose-50">Rose clair</option>
+          <option value="bg-transparent">Transparent</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+        <select name="collection-border-radius" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="rounded-none">Aucun</option>
+          <option value="rounded-lg">Léger (lg)</option>
+          <option value="rounded-xl">Moyen (xl)</option>
+          <option value="rounded-2xl">Fort (2xl)</option>
+          <option value="rounded-3xl">Très fort (3xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Ombre</span>
+        <select name="collection-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="shadow-none">Aucune</option>
+          <option value="shadow-sm">Légère (sm)</option>
+          <option value="shadow-md">Moyenne (md)</option>
+          <option value="shadow-lg">Forte (lg)</option>
+          <option value="shadow-xl">Très forte (xl)</option>
+          <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
           </div>
         </div>
 
@@ -961,6 +1210,50 @@
                 <option value="space-y-6">Aéré</option>
               </select>
             </label>
+            
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Style de la card</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Fond</span>
+        <select name="form-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="bg-white">Blanc</option>
+          <option value="bg-slate-50">Gris très clair</option>
+          <option value="bg-slate-100">Gris clair</option>
+          <option value="bg-slate-200">Gris</option>
+          <option value="bg-violet-50">Violet clair</option>
+          <option value="bg-violet-100">Violet</option>
+          <option value="bg-sky-50">Bleu clair</option>
+          <option value="bg-emerald-50">Vert clair</option>
+          <option value="bg-amber-50">Ambre clair</option>
+          <option value="bg-rose-50">Rose clair</option>
+          <option value="bg-transparent">Transparent</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+        <select name="form-border-radius" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="rounded-none">Aucun</option>
+          <option value="rounded-lg">Léger (lg)</option>
+          <option value="rounded-xl">Moyen (xl)</option>
+          <option value="rounded-2xl">Fort (2xl)</option>
+          <option value="rounded-3xl">Très fort (3xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Ombre</span>
+        <select name="form-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="shadow-none">Aucune</option>
+          <option value="shadow-sm">Légère (sm)</option>
+          <option value="shadow-md">Moyenne (md)</option>
+          <option value="shadow-lg">Forte (lg)</option>
+          <option value="shadow-xl">Très forte (xl)</option>
+          <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
           </div>
         </div>
 
@@ -1031,6 +1324,50 @@
                 <option value="bg-slate-100">Gris</option>
               </select>
             </label>
+            
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Style de la card</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Fond</span>
+        <select name="newsletter-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="bg-white">Blanc</option>
+          <option value="bg-slate-50">Gris très clair</option>
+          <option value="bg-slate-100">Gris clair</option>
+          <option value="bg-slate-200">Gris</option>
+          <option value="bg-violet-50">Violet clair</option>
+          <option value="bg-violet-100">Violet</option>
+          <option value="bg-sky-50">Bleu clair</option>
+          <option value="bg-emerald-50">Vert clair</option>
+          <option value="bg-amber-50">Ambre clair</option>
+          <option value="bg-rose-50">Rose clair</option>
+          <option value="bg-transparent">Transparent</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+        <select name="newsletter-border-radius" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="rounded-none">Aucun</option>
+          <option value="rounded-lg">Léger (lg)</option>
+          <option value="rounded-xl">Moyen (xl)</option>
+          <option value="rounded-2xl">Fort (2xl)</option>
+          <option value="rounded-3xl">Très fort (3xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Ombre</span>
+        <select name="newsletter-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="shadow-none">Aucune</option>
+          <option value="shadow-sm">Légère (sm)</option>
+          <option value="shadow-md">Moyenne (md)</option>
+          <option value="shadow-lg">Forte (lg)</option>
+          <option value="shadow-xl">Très forte (xl)</option>
+          <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
           </div>
         </div>
 

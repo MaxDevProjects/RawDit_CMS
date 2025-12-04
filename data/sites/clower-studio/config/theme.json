@@ -1,8 +1,8 @@
 {
   "colors": {
-    "primary": "violet-500",
-    "secondary": "indigo-400",
-    "accent": "emerald-500",
+    "primary": "slate-700",
+    "secondary": "slate-400",
+    "accent": "slate-900",
     "background": "slate-50",
     "text": "slate-900"
   },
