@@ -638,6 +638,18 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       }
+      // Afficher/masquer les boutons selon l'onglet
+      // Contenu → boutons Enregistrer/Annuler
+      // Apparence → indicateur auto-save
+      if (blockFormActions && blockFormAutosave) {
+        if (tabName === 'content') {
+          blockFormActions.classList.remove('hidden');
+          blockFormAutosave.classList.add('hidden');
+        } else {
+          blockFormActions.classList.add('hidden');
+          blockFormAutosave.classList.remove('hidden');
+        }
+      }
     };
 
     // Event listeners pour les onglets
@@ -652,6 +664,8 @@ document.addEventListener('DOMContentLoaded', () => {
       '[data-collection-selection-info]',
     );
     const blockFormCancel = document.querySelector('[data-block-form-cancel]');
+    const blockFormActions = document.querySelector('[data-block-form-actions]');
+    const blockFormAutosave = document.querySelector('[data-block-form-autosave]');
     const groupPreviewMobile = blockForm?.querySelector('[data-group-preview-mobile]');
     const groupPreviewDesktop = blockForm?.querySelector('[data-group-preview-desktop]');
     const collectionPreviewMobile = blockForm?.querySelector('[data-collection-preview-mobile]');
@@ -1057,6 +1071,77 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const getLoadingPreviewHtml = () =>
       '<!DOCTYPE html><html><body style="font-family:Inter,sans-serif;padding:40px;color:#475569;background:#fff;">Préparation de la prévisualisation…</body></html>';
+
+    // Debounce utility
+    const debounce = (fn, delay) => {
+      let timeoutId;
+      return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+      };
+    };
+
+    // Auto-save pour l'apparence (debounced)
+    let autoSaveTimeout = null;
+    const autoSaveAppearance = () => {
+      if (!currentPage || !activeBlockId) {
+        return;
+      }
+      const block = getActiveBlock();
+      const config = getBlockFormConfig(block);
+      if (!block || !config) {
+        return;
+      }
+      const values = collectFormValues(config);
+      const updatedBlocks = (currentPage.blocks || []).map((entry) => {
+        if (entry.id !== block.id) {
+          return entry;
+        }
+        const updatedSettings = { ...(entry.settings || {}), ...values };
+        return { ...entry, settings: updatedSettings };
+      });
+      // Mise à jour silencieuse (sans toast ni refresh complet)
+      const nextPage = { ...currentPage, blocks: updatedBlocks };
+      currentPage = nextPage;
+      savePageToServer(nextPage);
+    };
+
+    // Mise à jour live de la preview via postMessage (sans recharger l'iframe)
+    const updatePreviewBlockLive = (blockId, settings) => {
+      if (!previewFrame || !previewFrame.contentWindow) {
+        return;
+      }
+      // Envoie les nouvelles classes au bloc dans l'iframe
+      previewFrame.contentWindow.postMessage({
+        type: 'updateBlockStyles',
+        blockId,
+        settings,
+      }, '*');
+    };
+
+    // Mise à jour live + auto-save (debounced)
+    const debouncedAutoSave = debounce(() => {
+      autoSaveAppearance();
+      updatePreviewStatus('Sauvegardé');
+      setTimeout(() => updatePreviewStatus('À jour'), 1500);
+    }, 800);
+
+    // Refresh preview complet debounced (pour les changements complexes)
+    const debouncedRefreshPreview = debounce(() => {
+      if (currentPage) {
+        refreshPreview(currentPage);
+      }
+    }, 1500);
+
+    // Mise à jour live immédiate (pour la preview)
+    const handleAppearanceChange = (blockId, settings) => {
+      updatePreviewBlockLive(blockId, settings);
+      updatePreviewStatus('Modification…');
+      debouncedAutoSave();
+      // Refresh complet après un délai plus long (pour les changements de layout, etc.)
+      debouncedRefreshPreview();
+    };
+
     const refreshPreview = (page) => {
       if (!previewFrame || !page) {
         return;
@@ -2405,6 +2490,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!target || !target.name) {
         return;
       }
+      // Mini preview pour groupe
       if (target.name === 'group-columns-mobile' || target.name === 'group-columns-desktop') {
         const mobileValue =
           blockForm.querySelector('[name="group-columns-mobile"]')?.value || '1';
@@ -2412,12 +2498,40 @@ document.addEventListener('DOMContentLoaded', () => {
           blockForm.querySelector('[name="group-columns-desktop"]')?.value || '3';
         updateGroupMiniPreview(mobileValue, desktopValue);
       }
+      // Mini preview pour collection
       if (target.name === 'collection-columns-mobile' || target.name === 'collection-columns-desktop') {
         const mobileValue =
           blockForm.querySelector('[name="collection-columns-mobile"]')?.value || '1';
         const desktopValue =
           blockForm.querySelector('[name="collection-columns-desktop"]')?.value || '3';
         updateCollectionMiniPreview(mobileValue, desktopValue);
+      }
+      // Détection si on est dans le panel Apparence → auto-save
+      const panel = target.closest('[data-block-panel]');
+      if (panel && panel.dataset.blockPanel === 'appearance') {
+        // Auto-save + refresh preview pour l'apparence
+        const block = getActiveBlock();
+        const config = getBlockFormConfig(block);
+        if (block && config) {
+          const values = collectFormValues(config);
+          handleAppearanceChange(block.id, values);
+        }
+      }
+    });
+    // Également sur 'change' pour les selects
+    blockForm?.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!target || !target.name) {
+        return;
+      }
+      const panel = target.closest('[data-block-panel]');
+      if (panel && panel.dataset.blockPanel === 'appearance') {
+        const block = getActiveBlock();
+        const config = getBlockFormConfig(block);
+        if (block && config) {
+          const values = collectFormValues(config);
+          handleAppearanceChange(block.id, values);
+        }
       }
     });
     collectionSelect?.addEventListener('change', (event) => {
