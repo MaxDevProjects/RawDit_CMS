@@ -608,6 +608,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Onglets Contenu / Apparence
     const blockTabs = document.querySelectorAll('[data-block-tab]');
     let activeBlockTab = 'content';
+    
+    // Déclarations des éléments d'actions du formulaire (avant switchBlockTab)
+    const blockFormActions = document.querySelector('[data-block-form-actions]');
+    const blockFormAutosave = document.querySelector('[data-block-form-autosave]');
 
     // Fonction pour switcher entre les onglets Contenu/Apparence
     const switchBlockTab = (tabName) => {
@@ -664,8 +668,6 @@ document.addEventListener('DOMContentLoaded', () => {
       '[data-collection-selection-info]',
     );
     const blockFormCancel = document.querySelector('[data-block-form-cancel]');
-    const blockFormActions = document.querySelector('[data-block-form-actions]');
-    const blockFormAutosave = document.querySelector('[data-block-form-autosave]');
     const groupPreviewMobile = blockForm?.querySelector('[data-group-preview-mobile]');
     const groupPreviewDesktop = blockForm?.querySelector('[data-group-preview-desktop]');
     const collectionPreviewMobile = blockForm?.querySelector('[data-collection-preview-mobile]');

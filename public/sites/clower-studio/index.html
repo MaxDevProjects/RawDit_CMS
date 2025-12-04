@@ -70,13 +70,15 @@
           
           <section
             data-preview-block="hero-home"
-            class="relative overflow-hidden bg-sky-50 rounded-none shadow-none min-h-[50vh] px-10 py-16"
+            class="relative overflow-hidden bg-rose-50 rounded-3xl shadow-sm min-h-[50vh] px-10 py-16"
           >
             
             
-            <div class="relative z-10 flex flex-col gap-8 items-center ">
+              <div class="absolute inset-0 bg-black/50"></div>
+            
+            <div class="relative z-10 grid gap-10 lg:grid-cols-2 items-center ">
               
-              <div class="flex flex-col gap-4 items-center text-center" >
+              <div class="flex flex-col gap-4 " >
                 <p class="text-xs uppercase tracking-[0.3em] text-violet-400">
                   Brouillon
                 </p>
@@ -97,11 +99,11 @@
               </div>
               
               
-                <div class="flex justify-center " >
+                <div class="flex justify-center lg:justify-end" >
                   <div class="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/60 shadow-2xl ring-1 ring-violet-100/80">
                     <div
                       class="h-64 w-full bg-slate-200 bg-cover bg-center"
-                      style="background-image:url(https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&amp;q=80);"
+                      style="background-image:url(/sites/clower-studio/media/capture-d-ecran-2025-10-30-182720.png);"
                       aria-label="Illustration du hero"
                     ></div>
                     <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
@@ -126,7 +128,7 @@
           
           <section
             data-preview-block="paragraph-home-intro"
-            class="bg-transparent rounded-none shadow-none p-8 border border-slate-100 text-left space-y-4"
+            class="bg-rose-50 rounded-none shadow-none p-8 border border-slate-100 text-left space-y-4"
           >
             <h3 class="text-3xl font-semibold mb-2">
               Un studio web indépendant, au service des projets qui ont du sens
@@ -402,5 +404,78 @@ Toujours avec un même fil conducteur : partir de vos usages réels, de vos cont
     </main>
     
     
+    
+    
+    <script>
+      window.addEventListener('message', function(event) {
+        if (!event.data || event.data.type !== 'updateBlockStyles') return;
+        
+        const { blockId, settings } = event.data;
+        const block = document.querySelector('[data-preview-block="' + blockId + '"]');
+        if (!block) return;
+        
+        // Mapping des settings vers les classes Tailwind
+        const classUpdates = [];
+        
+        // Background
+        if (settings.bg) {
+          block.className = block.className.replace(/\bbg-\S+/g, '');
+          classUpdates.push(settings.bg);
+        }
+        
+        // Border radius
+        if (settings.borderRadius) {
+          block.className = block.className.replace(/\brounded-\S+/g, '');
+          classUpdates.push(settings.borderRadius.startsWith('rounded') ? settings.borderRadius : 'rounded-' + settings.borderRadius);
+        }
+        
+        // Shadow
+        if (settings.shadow) {
+          block.className = block.className.replace(/\bshadow-\S+/g, '');
+          classUpdates.push(settings.shadow.startsWith('shadow') ? settings.shadow : 'shadow-' + settings.shadow);
+        }
+        
+        // Height (pour hero)
+        if (settings.height) {
+          block.className = block.className.replace(/\bmin-h-\S+/g, '');
+          classUpdates.push(settings.height);
+        }
+        
+        // Ajouter les nouvelles classes
+        classUpdates.forEach(function(cls) {
+          if (cls) block.classList.add(cls);
+        });
+        
+        // Mise à jour des textes si présents
+        const titleEl = block.querySelector('h2, h3');
+        if (titleEl && settings.titleSize) {
+          titleEl.className = titleEl.className.replace(/\btext-\d*xl\b/g, '');
+          titleEl.classList.add(settings.titleSize);
+        }
+        
+        // Overlay (pour hero)
+        if (settings.overlay !== undefined) {
+          let overlay = block.querySelector('.absolute.inset-0[class*="bg-black"]');
+          if (settings.overlay && settings.overlay !== 'bg-black/0') {
+            if (!overlay) {
+              overlay = document.createElement('div');
+              overlay.className = 'absolute inset-0 ' + settings.overlay;
+              block.insertBefore(overlay, block.firstChild);
+            } else {
+              overlay.className = 'absolute inset-0 ' + settings.overlay;
+            }
+          } else if (overlay) {
+            overlay.remove();
+          }
+        }
+        
+        // Flash visuel pour confirmer la mise à jour
+        block.style.transition = 'outline 0.2s';
+        block.style.outline = '2px solid #9C6BFF';
+        setTimeout(function() {
+          block.style.outline = 'none';
+        }, 300);
+      });
+    </script>
   </body>
 </html>
