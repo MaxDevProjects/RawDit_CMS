@@ -1690,6 +1690,78 @@ async function start() {
     }
   });
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // LAYOUT (HEADER & FOOTER)
+  // ═══════════════════════════════════════════════════════════════════════
+  const readLayoutFile = async (siteSlug, type) => {
+    const layoutPath = path.join(DATA_DIR, 'sites', siteSlug, `${type}.json`);
+    try {
+      const content = await fs.readFile(layoutPath, 'utf-8');
+      return JSON.parse(content);
+    } catch {
+      return null;
+    }
+  };
+
+  const writeLayoutFile = async (siteSlug, type, data) => {
+    const layoutPath = path.join(DATA_DIR, 'sites', siteSlug, `${type}.json`);
+    await fs.writeFile(layoutPath, JSON.stringify(data, null, 2), 'utf-8');
+  };
+
+  // GET /api/sites/:slug/layout - Récupérer header et footer
+  app.get('/api/sites/:slug/layout', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    try {
+      const header = await readLayoutFile(siteSlug, 'header');
+      const footer = await readLayoutFile(siteSlug, 'footer');
+      res.json({ header, footer });
+    } catch (err) {
+      console.error('[layout] read failed', err);
+      res.status(500).json({ message: 'Erreur lors de la lecture du layout.' });
+    }
+  });
+
+  // PUT /api/sites/:slug/layout/header - Enregistrer le header
+  app.put('/api/sites/:slug/layout/header', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    try {
+      const data = req.body;
+      await writeLayoutFile(siteSlug, 'header', data);
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] header save rebuild failed', err.message),
+      );
+      res.json({ success: true, header: data });
+    } catch (err) {
+      console.error('[layout] header save failed', err);
+      res.status(500).json({ message: 'Erreur lors de l\'enregistrement du header.' });
+    }
+  });
+
+  // PUT /api/sites/:slug/layout/footer - Enregistrer le footer
+  app.put('/api/sites/:slug/layout/footer', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    try {
+      const data = req.body;
+      await writeLayoutFile(siteSlug, 'footer', data);
+      await buildSitePages(siteSlug).catch((err) =>
+        console.warn('[build] footer save rebuild failed', err.message),
+      );
+      res.json({ success: true, footer: data });
+    } catch (err) {
+      console.error('[layout] footer save failed', err);
+      res.status(500).json({ message: 'Erreur lors de l\'enregistrement du footer.' });
+    }
+  });
+
   app.get('/api/sites/:slug/media', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
     if (!siteSlug) {

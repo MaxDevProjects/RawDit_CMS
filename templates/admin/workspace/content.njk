@@ -5,192 +5,331 @@
 {% block workspace_header_actions %}
   <button
     type="button"
-    data-collection-drawer-open
+    data-content-drawer-open
     class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#9C6BFF] hover:text-[#9C6BFF] sm:w-auto lg:hidden"
   >
     <span class="text-lg leading-none">☰</span>
-    Collections
+    Contenus
   </button>
 {% endblock %}
 
 {% block sidebar_start %}
+  {# Mobile trigger #}
   <div class="lg:hidden flex items-center justify-between gap-3 rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
     <div>
-      <p class="text-xs uppercase tracking-wide text-slate-500">Collections</p>
-      <p class="text-sm text-slate-700">Choisissez une collection</p>
+      <p class="text-xs uppercase tracking-wide text-slate-500">Contenus</p>
+      <p class="text-sm text-slate-700">Header, Collections, Footer</p>
     </div>
     <button
       type="button"
-      data-collection-drawer-open
+      data-content-drawer-open
       class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
     >
       <span class="text-lg leading-none">☰</span>
-      Collections
     </button>
   </div>
 
+  {# Backdrop mobile #}
   <div
-    data-collection-drawer-backdrop
+    data-content-drawer-backdrop
     class="fixed inset-0 z-30 hidden bg-slate-900/30 backdrop-blur-sm lg:hidden"
     aria-hidden="true"
   ></div>
 
+  {# Sidebar drawer #}
   <section
-    data-collection-drawer
-    class="fixed inset-y-0 left-0 z-40 w-[300px] max-w-[90vw] -translate-x-full transform transition-transform duration-300 lg:relative lg:inset-auto lg:translate-x-0 lg:h-auto"
-    aria-label="Collections de contenus"
+    data-content-drawer
+    class="fixed inset-y-0 left-0 z-40 w-[320px] max-w-[90vw] -translate-x-full transform transition-transform duration-300 lg:relative lg:inset-auto lg:translate-x-0 lg:h-auto"
+    aria-label="Navigation des contenus"
   >
     <div class="h-full overflow-y-auto bg-white shadow-2xl lg:h-auto lg:overflow-visible lg:rounded-2xl lg:border lg:border-slate-200 lg:shadow-sm">
-      <div class="flex items-center justify-between border-b border-slate-200 p-4 lg:border-none">
-        <div>
-          <p class="text-xs uppercase tracking-tight text-slate-500">Collections</p>
-          <h2 class="text-lg font-semibold text-slate-900">Contenus structurés</h2>
-        </div>
+      {# Header mobile #}
+      <div class="flex items-center justify-between border-b border-slate-200 p-4 lg:hidden">
+        <h2 class="text-lg font-semibold text-slate-900">Contenus</h2>
         <button
           type="button"
-          data-collection-drawer-close
-          class="lg:hidden rounded-full p-2 text-sm text-slate-500 hover:bg-slate-100"
+          data-content-drawer-close
+          class="rounded-full p-2 text-sm text-slate-500 hover:bg-slate-100"
           aria-label="Fermer"
         >
           ✕
         </button>
       </div>
-      <div class="p-4 space-y-2">
-        <ul
-          data-collection-list
-          class="space-y-2"
-          role="listbox"
-          aria-label="Collections de contenus"
-        ></ul>
-        <p data-collection-empty class="text-sm text-slate-500">Aucune collection pour ce site.</p>
+
+      <div class="p-4 space-y-4">
+        {# SECTION HEADER #}
+        <div class="space-y-2">
+          <button
+            type="button"
+            data-content-section="header"
+            class="w-full flex items-center gap-3 rounded-xl border-2 border-transparent bg-gradient-to-r from-violet-50 to-white px-4 py-3 text-left transition-all hover:border-violet-200 hover:shadow-sm data-[active]:border-violet-400 data-[active]:bg-violet-50"
+          >
+            <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-600 text-lg">
+              ⬆
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-slate-900">Header & Navigation</p>
+              <p class="text-xs text-slate-500 truncate">Logo, menu, liens, CTA</p>
+            </div>
+            <span data-header-status class="h-2 w-2 rounded-full bg-slate-300" title="Non configuré"></span>
+          </button>
+        </div>
+
+        {# SECTION COLLECTIONS #}
+        <div class="space-y-2">
+          <div class="flex items-center justify-between px-1">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Collections</p>
+            <span data-collection-count class="text-xs text-slate-400">0</span>
+          </div>
+          <ul
+            data-collection-list
+            class="space-y-1"
+            role="listbox"
+            aria-label="Collections de contenus"
+          ></ul>
+          <p data-collection-empty class="text-sm text-slate-500 text-center py-3">Aucune collection</p>
+        </div>
+
+        {# SECTION FOOTER #}
+        <div class="space-y-2 pt-2 border-t border-slate-100">
+          <button
+            type="button"
+            data-content-section="footer"
+            class="w-full flex items-center gap-3 rounded-xl border-2 border-transparent bg-gradient-to-r from-slate-50 to-white px-4 py-3 text-left transition-all hover:border-slate-300 hover:shadow-sm data-[active]:border-violet-400 data-[active]:bg-violet-50"
+          >
+            <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 text-lg">
+              ⬇
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-slate-900">Footer</p>
+              <p class="text-xs text-slate-500 truncate">Colonnes, liens, réseaux, copyright</p>
+            </div>
+            <span data-footer-status class="h-2 w-2 rounded-full bg-slate-300" title="Non configuré"></span>
+          </button>
+        </div>
       </div>
     </div>
   </section>
 {% endblock %}
 
 {% block content_main %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-0">
+  {# VUE PAR DÉFAUT #}
+  <section data-content-view="empty" class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="p-8 text-center space-y-4">
+      <div class="mx-auto w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">📄</div>
+      <div>
+        <h2 class="text-xl font-semibold text-slate-900">Contenus du site</h2>
+        <p class="text-sm text-slate-500 mt-1">Sélectionnez une section pour la configurer</p>
+      </div>
+      <div class="flex flex-wrap justify-center gap-3 pt-2">
+        <button type="button" data-content-section-trigger="header" class="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 hover:bg-violet-100">⬆ Header</button>
+        <button type="button" data-content-section-trigger="footer" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">⬇ Footer</button>
+      </div>
+    </div>
+  </section>
+
+  {# VUE HEADER #}
+  <section data-content-view="header" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm">
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
       <div>
-        <p class="text-xs uppercase tracking-tight text-slate-500">Collection active</p>
+        <p class="text-xs uppercase tracking-tight text-violet-500">Configuration</p>
+        <h1 class="text-xl font-semibold text-slate-900">Header & Navigation</h1>
+      </div>
+      <button type="button" data-header-save class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#8654f5]">Enregistrer</button>
+    </div>
+    <div class="p-6 space-y-6">
+      {# Logo #}
+      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+        <legend class="px-2 text-sm font-semibold text-slate-700">Logo & Identité</legend>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Logo (URL image)</span>
+            <input type="text" name="header-logo" placeholder="/assets/logo.svg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Texte alternatif / Nom du site</span>
+            <input type="text" name="header-logo-alt" placeholder="Mon site" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+          </label>
+        </div>
+        <label class="space-y-1 block">
+          <span class="text-xs font-medium text-slate-600">Lien du logo</span>
+          <input type="text" name="header-logo-url" value="/" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+        </label>
+      </fieldset>
+      {# Navigation #}
+      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+        <legend class="px-2 text-sm font-semibold text-slate-700">Liens de navigation</legend>
+        <p class="text-xs text-slate-500">Ajoutez les liens du menu principal.</p>
+        <div data-header-nav-list class="space-y-2"></div>
+        <button type="button" data-header-nav-add class="w-full rounded-lg border-2 border-dashed border-slate-300 py-3 text-sm font-medium text-slate-500 hover:border-violet-400 hover:text-violet-600 transition-colors">+ Ajouter un lien</button>
+      </fieldset>
+      {# CTA #}
+      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+        <legend class="px-2 text-sm font-semibold text-slate-700">Bouton CTA (optionnel)</legend>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Texte du bouton</span>
+            <input type="text" name="header-cta-text" placeholder="Contactez-nous" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Lien du bouton</span>
+            <input type="text" name="header-cta-url" placeholder="/contact" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+          </label>
+        </div>
+        <label class="space-y-1 block">
+          <span class="text-xs font-medium text-slate-600">Style du bouton</span>
+          <select name="header-cta-style" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+            <option value="primary">Principal (violet)</option>
+            <option value="secondary">Secondaire (bordure)</option>
+            <option value="ghost">Ghost (transparent)</option>
+          </select>
+        </label>
+      </fieldset>
+      {# Style #}
+      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+        <legend class="px-2 text-sm font-semibold text-slate-700">Style du header</legend>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Position</span>
+            <select name="header-position" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+              <option value="static">Statique</option>
+              <option value="sticky">Sticky (reste en haut)</option>
+              <option value="fixed">Fixe (overlay)</option>
+            </select>
+          </label>
+          <label class="space-y-1 block">
+            <span class="text-xs font-medium text-slate-600">Fond</span>
+            <select name="header-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+              <option value="bg-white">Blanc</option>
+              <option value="bg-slate-900 text-white">Sombre</option>
+              <option value="bg-transparent">Transparent</option>
+              <option value="bg-white/80 backdrop-blur">Glass (blanc flou)</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+    </div>
+  </section>
+
+  {# VUE COLLECTION #}
+  <section data-content-view="collection" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
+      <div>
+        <p class="text-xs uppercase tracking-tight text-slate-500">Collection</p>
         <h1 data-collection-title class="text-xl font-semibold text-slate-900">Sélectionnez une collection</h1>
         <p data-collection-description class="text-sm text-slate-500"></p>
       </div>
-      <button
-        type="button"
-        data-item-add
-        class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#8654f5]"
-      >
-        + Ajouter un item
-      </button>
+      <button type="button" data-item-add class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#8654f5]">+ Ajouter un item</button>
     </div>
-
     <div class="p-6 space-y-4">
-      <div data-collection-items-empty class="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-        Choisissez une collection dans la colonne de gauche pour afficher ses items.
-      </div>
-
-      <div data-item-table-wrapper class="overflow-x-auto hidden">
-        <table class="min-w-full divide-y divide-slate-200 text-sm" data-item-table>
-          <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <tr>
-              <th scope="col" class="px-4 py-2">Titre</th>
-              <th scope="col" class="px-4 py-2">Slug</th>
-              <th scope="col" class="px-4 py-2">Statut</th>
-              <th scope="col" class="px-4 py-2">Dernière mise à jour</th>
+      <div data-collection-items-empty class="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">Choisissez une collection dans la colonne de gauche.</div>
+      <div data-item-table-wrapper class="hidden overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead>
+            <tr class="text-left text-xs uppercase tracking-wider text-slate-500">
+              <th class="px-4 py-3">Titre</th>
+              <th class="px-4 py-3">Statut</th>
+              <th class="px-4 py-3 hidden sm:table-cell">Mis à jour</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 text-slate-700" data-item-table-body></tbody>
+          <tbody data-item-table-body class="divide-y divide-slate-100"></tbody>
         </table>
       </div>
+    </div>
+  </section>
+
+  {# VUE FOOTER #}
+  <section data-content-view="footer" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
+      <div>
+        <p class="text-xs uppercase tracking-tight text-slate-500">Configuration</p>
+        <h1 class="text-xl font-semibold text-slate-900">Footer</h1>
+      </div>
+      <button type="button" data-footer-save class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#8654f5]">Enregistrer</button>
+    </div>
+    <div class="p-6 space-y-6">
+      {# Colonnes #}
+      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+        <legend class="px-2 text-sm font-semibold text-slate-700">Colonnes de liens</legend>
+        <p class="text-xs text-slate-500">Organisez vos liens en colonnes. Chaque colonne a un titre et des liens.</p>
+        <div data-footer-columns-list class="space-y-4"></div>
+        <button type="button" data-footer-column-add class="w-full rounded-lg border-2 border-dashed border-slate-300 py-3 text-sm font-medium text-slate-500 hover:border-violet-400 hover:text-violet-600 transition-colors">+ Ajouter une colonne</button>
+      </fieldset>
+      {# Réseaux sociaux #}
+      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+        <legend class="px-2 text-sm font-semibold text-slate-700">Réseaux sociaux</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">🔗 LinkedIn</span><input type="url" name="footer-social-linkedin" placeholder="https://linkedin.com/in/..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">🐦 Twitter / X</span><input type="url" name="footer-social-twitter" placeholder="https://twitter.com/..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">📸 Instagram</span><input type="url" name="footer-social-instagram" placeholder="https://instagram.com/..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">📘 Facebook</span><input type="url" name="footer-social-facebook" placeholder="https://facebook.com/..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">🎥 YouTube</span><input type="url" name="footer-social-youtube" placeholder="https://youtube.com/..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">💻 GitHub</span><input type="url" name="footer-social-github" placeholder="https://github.com/..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+        </div>
+      </fieldset>
+      {# Copyright #}
+      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+        <legend class="px-2 text-sm font-semibold text-slate-700">Copyright & Mentions</legend>
+        <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Texte copyright</span><input type="text" name="footer-copyright" placeholder="© 2025 Mon Site. Tous droits réservés." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Lien mentions légales</span><input type="text" name="footer-legal-url" placeholder="/mentions-legales" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Lien confidentialité</span><input type="text" name="footer-privacy-url" placeholder="/confidentialite" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+        </div>
+      </fieldset>
+      {# Style #}
+      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+        <legend class="px-2 text-sm font-semibold text-slate-700">Style du footer</legend>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Fond</span>
+            <select name="footer-bg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+              <option value="bg-slate-900 text-white">Sombre</option>
+              <option value="bg-white text-slate-900">Clair</option>
+              <option value="bg-slate-100 text-slate-900">Gris clair</option>
+              <option value="bg-violet-900 text-white">Violet</option>
+            </select>
+          </label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Nombre de colonnes</span>
+            <select name="footer-columns-count" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+              <option value="2">2 colonnes</option>
+              <option value="3">3 colonnes</option>
+              <option value="4" selected>4 colonnes</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
     </div>
   </section>
 {% endblock %}
 
 {% block sidebar_end %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-0">
-    <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-5 py-4">
-      <div>
-        <p class="text-xs uppercase tracking-tight text-slate-500">Édition de l’item</p>
-        <h2 class="text-sm font-semibold text-slate-900">Contenu structuré</h2>
-      </div>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+      <h2 class="text-sm font-semibold text-slate-900">Édition de l'item</h2>
       <span data-item-status-badge class="hidden rounded-full px-3 py-1 text-xs font-semibold"></span>
     </div>
     <div class="p-5 space-y-4">
-      <div data-item-detail-empty class="text-sm text-slate-500">
-        Sélectionnez un item ou cliquez sur « Ajouter un item » pour commencer.
-      </div>
+      <div data-item-detail-empty class="text-sm text-slate-500">Sélectionnez un item ou cliquez sur « Ajouter un item » pour commencer.</div>
       <form data-item-form class="hidden space-y-4">
         <div class="space-y-2">
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Titre</span>
-            <input type="text" name="item-title" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
-          </label>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Slug</span>
-            <input type="text" name="item-slug" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" placeholder="/projets/nouveau"/>
-          </label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Titre</span><input type="text" name="item-title" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Slug</span><input type="text" name="item-slug" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" placeholder="/projets/nouveau"/></label>
         </div>
-
-        <label class="space-y-1 block">
-          <span class="text-xs font-medium text-slate-600">Résumé</span>
-          <textarea name="item-excerpt" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
-        </label>
-
-        <label class="space-y-1 block">
-          <span class="text-xs font-medium text-slate-600">Contenu</span>
-          <textarea name="item-content" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
-        </label>
-
-        <label class="space-y-1 block">
-          <span class="text-xs font-medium text-slate-600">Image (URL ou media ID)</span>
-          <input type="text" name="item-image" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
-        </label>
-
-        <!-- CTA (Call-to-Action) -->
+        <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Résumé</span><textarea name="item-excerpt" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea></label>
+        <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Contenu</span><textarea name="item-content" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea></label>
+        <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Image (URL ou media ID)</span><input type="text" name="item-image" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
         <fieldset class="space-y-2 rounded-lg border border-slate-200 p-3">
           <legend class="text-xs font-medium text-slate-600 px-1">Call-to-Action (optionnel)</legend>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-500">Texte du bouton</span>
-            <input type="text" name="item-cta-text" placeholder="En savoir plus" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
-          </label>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-500">Lien du bouton</span>
-            <input type="text" name="item-cta-url" placeholder="/page ou https://..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
-          </label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-500">Texte du bouton</span><input type="text" name="item-cta-text" placeholder="En savoir plus" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+          <label class="space-y-1 block"><span class="text-xs font-medium text-slate-500">Lien du bouton</span><input type="text" name="item-cta-url" placeholder="/page ou https://..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
         </fieldset>
-
-        <label class="space-y-1 block">
-          <span class="text-xs font-medium text-slate-600">Statut</span>
-          <select name="item-status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-            <option value="Brouillon">Brouillon</option>
-            <option value="Publié">Publié</option>
-          </select>
+        <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Statut</span>
+          <select name="item-status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"><option value="Brouillon">Brouillon</option><option value="Publié">Publié</option></select>
         </label>
-
         <div class="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            data-item-delete
-            class="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-500 hover:bg-rose-50 disabled:pointer-events-none disabled:opacity-60"
-          >
-            Supprimer
-          </button>
+          <button type="button" data-item-delete class="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-500 hover:bg-rose-50 disabled:pointer-events-none disabled:opacity-60">Supprimer</button>
           <div class="flex items-center gap-2">
-            <button
-              type="button"
-              data-item-cancel
-              class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              data-item-save
-              class="rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
-            >
-              Enregistrer
-            </button>
+            <button type="button" data-item-cancel class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Annuler</button>
+            <button type="submit" data-item-save class="rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]">Enregistrer</button>
           </div>
         </div>
       </form>
@@ -198,32 +337,42 @@
   </section>
 {% endblock %}
 
-<div
-  data-item-delete-modal
-  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4"
-  role="dialog"
-  aria-modal="true"
->
+{# MODALS #}
+<div data-item-delete-modal class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
   <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl space-y-4">
-    <div class="space-y-1">
-      <h2 class="text-lg font-semibold text-slate-900">Supprimer cet item ?</h2>
-      <p class="text-sm text-slate-600">Cette action est immédiate dans l’éditeur.</p>
-    </div>
+    <div class="space-y-1"><h2 class="text-lg font-semibold text-slate-900">Supprimer cet item ?</h2><p class="text-sm text-slate-600">Cette action est immédiate.</p></div>
     <div class="flex items-center justify-end gap-2">
-      <button
-        type="button"
-        data-item-delete-cancel
-        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
-      >
-        Annuler
-      </button>
-      <button
-        type="button"
-        data-item-delete-confirm
-        class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
-      >
-        Supprimer
-      </button>
+      <button type="button" data-item-delete-cancel class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900">Annuler</button>
+      <button type="button" data-item-delete-confirm class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">Supprimer</button>
     </div>
   </div>
 </div>
+
+{# Templates dynamiques #}
+<template data-template-header-nav-item>
+  <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2" draggable="true" data-nav-item>
+    <span class="cursor-move text-slate-400 hover:text-slate-600">⋮⋮</span>
+    <input type="text" name="nav-label" placeholder="Libellé" class="flex-1 min-w-0 rounded border border-slate-200 px-2 py-1 text-sm focus:border-violet-400"/>
+    <input type="text" name="nav-url" placeholder="/page" class="flex-1 min-w-0 rounded border border-slate-200 px-2 py-1 text-sm focus:border-violet-400"/>
+    <button type="button" data-nav-remove class="p-1 text-slate-400 hover:text-rose-500" aria-label="Supprimer">✕</button>
+  </div>
+</template>
+
+<template data-template-footer-column>
+  <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2" data-footer-column>
+    <div class="flex items-center gap-2">
+      <input type="text" name="column-title" placeholder="Titre de la colonne" class="flex-1 rounded border border-slate-200 px-2 py-1 text-sm font-medium focus:border-violet-400"/>
+      <button type="button" data-column-remove class="p-1 text-slate-400 hover:text-rose-500" aria-label="Supprimer">✕</button>
+    </div>
+    <div data-column-links class="space-y-1 pl-2"></div>
+    <button type="button" data-column-link-add class="text-xs text-violet-600 hover:text-violet-800">+ Ajouter un lien</button>
+  </div>
+</template>
+
+<template data-template-footer-link>
+  <div class="flex items-center gap-1" data-footer-link>
+    <input type="text" name="link-label" placeholder="Libellé" class="flex-1 min-w-0 rounded border border-slate-200 px-2 py-1 text-xs focus:border-violet-400"/>
+    <input type="text" name="link-url" placeholder="/url" class="flex-1 min-w-0 rounded border border-slate-200 px-2 py-1 text-xs focus:border-violet-400"/>
+    <button type="button" data-link-remove class="p-0.5 text-slate-400 hover:text-rose-500 text-xs">✕</button>
+  </div>
+</template>

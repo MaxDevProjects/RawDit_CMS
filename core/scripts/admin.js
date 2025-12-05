@@ -3024,16 +3024,362 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!collectionList) {
       return;
     }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // HEADER & FOOTER MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════════
+    const contentViews = {
+      empty: document.querySelector('[data-content-view="empty"]'),
+      header: document.querySelector('[data-content-view="header"]'),
+      collection: document.querySelector('[data-content-view="collection"]'),
+      footer: document.querySelector('[data-content-view="footer"]'),
+    };
+    const contentSectionButtons = document.querySelectorAll('[data-content-section]');
+    const contentSectionTriggers = document.querySelectorAll('[data-content-section-trigger]');
+    const contentDrawer = document.querySelector('[data-content-drawer]');
+    const contentDrawerBackdrop = document.querySelector('[data-content-drawer-backdrop]');
+    const contentDrawerOpenButtons = document.querySelectorAll('[data-content-drawer-open]');
+    const contentDrawerCloseButtons = document.querySelectorAll('[data-content-drawer-close]');
+    const headerStatusIndicator = document.querySelector('[data-header-status]');
+    const footerStatusIndicator = document.querySelector('[data-footer-status]');
+    const collectionCountEl = document.querySelector('[data-collection-count]');
+    
+    // Header fields
+    const headerFields = {
+      logo: document.querySelector('[name="header-logo"]'),
+      logoAlt: document.querySelector('[name="header-logo-alt"]'),
+      logoUrl: document.querySelector('[name="header-logo-url"]'),
+      ctaText: document.querySelector('[name="header-cta-text"]'),
+      ctaUrl: document.querySelector('[name="header-cta-url"]'),
+      ctaStyle: document.querySelector('[name="header-cta-style"]'),
+      position: document.querySelector('[name="header-position"]'),
+      bg: document.querySelector('[name="header-bg"]'),
+    };
+    const headerNavList = document.querySelector('[data-header-nav-list]');
+    const headerNavAddBtn = document.querySelector('[data-header-nav-add]');
+    const headerSaveBtn = document.querySelector('[data-header-save]');
+    const headerNavItemTemplate = document.querySelector('[data-template-header-nav-item]');
+    
+    // Footer fields
+    const footerFields = {
+      linkedin: document.querySelector('[name="footer-social-linkedin"]'),
+      twitter: document.querySelector('[name="footer-social-twitter"]'),
+      instagram: document.querySelector('[name="footer-social-instagram"]'),
+      facebook: document.querySelector('[name="footer-social-facebook"]'),
+      youtube: document.querySelector('[name="footer-social-youtube"]'),
+      github: document.querySelector('[name="footer-social-github"]'),
+      copyright: document.querySelector('[name="footer-copyright"]'),
+      legalUrl: document.querySelector('[name="footer-legal-url"]'),
+      privacyUrl: document.querySelector('[name="footer-privacy-url"]'),
+      bg: document.querySelector('[name="footer-bg"]'),
+      columnsCount: document.querySelector('[name="footer-columns-count"]'),
+    };
+    const footerColumnsList = document.querySelector('[data-footer-columns-list]');
+    const footerColumnAddBtn = document.querySelector('[data-footer-column-add]');
+    const footerSaveBtn = document.querySelector('[data-footer-save]');
+    const footerColumnTemplate = document.querySelector('[data-template-footer-column]');
+    const footerLinkTemplate = document.querySelector('[data-template-footer-link]');
+    
+    let activeContentSection = null;
+    let headerData = { nav: [], logo: {}, cta: {}, style: {} };
+    let footerData = { columns: [], socials: {}, copyright: '', legal: {}, style: {} };
+    
+    const safeSiteSlugForLayout = stripLeadingSlash(workspaceContext?.slugValue || storedSite.slug || '');
+    const layoutApiBase = safeSiteSlugForLayout ? `/api/sites/${encodeURIComponent(safeSiteSlugForLayout)}/layout` : null;
+    
+    // View switching
+    const showContentView = (viewName) => {
+      Object.entries(contentViews).forEach(([name, el]) => {
+        if (el) el.classList.toggle('hidden', name !== viewName);
+      });
+      contentSectionButtons.forEach(btn => {
+        const section = btn.dataset.contentSection;
+        if (section === viewName) {
+          btn.dataset.active = 'true';
+        } else {
+          delete btn.dataset.active;
+        }
+      });
+      activeContentSection = viewName;
+    };
+    
+    // Drawer management
+    const openContentDrawer = () => {
+      contentDrawer?.classList.add('is-open');
+      contentDrawer && (contentDrawer.style.transform = 'translateX(0)');
+      contentDrawerBackdrop?.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    };
+    const closeContentDrawer = () => {
+      contentDrawer?.classList.remove('is-open');
+      contentDrawer && (contentDrawer.style.transform = '');
+      contentDrawerBackdrop?.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    };
+    
+    contentDrawerOpenButtons.forEach(btn => btn.addEventListener('click', openContentDrawer));
+    contentDrawerCloseButtons.forEach(btn => btn.addEventListener('click', closeContentDrawer));
+    contentDrawerBackdrop?.addEventListener('click', closeContentDrawer);
+    
+    // Section button handlers
+    contentSectionButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const section = btn.dataset.contentSection;
+        if (section === 'header' || section === 'footer') {
+          showContentView(section);
+        }
+        closeContentDrawer();
+      });
+    });
+    contentSectionTriggers.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const section = btn.dataset.contentSectionTrigger;
+        if (section) showContentView(section);
+      });
+    });
+    
+    // ─────────────────────────────────────────────────────────────────────
+    // HEADER FUNCTIONS
+    // ─────────────────────────────────────────────────────────────────────
+    const addNavItem = (label = '', url = '') => {
+      if (!headerNavItemTemplate || !headerNavList) return;
+      const clone = headerNavItemTemplate.content.cloneNode(true);
+      const item = clone.querySelector('[data-nav-item]');
+      const labelInput = clone.querySelector('[name="nav-label"]');
+      const urlInput = clone.querySelector('[name="nav-url"]');
+      const removeBtn = clone.querySelector('[data-nav-remove]');
+      if (labelInput) labelInput.value = label;
+      if (urlInput) urlInput.value = url;
+      removeBtn?.addEventListener('click', () => item?.remove());
+      headerNavList.appendChild(clone);
+    };
+    
+    const collectHeaderData = () => {
+      const nav = [];
+      headerNavList?.querySelectorAll('[data-nav-item]').forEach(item => {
+        const label = item.querySelector('[name="nav-label"]')?.value?.trim() || '';
+        const url = item.querySelector('[name="nav-url"]')?.value?.trim() || '';
+        if (label || url) nav.push({ label, url });
+      });
+      return {
+        logo: {
+          src: headerFields.logo?.value?.trim() || '',
+          alt: headerFields.logoAlt?.value?.trim() || '',
+          url: headerFields.logoUrl?.value?.trim() || '/',
+        },
+        nav,
+        cta: {
+          text: headerFields.ctaText?.value?.trim() || '',
+          url: headerFields.ctaUrl?.value?.trim() || '',
+          style: headerFields.ctaStyle?.value || 'primary',
+        },
+        style: {
+          position: headerFields.position?.value || 'static',
+          bg: headerFields.bg?.value || 'bg-white',
+        },
+      };
+    };
+    
+    const populateHeaderForm = (data) => {
+      if (!data) return;
+      if (headerFields.logo) headerFields.logo.value = data.logo?.src || '';
+      if (headerFields.logoAlt) headerFields.logoAlt.value = data.logo?.alt || '';
+      if (headerFields.logoUrl) headerFields.logoUrl.value = data.logo?.url || '/';
+      if (headerFields.ctaText) headerFields.ctaText.value = data.cta?.text || '';
+      if (headerFields.ctaUrl) headerFields.ctaUrl.value = data.cta?.url || '';
+      if (headerFields.ctaStyle) headerFields.ctaStyle.value = data.cta?.style || 'primary';
+      if (headerFields.position) headerFields.position.value = data.style?.position || 'static';
+      if (headerFields.bg) headerFields.bg.value = data.style?.bg || 'bg-white';
+      // Populate nav items
+      if (headerNavList) headerNavList.innerHTML = '';
+      (data.nav || []).forEach(item => addNavItem(item.label, item.url));
+      // Update status indicator
+      const hasData = data.logo?.src || data.nav?.length > 0 || data.cta?.text;
+      if (headerStatusIndicator) {
+        headerStatusIndicator.classList.toggle('bg-green-500', !!hasData);
+        headerStatusIndicator.classList.toggle('bg-slate-300', !hasData);
+        headerStatusIndicator.title = hasData ? 'Configuré' : 'Non configuré';
+      }
+    };
+    
+    headerNavAddBtn?.addEventListener('click', () => addNavItem());
+    
+    headerSaveBtn?.addEventListener('click', async () => {
+      if (!layoutApiBase) return;
+      headerSaveBtn.disabled = true;
+      headerSaveBtn.textContent = 'Enregistrement...';
+      try {
+        const data = collectHeaderData();
+        const response = await fetch(`${layoutApiBase}/header`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Erreur serveur');
+        headerData = data;
+        populateHeaderForm(data);
+        showToast('Header enregistré');
+      } catch (err) {
+        console.error('[header] save error', err);
+        showToast('Erreur lors de l\'enregistrement', 'error');
+      } finally {
+        headerSaveBtn.disabled = false;
+        headerSaveBtn.textContent = 'Enregistrer';
+      }
+    });
+    
+    // ─────────────────────────────────────────────────────────────────────
+    // FOOTER FUNCTIONS
+    // ─────────────────────────────────────────────────────────────────────
+    const addFooterLink = (container, label = '', url = '') => {
+      if (!footerLinkTemplate || !container) return;
+      const clone = footerLinkTemplate.content.cloneNode(true);
+      const item = clone.querySelector('[data-footer-link]');
+      const labelInput = clone.querySelector('[name="link-label"]');
+      const urlInput = clone.querySelector('[name="link-url"]');
+      const removeBtn = clone.querySelector('[data-link-remove]');
+      if (labelInput) labelInput.value = label;
+      if (urlInput) urlInput.value = url;
+      removeBtn?.addEventListener('click', () => item?.remove());
+      container.appendChild(clone);
+    };
+    
+    const addFooterColumn = (title = '', links = []) => {
+      if (!footerColumnTemplate || !footerColumnsList) return;
+      const clone = footerColumnTemplate.content.cloneNode(true);
+      const column = clone.querySelector('[data-footer-column]');
+      const titleInput = clone.querySelector('[name="column-title"]');
+      const linksContainer = clone.querySelector('[data-column-links]');
+      const addLinkBtn = clone.querySelector('[data-column-link-add]');
+      const removeBtn = clone.querySelector('[data-column-remove]');
+      if (titleInput) titleInput.value = title;
+      links.forEach(link => addFooterLink(linksContainer, link.label, link.url));
+      addLinkBtn?.addEventListener('click', () => addFooterLink(linksContainer));
+      removeBtn?.addEventListener('click', () => column?.remove());
+      footerColumnsList.appendChild(clone);
+    };
+    
+    const collectFooterData = () => {
+      const columns = [];
+      footerColumnsList?.querySelectorAll('[data-footer-column]').forEach(col => {
+        const title = col.querySelector('[name="column-title"]')?.value?.trim() || '';
+        const links = [];
+        col.querySelectorAll('[data-footer-link]').forEach(linkEl => {
+          const label = linkEl.querySelector('[name="link-label"]')?.value?.trim() || '';
+          const url = linkEl.querySelector('[name="link-url"]')?.value?.trim() || '';
+          if (label || url) links.push({ label, url });
+        });
+        if (title || links.length > 0) columns.push({ title, links });
+      });
+      return {
+        columns,
+        socials: {
+          linkedin: footerFields.linkedin?.value?.trim() || '',
+          twitter: footerFields.twitter?.value?.trim() || '',
+          instagram: footerFields.instagram?.value?.trim() || '',
+          facebook: footerFields.facebook?.value?.trim() || '',
+          youtube: footerFields.youtube?.value?.trim() || '',
+          github: footerFields.github?.value?.trim() || '',
+        },
+        copyright: footerFields.copyright?.value?.trim() || '',
+        legal: {
+          url: footerFields.legalUrl?.value?.trim() || '',
+          privacyUrl: footerFields.privacyUrl?.value?.trim() || '',
+        },
+        style: {
+          bg: footerFields.bg?.value || 'bg-slate-900 text-white',
+          columnsCount: footerFields.columnsCount?.value || '4',
+        },
+      };
+    };
+    
+    const populateFooterForm = (data) => {
+      if (!data) return;
+      if (footerFields.linkedin) footerFields.linkedin.value = data.socials?.linkedin || '';
+      if (footerFields.twitter) footerFields.twitter.value = data.socials?.twitter || '';
+      if (footerFields.instagram) footerFields.instagram.value = data.socials?.instagram || '';
+      if (footerFields.facebook) footerFields.facebook.value = data.socials?.facebook || '';
+      if (footerFields.youtube) footerFields.youtube.value = data.socials?.youtube || '';
+      if (footerFields.github) footerFields.github.value = data.socials?.github || '';
+      if (footerFields.copyright) footerFields.copyright.value = data.copyright || '';
+      if (footerFields.legalUrl) footerFields.legalUrl.value = data.legal?.url || '';
+      if (footerFields.privacyUrl) footerFields.privacyUrl.value = data.legal?.privacyUrl || '';
+      if (footerFields.bg) footerFields.bg.value = data.style?.bg || 'bg-slate-900 text-white';
+      if (footerFields.columnsCount) footerFields.columnsCount.value = data.style?.columnsCount || '4';
+      // Populate columns
+      if (footerColumnsList) footerColumnsList.innerHTML = '';
+      (data.columns || []).forEach(col => addFooterColumn(col.title, col.links));
+      // Update status indicator
+      const hasData = data.columns?.length > 0 || data.copyright || Object.values(data.socials || {}).some(v => v);
+      if (footerStatusIndicator) {
+        footerStatusIndicator.classList.toggle('bg-green-500', !!hasData);
+        footerStatusIndicator.classList.toggle('bg-slate-300', !hasData);
+        footerStatusIndicator.title = hasData ? 'Configuré' : 'Non configuré';
+      }
+    };
+    
+    footerColumnAddBtn?.addEventListener('click', () => addFooterColumn());
+    
+    footerSaveBtn?.addEventListener('click', async () => {
+      if (!layoutApiBase) return;
+      footerSaveBtn.disabled = true;
+      footerSaveBtn.textContent = 'Enregistrement...';
+      try {
+        const data = collectFooterData();
+        const response = await fetch(`${layoutApiBase}/footer`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Erreur serveur');
+        footerData = data;
+        populateFooterForm(data);
+        showToast('Footer enregistré');
+      } catch (err) {
+        console.error('[footer] save error', err);
+        showToast('Erreur lors de l\'enregistrement', 'error');
+      } finally {
+        footerSaveBtn.disabled = false;
+        footerSaveBtn.textContent = 'Enregistrer';
+      }
+    });
+    
+    // Load layout data on init
+    const loadLayoutData = async () => {
+      if (!layoutApiBase) return;
+      try {
+        const response = await fetch(layoutApiBase, { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.header) {
+            headerData = data.header;
+            populateHeaderForm(data.header);
+          }
+          if (data.footer) {
+            footerData = data.footer;
+            populateFooterForm(data.footer);
+          }
+        }
+      } catch (err) {
+        console.error('[layout] load error', err);
+      }
+    };
+    
+    // Initialize layout data
+    loadLayoutData();
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // COLLECTIONS (existing code continues below)
+    // ═══════════════════════════════════════════════════════════════════
+    
     const collectionEmptyState = document.querySelector('[data-collection-empty]');
     const collectionItemsEmpty = document.querySelector('[data-collection-items-empty]');
     const itemTableWrapper = document.querySelector('[data-item-table-wrapper]');
     const itemTableBody = document.querySelector('[data-item-table-body]');
     const collectionTitle = document.querySelector('[data-collection-title]');
     const collectionDescription = document.querySelector('[data-collection-description]');
-    const collectionDrawer = document.querySelector('[data-collection-drawer]');
-    const collectionDrawerBackdrop = document.querySelector('[data-collection-drawer-backdrop]');
-    const collectionDrawerOpenButtons = document.querySelectorAll('[data-collection-drawer-open]');
-    const collectionDrawerCloseButtons = document.querySelectorAll('[data-collection-drawer-close]');
     const itemAddButton = document.querySelector('[data-item-add]');
     const itemDetailEmpty = document.querySelector('[data-item-detail-empty]');
     const itemForm = document.querySelector('[data-item-form]');
@@ -3072,34 +3418,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let isCreatingItem = false;
     let itemSlugManuallyEdited = false;
     let pendingDeleteItemId = null;
-
-    const openCollectionDrawer = () => {
-      if (!collectionDrawer) {
-        return;
-      }
-      collectionDrawer.classList.add('is-open');
-      collectionDrawer.style.transform = 'translateX(0)';
-      collectionDrawerBackdrop?.classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
-    };
-
-    const closeCollectionDrawer = () => {
-      if (!collectionDrawer) {
-        return;
-      }
-      collectionDrawer.classList.remove('is-open');
-      collectionDrawer.style.transform = '';
-      collectionDrawerBackdrop?.classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
-    };
-
-    collectionDrawerOpenButtons.forEach((button) => {
-      button.addEventListener('click', openCollectionDrawer);
-    });
-    collectionDrawerCloseButtons.forEach((button) => {
-      button.addEventListener('click', closeCollectionDrawer);
-    });
-    collectionDrawerBackdrop?.addEventListener('click', closeCollectionDrawer);
 
     const normalizeItemSlugInput = (value) => {
       const raw = (value || '').trim();
@@ -3208,6 +3526,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderCollectionList = () => {
       collectionList.innerHTML = '';
+      // Update collection count
+      if (collectionCountEl) collectionCountEl.textContent = collections.length;
       if (!collections.length) {
         collectionEmptyState?.classList.remove('hidden');
         return;
@@ -3242,7 +3562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
           setActiveCollection(collection.id);
           if (!window.matchMedia('(min-width: 1024px)').matches) {
-            closeCollectionDrawer();
+            closeContentDrawer();
           }
         });
         collectionList.appendChild(button);
@@ -3445,6 +3765,8 @@ document.addEventListener('DOMContentLoaded', () => {
       activeItemId = null;
       isCreatingItem = false;
       itemSlugManuallyEdited = false;
+      // Switch to collection view
+      showContentView('collection');
       updateCollectionHeader();
       syncAddButtonState();
       renderCollectionList();
