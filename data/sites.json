@@ -12,5 +12,12 @@
     "outputPath": "/public/atelier",
     "lastDeployment": null,
     "isActive": false
+  },
+  {
+    "name": "landing clower ux",
+    "slug": "/landing-clower-ux",
+    "outputPath": "/public/landing-clower-ux",
+    "lastDeployment": null,
+    "isActive": false
   }
 ]

@@ -1113,8 +1113,9 @@
       <button type="button" data-import-modal-close class="text-slate-500 hover:text-slate-900 text-sm" aria-label="Fermer">✕</button>
     </div>
     <div class="flex gap-2">
-      <button type="button" data-import-tab="upload" class="px-3 py-1.5 text-sm font-semibold rounded-lg bg-[#9C6BFF] text-white">Importer</button>
-      <button type="button" data-import-tab="template" class="px-3 py-1.5 text-sm font-semibold rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50">Template JSON</button>
+      <button type="button" data-import-tab="upload" class="px-3 py-1.5 text-sm font-semibold rounded-lg bg-[#9C6BFF] text-white">Importer fichier</button>
+      <button type="button" data-import-tab="paste" class="px-3 py-1.5 text-sm font-semibold rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50">Coller JSON</button>
+      <button type="button" data-import-tab="template" class="px-3 py-1.5 text-sm font-semibold rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50">Template</button>
     </div>
     <div data-import-panel="upload">
       <div data-import-dropzone class="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center transition hover:border-[#9C6BFF] hover:bg-[#9C6BFF]/5">
@@ -1135,18 +1136,108 @@
         <div data-import-results-content class="text-sm text-slate-700"></div>
       </div>
     </div>
+    <div data-import-panel="paste" class="hidden">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Coller ton JSON ici</p>
+        <button type="button" data-format-json class="text-xs font-semibold text-[#9C6BFF] hover:underline">✨ Formater</button>
+      </div>
+      <textarea data-import-paste-json class="w-full h-64 bg-slate-900 text-slate-100 text-xs rounded-xl p-4 font-mono resize-y focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]" placeholder='{
+  "title": "Ma page",
+  "slug": "ma-page",
+  "blocks": [...]
+}'></textarea>
+      <p class="text-xs text-slate-500 mt-2">💡 Tu peux coller une seule page <code class="bg-slate-100 px-1 rounded">{...}</code> ou un tableau de pages <code class="bg-slate-100 px-1 rounded">[{...}, {...}]</code></p>
+      <div data-import-paste-error class="hidden mt-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-2"></div>
+    </div>
     <div data-import-panel="template" class="hidden">
       <div class="flex items-center justify-between mb-2">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Template avec tous les types de blocs</p>
-        <button type="button" data-copy-template class="text-xs font-semibold text-[#9C6BFF] hover:underline">📋 Copier</button>
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Guide & Template JSON</p>
+        <button type="button" data-copy-template class="text-xs font-semibold text-[#9C6BFF] hover:underline">📋 Copier le template</button>
       </div>
-      <pre data-template-json class="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 overflow-x-auto max-h-[50vh] overflow-y-auto"><code>{
+      
+      <!-- Instructions pour IA / Utilisateur -->
+      <div class="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl p-4 mb-4 space-y-3 border border-violet-100">
+        <h4 class="text-sm font-bold text-slate-800">📋 Instructions pour générer du JSON (pages + collections)</h4>
+        
+        <div class="text-xs text-slate-700 space-y-2">
+          <div class="bg-white/70 rounded-lg p-3 space-y-1">
+            <p class="font-semibold text-slate-800">📄 Formats acceptés :</p>
+            <ul class="list-disc list-inside space-y-0.5 text-slate-600">
+              <li>Une seule page : <code class="bg-white px-1 rounded">{"title": "...", "blocks": [...]}</code></li>
+              <li>Plusieurs pages : <code class="bg-white px-1 rounded">[{page1}, {page2}]</code></li>
+              <li>Pages + Collections : <code class="bg-white px-1 rounded">{"pages": [...], "collections": {...}}</code></li>
+            </ul>
+          </div>
+          
+          <div class="bg-white/70 rounded-lg p-3 space-y-1">
+            <p class="font-semibold text-slate-800">🔑 Champs obligatoires d'une page :</p>
+            <ul class="list-disc list-inside space-y-0.5 text-slate-600">
+              <li><code>title</code> : Titre affiché de la page (string)</li>
+              <li><code>slug</code> : URL de la page, format "/kebab-case" (ex: "/about")</li>
+              <li><code>blocks</code> : Tableau des blocs de contenu</li>
+            </ul>
+          </div>
+          
+          <div class="bg-white/70 rounded-lg p-3 space-y-1">
+            <p class="font-semibold text-slate-800">🧱 Structure d'un bloc :</p>
+            <ul class="list-disc list-inside space-y-0.5 text-slate-600">
+              <li><code>id</code> : Identifiant unique (ex: "hero-1")</li>
+              <li><code>type</code> : Type de bloc (voir ci-dessous)</li>
+              <li><code>label</code> : Libellé affiché dans l'éditeur</li>
+              <li><code>settings</code> : Paramètres du bloc</li>
+            </ul>
+          </div>
+          
+          <div class="bg-emerald-50 rounded-lg p-3 space-y-1 border border-emerald-200">
+            <p class="font-semibold text-emerald-800">📦 Collections (auto-créées si absentes) :</p>
+            <p class="text-emerald-700">Si un bloc <code>CollectionGrid</code> référence une collection qui n'existe pas, elle sera créée automatiquement.</p>
+            <p class="text-emerald-700 mt-1">Tu peux aussi fournir les données :</p>
+            <pre class="bg-white/80 rounded p-2 mt-1 text-[10px] overflow-x-auto"><code>"collections": {
+  "projets": {
+    "name": "Projets",
+    "description": "Nos réalisations",
+    "items": [
+      {
+        "title": "Projet 1",
+        "summary": "Description...",
+        "image": "/assets/img.jpg",
+        "cta": {"text": "Découvrir", "url": "/projet-1"}
+      },
+      {"title": "Projet 2", "summary": "Description..."}
+    ]
+  }
+}</code></pre>
+            <p class="text-emerald-600 text-[10px] mt-1">💡 Propriétés d'un item : <code>title</code>, <code>summary</code>, <code>content</code>, <code>image</code>, <code>status</code>, <code>cta</code> (optionnel: <code>text</code> + <code>url</code>)</p>
+          </div>
+        </div>
+        
+        <div class="bg-white/70 rounded-lg p-3">
+          <p class="font-semibold text-slate-800 text-xs mb-2">🎨 Types de blocs disponibles :</p>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Hero</span>
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Paragraphe</span>
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Image</span>
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Groupe</span>
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">CollectionGrid</span>
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Form</span>
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">NewsletterEmbed</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Template JSON complet -->
+      <details class="group">
+        <summary class="cursor-pointer text-xs font-semibold text-slate-600 hover:text-[#9C6BFF] flex items-center gap-2 mb-2">
+          <span class="group-open:rotate-90 transition-transform">▶</span>
+          Voir le template JSON complet avec tous les blocs
+        </summary>
+        <pre data-template-json class="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 overflow-x-auto max-h-[40vh] overflow-y-auto"><code>{
   "title": "Ma page exemple",
-  "slug": "ma-page-exemple",
-  "description": "Description de la page",
+  "slug": "/ma-page-exemple",
+  "description": "Description courte de la page pour l'admin",
   "seo": {
-    "title": "Titre SEO personnalisé",
-    "description": "Meta description pour les moteurs de recherche"
+    "title": "Titre SEO – Apparaît dans l'onglet navigateur",
+    "description": "Meta description pour Google (150-160 caractères max)"
   },
   "blocks": [
     {
@@ -1154,80 +1245,187 @@
       "type": "Hero",
       "label": "Hero principal",
       "settings": {
-        "title": "Bienvenue sur notre site",
-        "subtitle": "Une accroche percutante",
-        "ctaLabel": "Découvrir",
-        "ctaUrl": "/services",
-        "image": "/assets/hero.jpg",
-        "align": "center"
+        "title": "Titre principal du hero",
+        "subtitle": "Sous-titre ou accroche",
+        "ctaLabel": "Texte du bouton",
+        "ctaUrl": "/lien-cible",
+        "image": "/chemin/vers/image.jpg",
+        "align": "center",
+        "layout": "flex-row",
+        "height": "min-h-[50vh]",
+        "overlay": "bg-black/30",
+        "titleSize": "text-4xl"
       }
     },
     {
       "id": "paragraph-1",
       "type": "Paragraphe",
-      "label": "Introduction",
+      "label": "Section texte",
       "settings": {
-        "title": "Notre histoire",
-        "content": "Texte du paragraphe...",
-        "align": "left"
+        "title": "Titre de la section",
+        "content": "Contenu texte. Supporte les retours à la ligne.",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
       }
     },
     {
       "id": "image-1",
       "type": "Image",
-      "label": "Photo équipe",
+      "label": "Image illustrative",
       "settings": {
-        "src": "/assets/team.jpg",
-        "alt": "Notre équipe",
+        "src": "/chemin/vers/image.jpg",
+        "alt": "Description alternative pour accessibilité",
         "showCaption": true,
-        "caption": "L'équipe au complet"
+        "caption": "Légende de l'image",
+        "rounded": "rounded-2xl",
+        "shadow": "shadow-lg",
+        "maxWidth": "max-w-2xl",
+        "align": "mx-auto"
       }
     },
     {
       "id": "group-1",
       "type": "Groupe",
-      "label": "Grille services",
+      "label": "Grille de contenu",
       "settings": {
         "layout": "grid",
         "columnsMobile": "1",
-        "columnsDesktop": "3"
+        "columnsDesktop": "3",
+        "gap": "gap-6",
+        "itemsAlign": "items-start"
       }
     },
     {
       "id": "collection-1",
       "type": "CollectionGrid",
-      "label": "Nos projets",
+      "label": "Grille de collection",
       "settings": {
-        "collectionId": "projets",
-        "limit": 6
+        "collectionId": "nom-de-la-collection",
+        "limit": 6,
+        "columnsMobile": "1",
+        "columnsDesktop": "3",
+        "gap": "gap-4",
+        "cardRounded": "rounded-xl"
       }
     },
     {
       "id": "form-1",
       "type": "Form",
-      "label": "Contact",
+      "label": "Formulaire de contact",
       "settings": {
         "formTitle": "Contactez-nous",
-        "actionUrl": "https://formspree.io/f/xxxxx",
+        "actionUrl": "https://formspree.io/f/votre-id",
         "method": "POST",
         "serviceName": "Formspree",
-        "submitLabel": "Envoyer",
-        "successMessage": "Merci !"
+        "submitLabel": "Envoyer le message",
+        "successMessage": "Merci ! Nous vous répondrons rapidement.",
+        "maxWidth": "max-w-lg",
+        "align": "mx-auto"
       }
     },
     {
       "id": "newsletter-1",
       "type": "NewsletterEmbed",
-      "label": "Newsletter",
+      "label": "Inscription newsletter",
       "settings": {
         "title": "Restez informé",
         "serviceName": "Brevo",
-        "embedCode": "&lt;form...&gt;Code HTML du formulaire&lt;/form&gt;"
+        "embedCode": "&lt;form&gt;Code HTML du formulaire newsletter&lt;/form&gt;",
+        "maxWidth": "max-w-md",
+        "align": "mx-auto"
       }
     }
   ]
 }</code></pre>
-      <p class="text-xs text-slate-500 mt-2">💡 Tu peux importer une seule page ou un tableau de pages <code class="bg-slate-100 px-1 rounded">[{...}, {...}]</code></p>
+      </details>
+      
+      <!-- Template avec collections -->
+      <details class="group mt-3">
+        <summary class="cursor-pointer text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-2 mb-2">
+          <span class="group-open:rotate-90 transition-transform">▶</span>
+          Voir le template avec pages + collections
+        </summary>
+        <pre class="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 overflow-x-auto max-h-[40vh] overflow-y-auto"><code>{
+  "pages": [
+    {
+      "title": "Nos réalisations",
+      "slug": "/realisations",
+      "description": "Découvrez nos projets",
+      "blocks": [
+        {
+          "id": "hero-realisations",
+          "type": "Hero",
+          "label": "Hero réalisations",
+          "settings": {
+            "title": "Nos réalisations",
+            "subtitle": "Découvrez nos projets récents"
+          }
+        },
+        {
+          "id": "grid-projets",
+          "type": "CollectionGrid",
+          "label": "Grille des projets",
+          "settings": {
+            "collectionId": "mes-projets",
+            "limit": 6,
+            "columnsDesktop": "3"
+          }
+        }
+      ]
+    }
+  ],
+  "collections": {
+    "mes-projets": {
+      "name": "Mes Projets",
+      "description": "Portfolio de réalisations",
+      "items": [
+        {
+          "id": "projet-1",
+          "title": "Site e-commerce Bio",
+          "status": "Publié",
+          "summary": "Boutique en ligne éco-responsable",
+          "image": "/assets/projet1.jpg",
+          "cta": {
+            "text": "Voir le projet",
+            "url": "/projets/ecommerce-bio"
+          }
+        },
+        {
+          "id": "projet-2",
+          "title": "Application mobile santé",
+          "status": "Publié",
+          "summary": "Suivi de bien-être quotidien",
+          "image": "/assets/projet2.jpg",
+          "cta": {
+            "text": "Découvrir",
+            "url": "/projets/app-sante"
+          }
+        },
+        {
+          "id": "projet-3",
+          "title": "Plateforme éducative",
+          "status": "Brouillon",
+          "summary": "Cours en ligne pour enfants",
+          "image": "/assets/projet3.jpg"
+        }
+      ]
+    }
+  }
+}</code></pre>
+      </details>
+      
+      <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <p class="text-xs text-amber-800">
+          <strong>💡 Conseils :</strong><br>
+          • Les <code>id</code> doivent être uniques dans la page<br>
+          • Le <code>slug</code> doit commencer par "/" et être en kebab-case<br>
+          • Les collections référencées dans <code>CollectionGrid</code> sont créées automatiquement si elles n'existent pas<br>
+          • Tu peux fournir les items de collection directement dans le JSON<br>
+          • Le <code>cta</code> (Call-to-Action) est optionnel : <code>{"text": "Voir", "url": "/lien"}</code>
+        </p>
+      </div>
     </div>
     <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
       <button type="button" data-import-modal-close class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900">Fermer</button>
@@ -1236,4 +1434,3 @@
   </div>
 </div>
 {% endblock %}
-

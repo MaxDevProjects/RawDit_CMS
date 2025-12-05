@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "id": "step-clarity-call",
+      "title": "1. Clarity Call",
+      "status": "Brouillon",
+      "summary": "Un appel de 30–45 minutes pour comprendre votre site, vos objectifs et les points de friction.",
+      "slug": "/revamp-day-steps-1-clarity-call",
+      "content": "",
+      "image": "",
+      "updatedAt": "2025-12-05T10:21:42.889Z"
+    },
+    {
+      "id": "step-revamp-day",
+      "title": "2. Journée Revamp",
+      "status": "Brouillon",
+      "summary": "Travail intensif sur vos pages clés : hero, navigation, structure, lisibilité, cohérence.",
+      "slug": "/revamp-day-steps-2-journee-revamp",
+      "content": "",
+      "image": "",
+      "updatedAt": "2025-12-05T10:21:42.890Z"
+    },
+    {
+      "id": "step-recap-adjust",
+      "title": "3. Récap + ajustements",
+      "status": "Brouillon",
+      "summary": "Un avant/après commenté + 7 jours d’ajustements pour affiner les détails.",
+      "slug": "/revamp-day-steps-3-recap-ajustements",
+      "content": "",
+      "image": "",
+      "updatedAt": "2025-12-05T10:21:42.890Z"
+    }
+  ]
+}

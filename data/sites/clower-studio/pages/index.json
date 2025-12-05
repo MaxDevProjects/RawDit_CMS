@@ -20,7 +20,7 @@
         "direction": "row",
         "gap": "xl",
         "rounded": "2xl",
-        "shadow": "shadow-sm",
+        "shadow": "shadow-none",
         "background": "surface-soft",
         "paddingY": "xl",
         "paddingX": "lg",
@@ -29,8 +29,8 @@
         "contentAlign": "items-center",
         "overlay": "bg-black/50",
         "titleSize": "text-3xl",
-        "bg": "bg-rose-50",
-        "borderRadius": "rounded-3xl"
+        "bg": "bg-slate-200",
+        "borderRadius": "rounded-none"
       },
       "props": [],
       "description": "Je m’appelle Maxime, développeur–designer freelance. Avec Clower Studio, j’accompagne les projets éducatifs, les pros de l’enfance, de la parentalité, de la santé et les acteurs engagés à créer des outils web clairs, responsables et vraiment utiles."

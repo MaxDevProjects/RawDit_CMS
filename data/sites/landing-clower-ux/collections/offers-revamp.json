@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "offer-checkup-ux",
+      "title": "Check-Up UX",
+      "status": "Publié",
+      "summary": "Audit rapide de votre site + première amélioration concrète pour repartir sur des bases plus claires.",
+      "slug": "/offers-revamp-check-up-ux",
+      "content": "<p><strong>Check-Up UX</strong> : un diagnostic ciblé pour comprendre ce qui bloque sur votre site et corriger un premier point clé.</p><ul><li>Analyse de la navigation, de la lisibilité et de la hiérarchie des informations</li><li>Identification des points les plus bloquants pour vos visiteurs</li><li>Une première amélioration concrète (texte, CTA, structure de section, etc.)</li><li>Retour synthétique et actionnable pour la suite</li></ul>",
+      "image": "https://picsum.photos/600/350?random=10",
+      "updatedAt": "2025-12-05T10:52:55.476Z",
+      "cta": {
+        "text": "Réserver un Check-Up UX",
+        "url": "mailto:clower.webconception@gmail.com?subject=Réservation%20Check-Up%20UX"
+      }
+    },
+    {
+      "id": "offer-revamp-day",
+      "title": "Revamp Day",
+      "status": "Publié",
+      "summary": "Une journée dédiée pour transformer votre site et le rendre plus fluide, cohérent et professionnel.",
+      "slug": "/offers-revamp-revamp-day",
+      "content": "<p><strong>Revamp Day</strong> : une intervention d’une journée pour retravailler votre site en profondeur, sans repartir de zéro.</p><ul><li>Amélioration de sections clés (hero, menu, pages importantes, CTA…)</li><li>Clarification du parcours utilisateur</li><li>Harmonisation du design et de la cohérence visuelle</li><li>Avant / après pour visualiser les changements</li><li>Support léger après l’intervention pour de petits ajustements</li></ul>",
+      "image": "https://picsum.photos/600/350?random=11",
+      "updatedAt": "2025-12-05T10:52:55.476Z",
+      "cta": {
+        "text": "Parler d’un Revamp Day",
+        "url": "mailto:clower.webconception@gmail.com?subject=Info%20Revamp%20Day"
+      }
+    }
+  ]
+}

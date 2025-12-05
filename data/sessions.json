@@ -42,6 +42,16 @@
   "cc0c5301d6dc6fd2d4fd12f78fb9dbc8c023273b10b0d086074a11870779fdc4": {
     "username": "admin",
     "createdAt": 1764857180121,
-    "currentSiteSlug": "/clower-studio"
+    "currentSiteSlug": "/landing-clower-ux"
+  },
+  "5a7e57adf76ff0fcecb8a54204110fd318d12635c103f2aff22b0da778092873": {
+    "username": "admin",
+    "createdAt": 1764880006113,
+    "currentSiteSlug": null
+  },
+  "edbc3f3cf9ebfadfdcd9db440af66f4377deefa3e6a0d7acff9a27d67f4e9444": {
+    "username": "admin",
+    "createdAt": 1764923396698,
+    "currentSiteSlug": "/landing-clower-ux"
   }
 }

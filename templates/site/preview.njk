@@ -103,9 +103,9 @@
                 <h2 class="{{ title_size }} font-bold leading-tight">
                   {{ settings.title or block.label or 'Titre du hero' }}
                 </h2>
-                <p class="text-lg text-slate-600 max-w-2xl">
-                  {{ settings.subtitle or block.description or 'Ajoutez un sous-titre inspirant pour ce hero.' }}
-                </p>
+                <div class="text-lg text-slate-600 max-w-2xl [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic">
+                  {{ (settings.subtitle or block.description or 'Ajoutez un sous-titre inspirant pour ce hero.') | safe }}
+                </div>
                 {% if settings.ctaLabel %}
                   <a
                     href="{{ settings.ctaUrl or '#' }}"
@@ -146,9 +146,9 @@
             <h3 class="{{ title_size }} font-semibold mb-2">
               {{ settings.title or block.label or 'Titre du paragraphe' }}
             </h3>
-            <p class="{{ text_size }} text-slate-600">
-              {{ settings.content or block.description or 'Ajoutez votre texte éditorial ici.' }}
-            </p>
+            <div class="{{ text_size }} text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-violet-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
+              {{ (settings.content or block.description or 'Ajoutez votre texte éditorial ici.') | safe }}
+            </div>
           </section>
         {% elif type == 'image' %}
           {% set src = settings.src or '' %}
@@ -233,9 +233,23 @@
                 {% for item in allItems %}
                   {% if loop.index0 < limit %}
                   <article class="{{ coll_card_rounded }} border border-slate-100 bg-slate-50 p-4 space-y-2">
+                    {% if item.image %}
+                    <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-32 object-cover rounded-lg mb-2" />
+                    {% endif %}
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-400">{{ item.status or '' }}</p>
                     <h4 class="text-lg font-semibold text-slate-900">{{ item.title or 'Item' }}</h4>
-                    <p class="text-sm text-slate-600">{{ item.summary or item.excerpt or '' }}</p>
+                    <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">{{ (item.summary or item.excerpt or '') | safe }}</div>
+                    {% if item.cta and item.cta.text %}
+                    <a 
+                      href="{{ item.cta.url or '#' }}" 
+                      class="inline-flex items-center gap-1 mt-2 px-4 py-2 text-sm font-medium text-white bg-[#9C6BFF] hover:bg-[#8654f5] rounded-xl transition-colors"
+                    >
+                      {{ item.cta.text }}
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </a>
+                    {% endif %}
                   </article>
                   {% endif %}
                 {% endfor %}

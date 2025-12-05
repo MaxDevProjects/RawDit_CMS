@@ -104,8 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const siteCreateButtons = document.querySelectorAll('[data-site-create]');
   const siteModal = document.querySelector('[data-site-modal]');
   const siteForm = document.querySelector('[data-site-form]');
-  const siteNameInput = document.querySelector('[data-site-name]');
-  const siteSlugInput = document.querySelector('[data-site-slug]');
+  // Use more specific selectors to get inputs INSIDE the form, not site cards
+  const siteNameInput = siteForm?.querySelector('input[name="siteName"]');
+  const siteSlugInput = siteForm?.querySelector('input[name="siteSlug"]');
   const siteSlugError = document.querySelector('[data-site-slug-error]');
   const siteModalError = document.querySelector('[data-site-modal-error]');
   const siteModalCancelButtons = document.querySelectorAll('[data-site-modal-cancel]');
@@ -329,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const workspaceSlugify = (value) =>
-    value
+    (value || '')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
@@ -399,11 +400,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!slugManuallyEdited || siteSlugInput.value.trim().length === 0) {
       siteSlugInput.value = workspaceSlugify(siteNameInput.value);
     }
+    // Clear errors when user types
+    siteSlugError && (siteSlugError.textContent = '');
+    siteModalError && (siteModalError.textContent = '');
+  });
+
+  siteSlugInput?.addEventListener('focus', () => {
+    // Auto-fill slug from name if empty when user focuses the slug field
+    const slugVal = siteSlugInput?.value || '';
+    const nameVal = siteNameInput?.value || '';
+    if (!slugVal.trim() && nameVal.trim()) {
+      siteSlugInput.value = workspaceSlugify(nameVal);
+    }
   });
 
   siteSlugInput?.addEventListener('input', () => {
     slugManuallyEdited = true;
     siteSlugError && (siteSlugError.textContent = '');
+    siteModalError && (siteModalError.textContent = '');
   });
 
   const getSlugSet = () =>
@@ -411,19 +425,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   siteForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
+    console.log('[admin] Form submit - siteNameInput:', siteNameInput, 'siteSlugInput:', siteSlugInput);
+    
     if (!siteNameInput || !siteSlugInput) {
+      console.log('[admin] Missing inputs, aborting');
       return;
     }
+    
     const nameValue = (siteNameInput.value || '').trim();
-    let slugValue = siteSlugInput.value || '';
-    if (!slugValue) {
-      slugValue = nameValue;
+    let slugValue = (siteSlugInput.value || '').trim();
+    
+    console.log('[admin] nameValue:', nameValue, 'slugValue:', slugValue);
+    
+    // Auto-generate slug from name if empty
+    if (!slugValue && nameValue) {
+      slugValue = workspaceSlugify(nameValue);
+      siteSlugInput.value = slugValue;
+      console.log('[admin] Auto-generated slug:', slugValue);
     }
+    
     const normalizedSlug = normalizeSlugValue(slugValue);
-    if (!nameValue || !normalizedSlug) {
-      siteSlugError && (siteSlugError.textContent = 'Nom et slug sont requis.');
+    console.log('[admin] normalizedSlug:', normalizedSlug);
+    
+    // Validate name
+    if (!nameValue) {
+      console.log('[admin] Name validation failed');
+      siteModalError && (siteModalError.textContent = 'Le nom du site est requis.');
+      siteNameInput.focus();
       return;
     }
+    
+    // Validate slug
+    if (!normalizedSlug) {
+      console.log('[admin] Slug validation failed');
+      siteSlugError && (siteSlugError.textContent = 'Le slug ne peut pas être vide ou contenir uniquement des caractères spéciaux.');
+      siteSlugInput.focus();
+      return;
+    }
+    
     const existingSlugs = getSlugSet();
     if (existingSlugs.has(normalizedSlug)) {
       siteSlugError && (siteSlugError.textContent = 'Ce slug est déjà utilisé.');
@@ -1275,7 +1314,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const importPanels = document.querySelectorAll('[data-import-panel]');
     const copyTemplateBtn = document.querySelector('[data-copy-template]');
     const templateJson = document.querySelector('[data-template-json]');
+    // Paste JSON elements
+    const importPasteInput = document.querySelector('[data-import-paste-json]');
+    const pasteFormatBtn = document.querySelector('[data-format-json]');
+    const pasteError = document.querySelector('[data-import-paste-error]');
     let importSelectedFiles = [];
+    let activeImportTab = 'upload';
     // Delete page elements
     const deletePageModal = document.querySelector('[data-delete-page-modal]');
     const deletePageName = document.querySelector('[data-delete-page-name]');
@@ -2266,34 +2310,107 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // === Import JSON handlers ===
+    const resetPasteState = () => {
+      if (importPasteInput) importPasteInput.value = '';
+      if (pasteError) {
+        pasteError.classList.add('hidden');
+        pasteError.textContent = '';
+      }
+    };
+
+    const validatePasteJson = () => {
+      if (!importPasteInput) return null;
+      const text = importPasteInput.value.trim();
+      if (!text) {
+        if (pasteError) pasteError.classList.add('hidden');
+        return null;
+      }
+      try {
+        const parsed = JSON.parse(text);
+        if (pasteError) pasteError.classList.add('hidden');
+        return parsed;
+      } catch (err) {
+        if (pasteError) {
+          pasteError.classList.remove('hidden');
+          pasteError.textContent = `❌ JSON invalide : ${err.message}`;
+        }
+        return null;
+      }
+    };
+
+    const formatPasteJson = () => {
+      if (!importPasteInput) return;
+      const text = importPasteInput.value.trim();
+      if (!text) return;
+      try {
+        const parsed = JSON.parse(text);
+        importPasteInput.value = JSON.stringify(parsed, null, 2);
+        validatePasteJson();
+      } catch {
+        // Si pas valide, on ne formate pas
+      }
+    };
+
+    const updateImportSubmitState = () => {
+      if (!importSubmit) return;
+      if (activeImportTab === 'upload') {
+        importSubmit.disabled = importSelectedFiles.length === 0;
+      } else if (activeImportTab === 'paste') {
+        const parsed = validatePasteJson();
+        importSubmit.disabled = !parsed;
+      } else {
+        importSubmit.disabled = true;
+      }
+    };
+
     const openImportModal = () => {
       if (!importModal) return;
       importModal.classList.remove('hidden');
       importModal.classList.add('flex');
       importSelectedFiles = [];
+      activeImportTab = 'upload';
       updateImportFileList();
+      resetPasteState();
       if (importResults) importResults.classList.add('hidden');
       if (importResultsContent) importResultsContent.innerHTML = '';
-      if (importSubmit) importSubmit.disabled = true;
+      updateImportSubmitState();
+      // Reset tabs to upload
+      importTabs.forEach((t) => {
+        if (t.dataset.importTab === 'upload') {
+          t.classList.add('bg-[#9C6BFF]', 'text-white');
+          t.classList.remove('border', 'border-slate-200', 'text-slate-700');
+        } else {
+          t.classList.remove('bg-[#9C6BFF]', 'text-white');
+          t.classList.add('border', 'border-slate-200', 'text-slate-700');
+        }
+      });
+      importPanels.forEach((p) => {
+        if (p.dataset.importPanel === 'upload') {
+          p.classList.remove('hidden');
+        } else {
+          p.classList.add('hidden');
+        }
+      });
     };
     const closeImportModal = () => {
       if (!importModal) return;
       importModal.classList.add('hidden');
       importModal.classList.remove('flex');
       importSelectedFiles = [];
+      resetPasteState();
     };
     const updateImportFileList = () => {
       if (!importFileList || !importFileNames) return;
       if (importSelectedFiles.length === 0) {
         importFileList.classList.add('hidden');
-        if (importSubmit) importSubmit.disabled = true;
+        updateImportSubmitState();
         return;
       }
       importFileList.classList.remove('hidden');
       importFileNames.innerHTML = importSelectedFiles
         .map((f) => `<li class="flex items-center gap-2"><span class="text-lg">📄</span>${f.name}</li>`)
         .join('');
-      if (importSubmit) importSubmit.disabled = false;
+      updateImportSubmitState();
     };
     const handleImportFiles = (files) => {
       const jsonFiles = Array.from(files).filter(
@@ -2307,65 +2424,225 @@ document.addEventListener('DOMContentLoaded', () => {
       updateImportFileList();
     };
     const executeImport = async () => {
-      if (!pagesApiBase || importSelectedFiles.length === 0) return;
-      if (importSubmit) {
-        importSubmit.disabled = true;
-        importSubmit.textContent = 'Import...';
-      }
-      try {
-        const pagesData = [];
+      if (!pagesApiBase) return;
+      
+      // Determine source of data based on active tab
+      let pagesData = [];
+      
+      console.log('[import] activeImportTab:', activeImportTab);
+      
+      if (activeImportTab === 'paste') {
+        // Import from pasted JSON
+        const text = importPasteInput?.value?.trim();
+        console.log('[import] paste text length:', text?.length);
+        if (!text) {
+          showToast('Aucun JSON à importer.');
+          if (importResults && importResultsContent) {
+            importResults.classList.remove('hidden');
+            importResultsContent.innerHTML = '<p class="text-amber-600">⚠ Le champ de texte est vide.</p>';
+          }
+          return;
+        }
+        try {
+          const parsed = JSON.parse(text);
+          console.log('[import] parsed JSON:', parsed);
+          console.log('[import] parsed type:', typeof parsed, Array.isArray(parsed) ? 'array' : 'not array');
+          
+          // Support format { pages: [...], collections: {...} }
+          if (parsed && !Array.isArray(parsed) && parsed.pages) {
+            console.log('[import] detected pages+collections format');
+            pagesData = parsed; // Send the whole object, backend will handle it
+          } else if (Array.isArray(parsed)) {
+            pagesData.push(...parsed);
+          } else {
+            pagesData.push(parsed);
+          }
+          console.log('[import] pagesData prepared:', pagesData);
+        } catch (parseErr) {
+          // Afficher le détail de l'erreur de parsing
+          const errorLine = parseErr.message.match(/position (\d+)/);
+          let errorDetail = parseErr.message;
+          if (errorLine) {
+            const pos = parseInt(errorLine[1], 10);
+            const lines = text.substring(0, pos).split('\n');
+            const lineNum = lines.length;
+            const colNum = lines[lines.length - 1].length + 1;
+            errorDetail = `Ligne ${lineNum}, colonne ${colNum}: ${parseErr.message}`;
+          }
+          showToast(`Erreur JSON : ${errorDetail}`, 'error');
+          console.error('[import] paste parse error', parseErr);
+          // Show error in results area
+          if (importResults && importResultsContent) {
+            importResults.classList.remove('hidden');
+            importResultsContent.innerHTML = `
+              <div class="text-rose-600">
+                <p class="font-medium">✗ Erreur de syntaxe JSON</p>
+                <p class="text-xs mt-1">${errorDetail}</p>
+                <p class="text-xs mt-2 text-slate-500">Vérifiez les virgules, guillemets et accolades.</p>
+              </div>
+            `;
+          }
+          return;
+        }
+      } else if (activeImportTab === 'upload') {
+        // Import from files
+        if (importSelectedFiles.length === 0) return;
+        const fileErrors = [];
         for (const file of importSelectedFiles) {
           const text = await file.text();
           try {
             const parsed = JSON.parse(text);
-            // Support single page or array of pages
             if (Array.isArray(parsed)) {
               pagesData.push(...parsed);
             } else {
               pagesData.push(parsed);
             }
           } catch (parseErr) {
-            showToast(`Erreur JSON dans ${file.name}`);
+            const errorLine = parseErr.message.match(/position (\d+)/);
+            let errorDetail = parseErr.message;
+            if (errorLine) {
+              const pos = parseInt(errorLine[1], 10);
+              const lines = text.substring(0, pos).split('\n');
+              const lineNum = lines.length;
+              errorDetail = `Ligne ${lineNum}: ${parseErr.message}`;
+            }
+            fileErrors.push({ file: file.name, error: errorDetail });
             console.error('[import] parse error', file.name, parseErr);
           }
         }
-        if (pagesData.length === 0) {
-          showToast('Aucune page valide à importer.');
-          return;
+        // Show file parsing errors if any
+        if (fileErrors.length > 0) {
+          if (importResults && importResultsContent) {
+            importResults.classList.remove('hidden');
+            let html = '<div class="text-rose-600"><p class="font-medium">✗ Erreurs de syntaxe JSON</p><ul class="ml-4 text-xs mt-1">';
+            fileErrors.forEach(e => {
+              html += `<li><strong>${e.file}</strong>: ${e.error}</li>`;
+            });
+            html += '</ul></div>';
+            if (pagesData.length > 0) {
+              html += `<p class="text-amber-600 mt-2 text-sm">⚠ ${pagesData.length} page(s) valide(s) seront importée(s)</p>`;
+            }
+            importResultsContent.innerHTML = html;
+          }
+          if (pagesData.length === 0) {
+            showToast('Tous les fichiers contiennent des erreurs JSON', 'error');
+            return;
+          }
         }
+      } else {
+        return;
+      }
+
+      // Vérifier qu'on a des données à importer
+      const hasData = Array.isArray(pagesData) 
+        ? pagesData.length > 0 
+        : (pagesData && (pagesData.pages?.length > 0 || pagesData.title));
+      
+      console.log('[import] hasData check:', hasData, 'pagesData:', pagesData);
+      
+      if (!hasData) {
+        showToast('Aucune page valide à importer.');
+        if (importResults && importResultsContent) {
+          importResults.classList.remove('hidden');
+          importResultsContent.innerHTML = `
+            <div class="text-amber-600">
+              <p class="font-medium">⚠ Aucune page détectée</p>
+              <p class="text-xs mt-1">Le JSON doit contenir :</p>
+              <ul class="text-xs ml-4 mt-1 list-disc">
+                <li>Un objet page avec "title" : <code>{"title": "Ma page", ...}</code></li>
+                <li>Un tableau de pages : <code>[{"title": "Page 1"}, {"title": "Page 2"}]</code></li>
+                <li>Ou un objet combiné : <code>{"pages": [...], "collections": {...}}</code></li>
+              </ul>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      if (importSubmit) {
+        importSubmit.disabled = true;
+        importSubmit.textContent = 'Import...';
+      }
+      
+      // Afficher ce qu'on va envoyer (debug)
+      console.log('[import] Sending to server:', JSON.stringify(pagesData).substring(0, 500));
+      
+      try {
         const response = await fetch(`${pagesApiBase}/import`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(pagesData),
         });
+        
+        console.log('[import] Server response status:', response.status);
+        
         const result = await response.json();
+        console.log('[import] Server response body:', result);
         if (!response.ok) {
+          // Afficher le détail de l'erreur serveur
+          if (importResults && importResultsContent) {
+            importResults.classList.remove('hidden');
+            importResultsContent.innerHTML = `
+              <div class="text-rose-600">
+                <p class="font-medium">✗ Erreur serveur</p>
+                <p class="text-xs mt-1">${result.message || 'Erreur inconnue'}</p>
+                ${result.details ? `<p class="text-xs mt-1 text-slate-500">${result.details}</p>` : ''}
+              </div>
+            `;
+          }
           throw new Error(result.message || 'Erreur serveur');
         }
         // Show results
         if (importResults && importResultsContent) {
           importResults.classList.remove('hidden');
           let html = '';
-          if (result.imported && result.imported.length > 0) {
-            html += `<p class="text-green-700">✓ ${result.imported.length} page(s) importée(s)</p>`;
+          
+          // Entête succès/erreur
+          const hasSuccess = (result.imported?.length > 0) || (result.collectionsCreated?.length > 0);
+          const hasErrors = result.errors?.length > 0;
+          
+          if (hasSuccess && !hasErrors) {
+            html += '<div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-2"><p class="text-green-800 font-medium">✓ Import réussi</p></div>';
+          } else if (hasSuccess && hasErrors) {
+            html += '<div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2"><p class="text-amber-800 font-medium">⚠ Import partiel</p></div>';
+          } else if (hasErrors) {
+            html += '<div class="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-2"><p class="text-rose-800 font-medium">✗ Import échoué</p></div>';
+          }
+          
+          // Collections créées
+          if (result.collectionsCreated && result.collectionsCreated.length > 0) {
+            html += `<p class="text-violet-700 mt-2">✓ ${result.collectionsCreated.length} collection(s) créée(s)</p>`;
             html += '<ul class="ml-4 text-xs text-slate-600">';
-            result.imported.forEach((p) => {
-              html += `<li>${p.title} (${p.action === 'updated' ? 'mise à jour' : 'créée'})</li>`;
+            result.collectionsCreated.forEach((c) => {
+              html += `<li>${c.name} (${c.itemsCount} item${c.itemsCount > 1 ? 's' : ''})</li>`;
             });
             html += '</ul>';
           }
+          // Pages importées
+          if (result.imported && result.imported.length > 0) {
+            html += `<p class="text-green-700 mt-2">✓ ${result.imported.length} page(s) importée(s)</p>`;
+            html += '<ul class="ml-4 text-xs text-slate-600">';
+            result.imported.forEach((p) => {
+              html += `<li><strong>${p.title}</strong> → ${p.slug} (${p.action === 'updated' ? 'mise à jour' : 'créée'})</li>`;
+            });
+            html += '</ul>';
+          }
+          // Erreurs avec détails
           if (result.errors && result.errors.length > 0) {
-            html += `<p class="text-rose-600 mt-2">✗ ${result.errors.length} erreur(s)</p>`;
-            html += '<ul class="ml-4 text-xs text-rose-500">';
+            html += `<p class="text-rose-600 mt-3 font-medium">✗ ${result.errors.length} erreur(s)</p>`;
+            html += '<ul class="ml-4 text-xs text-rose-600 space-y-1 mt-1">';
             result.errors.forEach((e) => {
-              html += `<li>${e.title}: ${e.error}</li>`;
+              html += `<li class="bg-rose-50 p-2 rounded"><strong>${e.title}</strong><br/><span class="text-rose-500">${e.error}</span></li>`;
             });
             html += '</ul>';
           }
           importResultsContent.innerHTML = html;
         }
-        // Reload pages list
+        // Reload pages list and show toast
+        const hasSuccess = (result.imported?.length > 0) || (result.collectionsCreated?.length > 0);
+        const hasErrors = result.errors?.length > 0;
+        
         if (result.imported && result.imported.length > 0) {
           const freshPages = await fetchPagesFromServer();
           pages = freshPages;
@@ -2373,13 +2650,26 @@ document.addEventListener('DOMContentLoaded', () => {
           if (pages.length > 0 && !activePageId) {
             setActivePage(pages[0].id);
           }
-          showToast(`${result.imported.length} page(s) importée(s)`);
         }
+        
+        // Toast avec statut approprié
+        if (hasSuccess && !hasErrors) {
+          const collectionsMsg = result.collectionsCreated?.length 
+            ? ` + ${result.collectionsCreated.length} collection(s)` 
+            : '';
+          showToast(`✓ Import réussi : ${result.imported?.length || 0} page(s)${collectionsMsg}`, 'success');
+        } else if (hasSuccess && hasErrors) {
+          showToast(`⚠ Import partiel : ${result.imported?.length || 0} page(s), ${result.errors.length} erreur(s)`, 'warning');
+        } else if (hasErrors) {
+          showToast(`✗ Import échoué : ${result.errors.length} erreur(s)`, 'error');
+        }
+        
         importSelectedFiles = [];
         updateImportFileList();
+        resetPasteState();
       } catch (err) {
         console.error('[import] failed', err);
-        showToast(err.message || 'Erreur import');
+        showToast(err.message || 'Erreur import', 'error');
       } finally {
         if (importSubmit) {
           importSubmit.disabled = false;
@@ -2409,10 +2699,16 @@ document.addEventListener('DOMContentLoaded', () => {
       handleImportFiles(e.dataTransfer.files);
     });
     importSubmit?.addEventListener('click', executeImport);
+    // Paste JSON handlers
+    importPasteInput?.addEventListener('input', () => {
+      updateImportSubmitState();
+    });
+    pasteFormatBtn?.addEventListener('click', formatPasteJson);
     // Import tabs
     importTabs.forEach((tab) => {
       tab.addEventListener('click', () => {
         const targetPanel = tab.dataset.importTab;
+        activeImportTab = targetPanel;
         importTabs.forEach((t) => {
           if (t.dataset.importTab === targetPanel) {
             t.classList.add('bg-[#9C6BFF]', 'text-white');
@@ -2429,6 +2725,7 @@ document.addEventListener('DOMContentLoaded', () => {
             p.classList.add('hidden');
           }
         });
+        updateImportSubmitState();
       });
     });
     copyTemplateBtn?.addEventListener('click', async () => {
@@ -2747,6 +3044,8 @@ document.addEventListener('DOMContentLoaded', () => {
           excerpt: itemForm.querySelector('[name="item-excerpt"]'),
           content: itemForm.querySelector('[name="item-content"]'),
           image: itemForm.querySelector('[name="item-image"]'),
+          ctaText: itemForm.querySelector('[name="item-cta-text"]'),
+          ctaUrl: itemForm.querySelector('[name="item-cta-url"]'),
           status: itemForm.querySelector('[name="item-status"]'),
         }
       : {};
@@ -3049,6 +3348,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (itemFormFields.image) {
         itemFormFields.image.value = item.image || '';
       }
+      if (itemFormFields.ctaText) {
+        itemFormFields.ctaText.value = item.cta?.text || item.ctaText || '';
+      }
+      if (itemFormFields.ctaUrl) {
+        itemFormFields.ctaUrl.value = item.cta?.url || item.ctaUrl || '';
+      }
       if (itemFormFields.status) {
         itemFormFields.status.value = item.status || 'Brouillon';
       }
@@ -3087,7 +3392,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const summary = (itemFormFields.excerpt?.value || '').trim();
       const content = (itemFormFields.content?.value || '').trim();
       const image = (itemFormFields.image?.value || '').trim();
+      const ctaText = (itemFormFields.ctaText?.value || '').trim();
+      const ctaUrl = (itemFormFields.ctaUrl?.value || '').trim();
       const status = itemFormFields.status?.value || 'Brouillon';
+      
+      // Build CTA object only if at least one field is filled
+      const cta = (ctaText || ctaUrl) ? { text: ctaText, url: ctaUrl } : null;
+      
       return {
         title,
         slug: slugInput ? normalizeItemSlugInput(slugInput) : normalizeItemSlugInput(title),
@@ -3096,6 +3407,7 @@ document.addEventListener('DOMContentLoaded', () => {
         content,
         image,
         status,
+        ...(cta && { cta }),
       };
     };
 

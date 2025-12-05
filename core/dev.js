@@ -1291,29 +1291,166 @@ async function start() {
     }
   });
 
-  // US X – Import JSON pages
+  // US X – Import JSON pages (with auto-collection creation)
   app.post('/api/sites/:slug/pages/import', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
-    const pagesData = req.body;
-    if (!Array.isArray(pagesData) || pagesData.length === 0) {
-      return res.status(400).json({ message: 'Aucune page à importer.' });
+    let pagesData = req.body;
+    let collectionsData = null;
+    
+    console.log('[import] Received body type:', typeof pagesData, Array.isArray(pagesData) ? 'array' : 'not array');
+    console.log('[import] Received body preview:', JSON.stringify(pagesData).substring(0, 300));
+    
+    // Vérification du body
+    if (!pagesData || (typeof pagesData === 'object' && Object.keys(pagesData).length === 0)) {
+      console.log('[import] ERROR: Empty body');
+      return res.status(400).json({ 
+        message: 'Aucune donnée reçue.', 
+        details: 'Le JSON envoyé est vide ou invalide.' 
+      });
     }
-    const results = { imported: [], errors: [] };
-    const validatePageStructure = (page) => {
-      if (!page || typeof page !== 'object') return 'Structure invalide';
-      if (typeof page.title !== 'string' || !page.title.trim()) return 'Titre manquant';
-      if (page.blocks && !Array.isArray(page.blocks)) return 'Blocs invalides';
+    
+    // Support for combined import: { pages: [...], collections: {...} }
+    if (pagesData && !Array.isArray(pagesData) && pagesData.pages) {
+      console.log('[import] Detected pages+collections format');
+      collectionsData = pagesData.collections || null;
+      pagesData = pagesData.pages;
+    }
+    
+    // Also support single page object
+    if (pagesData && !Array.isArray(pagesData) && pagesData.title) {
+      console.log('[import] Detected single page object');
+      pagesData = [pagesData];
+    }
+    
+    console.log('[import] After normalization: pages count =', Array.isArray(pagesData) ? pagesData.length : 'N/A');
+    
+    if (!Array.isArray(pagesData) || pagesData.length === 0) {
+      console.log('[import] ERROR: No valid pages found');
+      return res.status(400).json({ 
+        message: 'Aucune page à importer.', 
+        details: 'Le JSON doit contenir un objet page avec "title", ou un tableau de pages, ou un objet { pages: [...] }.' 
+      });
+    }
+    
+    const results = { imported: [], errors: [], collectionsCreated: [], success: true };
+    
+    const validatePageStructure = (page, index) => {
+      if (!page || typeof page !== 'object') return `Page ${index + 1}: Structure invalide (doit être un objet)`;
+      if (typeof page.title !== 'string' || !page.title.trim()) return `Page ${index + 1}: Propriété "title" manquante ou vide`;
+      if (page.blocks && !Array.isArray(page.blocks)) return `Page ${index + 1} "${page.title}": La propriété "blocks" doit être un tableau`;
+      if (page.blocks) {
+        for (let i = 0; i < page.blocks.length; i++) {
+          const block = page.blocks[i];
+          if (!block || typeof block !== 'object') return `Page "${page.title}", bloc ${i + 1}: Structure invalide`;
+          if (!block.type) return `Page "${page.title}", bloc ${i + 1}: Propriété "type" manquante`;
+        }
+      }
       return null;
     };
+    
     try {
+      // Step 1: Extract all referenced collection IDs from blocks
+      const referencedCollections = new Set();
+      for (const pageData of pagesData) {
+        if (Array.isArray(pageData.blocks)) {
+          for (const block of pageData.blocks) {
+            const collectionId = block.settings?.collectionId || block.collectionId;
+            if (collectionId && typeof collectionId === 'string') {
+              referencedCollections.add(collectionId);
+            }
+          }
+        }
+      }
+      
+      // Step 2: Check existing collections and create missing ones
+      if (referencedCollections.size > 0 || collectionsData) {
+        const existingCollections = await readCollectionsIndex(siteSlug);
+        const existingIds = new Set(existingCollections.map(c => c.id));
+        const collectionsDir = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'collections');
+        await ensureDir(collectionsDir);
+        
+        // Create collections from explicit collectionsData
+        if (collectionsData && typeof collectionsData === 'object') {
+          for (const [collectionId, collectionInfo] of Object.entries(collectionsData)) {
+            if (!existingIds.has(collectionId)) {
+              // Add to index
+              const newEntry = {
+                id: collectionId,
+                name: collectionInfo.name || collectionId.charAt(0).toUpperCase() + collectionId.slice(1),
+                type: 'collection',
+                description: collectionInfo.description || `Collection ${collectionId}`,
+                path: `${collectionId}.json`
+              };
+              existingCollections.push(newEntry);
+              existingIds.add(collectionId);
+              
+              // Create collection file with items
+              const items = Array.isArray(collectionInfo.items) ? collectionInfo.items.map((item, idx) => ({
+                id: item.id || `${collectionId}-${idx + 1}`,
+                title: item.title || `Item ${idx + 1}`,
+                status: item.status || 'Brouillon',
+                summary: item.summary || item.description || '',
+                slug: item.slug || `/${collectionId}-${slugify(item.title || `item-${idx + 1}`)}`,
+                content: item.content || '',
+                image: item.image || '',
+                updatedAt: new Date().toISOString(),
+                ...item
+              })) : [];
+              
+              const collectionFilePath = path.join(collectionsDir, `${collectionId}.json`);
+              await fs.writeFile(collectionFilePath, JSON.stringify({ items }, null, 2), 'utf8');
+              results.collectionsCreated.push({ id: collectionId, name: newEntry.name, itemsCount: items.length });
+            }
+          }
+        }
+        
+        // Create empty collections for referenced but non-existent ones
+        for (const collectionId of referencedCollections) {
+          if (!existingIds.has(collectionId)) {
+            // Check if we have data in collectionsData
+            if (collectionsData && collectionsData[collectionId]) {
+              continue; // Already handled above
+            }
+            
+            // Create empty collection
+            const newEntry = {
+              id: collectionId,
+              name: collectionId.charAt(0).toUpperCase() + collectionId.slice(1).replace(/-/g, ' '),
+              type: 'collection',
+              description: `Collection ${collectionId} (créée automatiquement)`,
+              path: `${collectionId}.json`
+            };
+            existingCollections.push(newEntry);
+            existingIds.add(collectionId);
+            
+            const collectionFilePath = path.join(collectionsDir, `${collectionId}.json`);
+            try {
+              await fs.access(collectionFilePath);
+            } catch {
+              await fs.writeFile(collectionFilePath, JSON.stringify({ items: [] }, null, 2), 'utf8');
+            }
+            results.collectionsCreated.push({ id: collectionId, name: newEntry.name, itemsCount: 0, auto: true });
+          }
+        }
+        
+        // Update index.json if collections were added
+        if (results.collectionsCreated.length > 0) {
+          const indexPath = path.join(collectionsDir, 'index.json');
+          await fs.writeFile(indexPath, JSON.stringify(existingCollections, null, 2), 'utf8');
+        }
+      }
+      
+      // Step 3: Import pages
       const existingPages = await readPagesForSite(siteSlug);
       const existingById = new Map(existingPages.map((p) => [p.id, p]));
       const existingBySlug = new Map(existingPages.map((p) => [p.slug, p]));
 
-      for (const pageData of pagesData) {
-        const validationError = validatePageStructure(pageData);
+      for (let i = 0; i < pagesData.length; i++) {
+        const pageData = pagesData[i];
+        const validationError = validatePageStructure(pageData, i);
         if (validationError) {
-          results.errors.push({ title: pageData.title || '(sans titre)', error: validationError });
+          results.errors.push({ title: pageData.title || `(page ${i + 1})`, error: validationError });
+          results.success = false;
           continue;
         }
         const title = pageData.title.trim();

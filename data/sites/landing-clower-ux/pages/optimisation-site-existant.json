@@ -1,0 +1,192 @@
+{
+  "id": "optimisation-site-existant",
+  "title": "Optimiser votre site existant sans tout refaire",
+  "slug": "/optimisation-site-existant",
+  "description": "Offre d’optimisation UX et de remise à niveau de sites existants sans refonte complète.",
+  "badges": [],
+  "blocks": [
+    {
+      "id": "hero-optimisation-site",
+      "type": "Hero",
+      "label": "Hero principal",
+      "settings": {
+        "title": "Améliorer votre site sans repartir de zéro.",
+        "subtitle": "Votre site existe déjà, mais quelque chose cloche : navigation confuse, design plus vraiment aligné avec votre projet, visiteurs qui ne savent pas où cliquer. Je vous aide à améliorer l’UX, la clarté et le rendu de votre site sans tout casser.",
+        "ctaLabel": "Me parler de mon site",
+        "ctaUrl": "#contact",
+        "image": "https://picsum.photos/1200/600?random=1",
+        "align": "center",
+        "layout": "flex-row",
+        "height": "min-h-[60vh]",
+        "overlay": "bg-black/20",
+        "titleSize": "text-4xl"
+      }
+    },
+    {
+      "id": "paragraph-probleme",
+      "type": "Paragraphe",
+      "label": "Section problème",
+      "settings": {
+        "title": "Vous avez déjà un site… mais il ne fait pas vraiment le job.",
+        "content": "<p>Vous avez investi du temps (et souvent du budget) dans votre site, mais :</p><ul><li>la navigation n’est pas intuitive</li><li>la hiérarchie des informations n’est pas claire</li><li>le design ne reflète plus vraiment votre niveau ni votre activité</li><li>vos visiteurs ne savent pas quoi faire une fois arrivés</li></ul><p>Et l’idée d’une refonte complète vous donne surtout une chose : de la charge mentale.</p><p>La plupart des sites n’ont pas besoin d’être refaits : ils ont besoin d’être <strong>optimisés</strong>.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      }
+    },
+    {
+      "id": "image-focus-ux",
+      "type": "Image",
+      "label": "Illustration UX",
+      "settings": {
+        "src": "https://picsum.photos/1000/500?random=2",
+        "alt": "Illustration abstraite représentant des interfaces web organisées",
+        "showCaption": true,
+        "caption": "On ne repart pas de zéro : on simplifie, on clarifie, on améliore ce qui existe déjà.",
+        "rounded": "rounded-2xl",
+        "shadow": "shadow-lg",
+        "maxWidth": "max-w-4xl",
+        "align": "mx-auto"
+      }
+    },
+    {
+      "id": "paragraph-philo",
+      "type": "Paragraphe",
+      "label": "Section philosophie",
+      "settings": {
+        "title": "Mon approche : améliorer l’existant, pas tout casser.",
+        "content": "<p>Chez Clower Studio, l’objectif n’est pas de vendre une refonte pour vendre une refonte.</p><p>Mon métier, c’est de prendre votre site tel qu’il est aujourd’hui et de :</p><ul><li>clarifier l’expérience utilisateur (UX)</li><li>fluidifier la navigation</li><li>harmoniser le design</li><li>renforcer la confiance et la lisibilité</li></ul><p>Sans renier ce qui a déjà été fait, ni repartir d’une page blanche. On respecte l’histoire de votre projet, tout en l’aidant à passer à l’étape d’après.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      }
+    },
+    {
+      "id": "paragraph-offres-intro",
+      "type": "Paragraphe",
+      "label": "Intro offres",
+      "settings": {
+        "title": "Deux formats pour optimiser votre site existant",
+        "content": "<p>Pour garder les choses simples et efficaces, cette offre est structurée autour de deux formats complémentaires&nbsp;:</p><ul><li><strong>Check-Up UX</strong> : un diagnostic rapide et actionnable pour comprendre ce qui bloque et corriger un premier point clé.</li><li><strong>Revamp Day</strong> : une intervention plus profonde pour retravailler les sections essentielles, améliorer la cohérence visuelle et rendre le parcours plus fluide.</li></ul><p>Les détails de chaque offre (titre, description, prix, visuels…) sont gérés dans une collection dédiée.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      }
+    },
+    {
+      "id": "collection-offres-revamp",
+      "type": "CollectionGrid",
+      "label": "Offres d’optimisation",
+      "settings": {
+        "collectionId": "offers-revamp",
+        "limit": 2,
+        "columnsMobile": "1",
+        "columnsDesktop": "2",
+        "gap": "gap-6",
+        "cardRounded": "rounded-2xl"
+      }
+    },
+    {
+      "id": "paragraph-why-now",
+      "type": "Paragraphe",
+      "label": "Pourquoi maintenant",
+      "settings": {
+        "title": "Pourquoi optimiser votre site maintenant ?",
+        "content": "<p>C’est souvent en fin d’année ou juste avant un lancement que l’on se rend compte que le site ne suit plus :</p><ul><li>vos offres ont évolué, mais le site non</li><li>vous avez ajouté des éléments au fil de l’eau</li><li>le résultat est utile, mais plus très lisible</li></ul><p>En optimisant votre site existant maintenant, vous&nbsp;:</p><ul><li>réduisez la charge mentale avant vos prochaines campagnes</li><li>améliorez l’expérience de vos visiteurs</li><li>renforcez la confiance dans votre activité</li><li>préparez le terrain pour les prochaines années, sans gros chantier technique.</li></ul>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      }
+    },
+    {
+      "id": "image-avant-apres",
+      "type": "Image",
+      "label": "Illustration avant/après",
+      "settings": {
+        "src": "https://picsum.photos/1100/500?random=3",
+        "alt": "Comparaison avant après d'une interface de site web",
+        "showCaption": true,
+        "caption": "Objectif : passer d’un site un peu flou à une expérience claire, fluide et professionnelle.",
+        "rounded": "rounded-2xl",
+        "shadow": "shadow-lg",
+        "maxWidth": "max-w-4xl",
+        "align": "mx-auto"
+      }
+    },
+    {
+      "id": "paragraph-process-intro",
+      "type": "Paragraphe",
+      "label": "Intro process",
+      "settings": {
+        "title": "Un process simple, en petites étapes claires.",
+        "content": "<p>Pour que ce soit léger pour vous, le process est découpé en étapes simples, gérées via une collection dédiée. Chaque étape décrit ce qui se passe, ce que vous recevez et ce que cela change pour votre site.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      }
+    },
+    {
+      "id": "collection-process-optimisation",
+      "type": "CollectionGrid",
+      "label": "Étapes du process",
+      "settings": {
+        "collectionId": "process-optimisation-site",
+        "limit": 4,
+        "columnsMobile": "1",
+        "columnsDesktop": "4",
+        "gap": "gap-4",
+        "cardRounded": "rounded-xl"
+      }
+    },
+    {
+      "id": "paragraph-faq",
+      "type": "Paragraphe",
+      "label": "FAQ",
+      "settings": {
+        "title": "Questions fréquentes",
+        "content": "<p><strong>Vous travaillez sur quels types de sites&nbsp;?</strong><br>WordPress, Webflow, Kirby, Shopify ou solution sur mesure : tant que le site est en ligne, on peut l’analyser et l’améliorer.</p><p><strong>Est-ce que c’est une refonte complète&nbsp;?</strong><br>Non. Cette offre est pensée pour améliorer l’existant. Si une refonte devient vraiment nécessaire, on pourra la cadrer dans un second temps, sur une base plus solide.</p><p><strong>Combien de temps ça prend&nbsp;?</strong><br>Le Check-Up UX est rapide. Une intervention de type Revamp se fait en général sur une journée dédiée.</p><p><strong>Est-ce que c’est adapté si je prépare un lancement pour l’année prochaine&nbsp;?</strong><br>Oui, c’est même le meilleur moment : on consolide vos bases avant de mettre plus d’énergie en communication et en acquisition.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      }
+    },
+    {
+      "id": "paragraph-contact-intro",
+      "type": "Paragraphe",
+      "label": "Intro contact",
+      "settings": {
+        "title": "On commence par un message simple.",
+        "content": "<p>Si vous sentez que votre site pourrait faire mieux mais que vous ne savez pas par où commencer, envoyez-moi quelques lignes.</p><p>On verra ensemble ce qu’on peut déjà améliorer rapidement, sans vous embarquer dans un chantier dont vous n’avez ni le temps ni l’énergie.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      }
+    },
+    {
+      "id": "form-contact",
+      "type": "Form",
+      "label": "Formulaire de contact",
+      "settings": {
+        "formTitle": "Me parler de votre site",
+        "actionUrl": "https://formspree.io/f/votre-id",
+        "method": "POST",
+        "serviceName": "Formspree",
+        "submitLabel": "Envoyer mon message",
+        "successMessage": "Merci ! Je reviens vers vous rapidement.",
+        "maxWidth": "max-w-lg",
+        "align": "mx-auto"
+      }
+    }
+  ],
+  "seo": {
+    "title": "Améliorer un site existant – Optimisation UX & Revamp | Clower Studio",
+    "description": "Votre site manque de clarté ou de cohérence ? J’améliore l’UX, la navigation et le design de votre site existant sans refonte complète, avec un Check-Up UX et un Revamp ciblé."
+  }
+}
