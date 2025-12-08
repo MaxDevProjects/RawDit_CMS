@@ -31,13 +31,20 @@
   </head>
   <body class="font-['Inter'] text-slate-900">
     
-    <header class="bg-white shadow-sm border-b border-slate-100">
-      <div class="max-w-5xl mx-auto px-6 py-8 space-y-2">
-        <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Preview responsive</p>
-        <h1 class="text-3xl font-bold">landing clower ux</h1>
-        <p class="text-sm text-slate-500">/optimisation-site-existant</p>
-      </div>
-    </header>
+    
+    
+    
+    
+    
+      
+      <header class="bg-white shadow-sm border-b border-slate-100">
+        <div class="max-w-5xl mx-auto px-6 py-8 space-y-2">
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Preview responsive</p>
+          <h1 class="text-3xl font-bold">landing clower ux</h1>
+          <p class="text-sm text-slate-500">/optimisation-site-existant</p>
+        </div>
+      </header>
+    
 
     <main class="max-w-5xl mx-auto px-6 py-10 space-y-6">
       
@@ -70,13 +77,11 @@
           
           <section
             data-preview-block="hero-optimisation-site"
-            class="relative overflow-hidden bg-gradient-to-br from-violet-50 to-white rounded-3xl shadow-none min-h-[60vh] px-10 py-16"
+            class="relative overflow-hidden bg-transparent rounded-none shadow-none min-h-[75vh] px-10 py-16"
           >
             
             
-              <div class="absolute inset-0 bg-black/20"></div>
-            
-            <div class="relative z-10 grid gap-10 lg:grid-cols-2 items-center ">
+            <div class="relative z-10 grid gap-10 lg:grid-cols-2 items-start ">
               
               <div class="flex flex-col gap-4 " >
                 <p class="text-xs uppercase tracking-[0.3em] text-violet-400">
@@ -85,9 +90,9 @@
                 <h2 class="text-4xl font-bold leading-tight">
                   Améliorer votre site sans repartir de zéro.
                 </h2>
-                <p class="text-lg text-slate-600 max-w-2xl">
+                <div class="text-lg text-slate-600 max-w-2xl [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic">
                   Votre site existe déjà, mais quelque chose cloche : navigation confuse, design plus vraiment aligné avec votre projet, visiteurs qui ne savent pas où cliquer. Je vous aide à améliorer l’UX, la clarté et le rendu de votre site sans tout casser.
-                </p>
+                </div>
                 
                   <a
                     href="#contact"
@@ -133,9 +138,9 @@
             <h3 class="text-2xl font-semibold mb-2">
               Vous avez déjà un site… mais il ne fait pas vraiment le job.
             </h3>
-            <p class="text-base text-slate-600">
-              &lt;p&gt;Vous avez investi du temps (et souvent du budget) dans votre site, mais :&lt;/p&gt;&lt;ul&gt;&lt;li&gt;la navigation n’est pas intuitive&lt;/li&gt;&lt;li&gt;la hiérarchie des informations n’est pas claire&lt;/li&gt;&lt;li&gt;le design ne reflète plus vraiment votre niveau ni votre activité&lt;/li&gt;&lt;li&gt;vos visiteurs ne savent pas quoi faire une fois arrivés&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Et l’idée d’une refonte complète vous donne surtout une chose : de la charge mentale.&lt;/p&gt;&lt;p&gt;La plupart des sites n’ont pas besoin d’être refaits : ils ont besoin d’être &lt;strong&gt;optimisés&lt;/strong&gt;.&lt;/p&gt;
-            </p>
+            <div class="text-base text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-violet-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
+              <p>Vous avez investi du temps (et souvent du budget) dans votre site, mais :</p><ul><li>la navigation n’est pas intuitive</li><li>la hiérarchie des informations n’est pas claire</li><li>le design ne reflète plus vraiment votre niveau ni votre activité</li><li>vos visiteurs ne savent pas quoi faire une fois arrivés</li></ul><p>Et l’idée d’une refonte complète vous donne surtout une chose : de la charge mentale.</p><p>La plupart des sites n’ont pas besoin d’être refaits : ils ont besoin d’être <strong>optimisés</strong>.</p>
+            </div>
           </section>
         
       
@@ -147,14 +152,22 @@
           
           
           
+          
+          
+          
+          
+          
           <figure
             data-preview-block="image-focus-ux"
-            class="bg-white rounded-2xl shadow-lg border border-slate-100 p-4 space-y-3"
+            class="bg-white rounded-2xl shadow-lg max-w-4xl mx-auto border border-slate-100 p-4 space-y-3"
           >
-            <div
-              class="h-64 w-full rounded-2xl bg-slate-200 bg-cover bg-center"
-              style="background-image:url(https://picsum.photos/1000/500?random=2);"
-            ></div>
+            
+              <img
+                src="https://picsum.photos/1000/500?random=2"
+                alt="Illustration abstraite représentant des interfaces web organisées"
+                class="w-full h-64 object-cover rounded-2xl"
+              />
+            
             <div>
               <h3 class="text-xl font-semibold">Illustration UX</h3>
               <p class="text-sm text-slate-500">Illustration</p>
@@ -184,9 +197,9 @@
             <h3 class="text-2xl font-semibold mb-2">
               Mon approche : améliorer l’existant, pas tout casser.
             </h3>
-            <p class="text-base text-slate-600">
-              &lt;p&gt;Chez Clower Studio, l’objectif n’est pas de vendre une refonte pour vendre une refonte.&lt;/p&gt;&lt;p&gt;Mon métier, c’est de prendre votre site tel qu’il est aujourd’hui et de :&lt;/p&gt;&lt;ul&gt;&lt;li&gt;clarifier l’expérience utilisateur (UX)&lt;/li&gt;&lt;li&gt;fluidifier la navigation&lt;/li&gt;&lt;li&gt;harmoniser le design&lt;/li&gt;&lt;li&gt;renforcer la confiance et la lisibilité&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Sans renier ce qui a déjà été fait, ni repartir d’une page blanche. On respecte l’histoire de votre projet, tout en l’aidant à passer à l’étape d’après.&lt;/p&gt;
-            </p>
+            <div class="text-base text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-violet-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
+              <p>Chez Clower Studio, l’objectif n’est pas de vendre une refonte pour vendre une refonte.</p><p>Mon métier, c’est de prendre votre site tel qu’il est aujourd’hui et de :</p><ul><li>clarifier l’expérience utilisateur (UX)</li><li>fluidifier la navigation</li><li>harmoniser le design</li><li>renforcer la confiance et la lisibilité</li></ul><p>Sans renier ce qui a déjà été fait, ni repartir d’une page blanche. On respecte l’histoire de votre projet, tout en l’aidant à passer à l’étape d’après.</p>
+            </div>
           </section>
         
       
@@ -209,9 +222,9 @@
             <h3 class="text-2xl font-semibold mb-2">
               Deux formats pour optimiser votre site existant
             </h3>
-            <p class="text-base text-slate-600">
-              &lt;p&gt;Pour garder les choses simples et efficaces, cette offre est structurée autour de deux formats complémentaires&amp;nbsp;:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;strong&gt;Check-Up UX&lt;/strong&gt; : un diagnostic rapide et actionnable pour comprendre ce qui bloque et corriger un premier point clé.&lt;/li&gt;&lt;li&gt;&lt;strong&gt;Revamp Day&lt;/strong&gt; : une intervention plus profonde pour retravailler les sections essentielles, améliorer la cohérence visuelle et rendre le parcours plus fluide.&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Les détails de chaque offre (titre, description, prix, visuels…) sont gérés dans une collection dédiée.&lt;/p&gt;
-            </p>
+            <div class="text-base text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-violet-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
+              <p>Pour garder les choses simples et efficaces, cette offre est structurée autour de deux formats complémentaires&nbsp;:</p><ul><li><strong>Check-Up UX</strong> : un diagnostic rapide et actionnable pour comprendre ce qui bloque et corriger un premier point clé.</li><li><strong>Revamp Day</strong> : une intervention plus profonde pour retravailler les sections essentielles, améliorer la cohérence visuelle et rendre le parcours plus fluide.</li></ul><p>Les détails de chaque offre (titre, description, prix, visuels…) sont gérés dans une collection dédiée.</p>
+            </div>
           </section>
         
       
@@ -248,17 +261,45 @@
                 
                   
                   <article class="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-2">
+                    
+                    <img src="https://picsum.photos/600/350?random=10" alt="Check-Up UX" class="w-full h-32 object-cover rounded-lg mb-2" />
+                    
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Publié</p>
                     <h4 class="text-lg font-semibold text-slate-900">Check-Up UX</h4>
-                    <p class="text-sm text-slate-600">Audit rapide de votre site + première amélioration concrète pour repartir sur des bases plus claires.</p>
+                    <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">Audit rapide de votre site + première amélioration concrète pour repartir sur des bases plus claires.</div>
+                    
+                    <a 
+                      href="mailto:clower.webconception@gmail.com?subject=Réservation%20Check-Up%20UX" 
+                      class="inline-flex items-center gap-1 mt-2 px-4 py-2 text-sm font-medium text-white bg-[#9C6BFF] hover:bg-[#8654f5] rounded-xl transition-colors"
+                    >
+                      Réserver un Check-Up UX
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </a>
+                    
                   </article>
                   
                 
                   
                   <article class="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-2">
+                    
+                    <img src="https://picsum.photos/600/350?random=11" alt="Revamp Day" class="w-full h-32 object-cover rounded-lg mb-2" />
+                    
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Publié</p>
                     <h4 class="text-lg font-semibold text-slate-900">Revamp Day</h4>
-                    <p class="text-sm text-slate-600">Une journée dédiée pour transformer votre site et le rendre plus fluide, cohérent et professionnel.</p>
+                    <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">Une journée dédiée pour transformer votre site et le rendre plus fluide, cohérent et professionnel.</div>
+                    
+                    <a 
+                      href="mailto:clower.webconception@gmail.com?subject=Info%20Revamp%20Day" 
+                      class="inline-flex items-center gap-1 mt-2 px-4 py-2 text-sm font-medium text-white bg-[#9C6BFF] hover:bg-[#8654f5] rounded-xl transition-colors"
+                    >
+                      Parler d’un Revamp Day
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </a>
+                    
                   </article>
                   
                 
@@ -286,9 +327,9 @@
             <h3 class="text-2xl font-semibold mb-2">
               Pourquoi optimiser votre site maintenant ?
             </h3>
-            <p class="text-base text-slate-600">
-              &lt;p&gt;C’est souvent en fin d’année ou juste avant un lancement que l’on se rend compte que le site ne suit plus :&lt;/p&gt;&lt;ul&gt;&lt;li&gt;vos offres ont évolué, mais le site non&lt;/li&gt;&lt;li&gt;vous avez ajouté des éléments au fil de l’eau&lt;/li&gt;&lt;li&gt;le résultat est utile, mais plus très lisible&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;En optimisant votre site existant maintenant, vous&amp;nbsp;:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;réduisez la charge mentale avant vos prochaines campagnes&lt;/li&gt;&lt;li&gt;améliorez l’expérience de vos visiteurs&lt;/li&gt;&lt;li&gt;renforcez la confiance dans votre activité&lt;/li&gt;&lt;li&gt;préparez le terrain pour les prochaines années, sans gros chantier technique.&lt;/li&gt;&lt;/ul&gt;
-            </p>
+            <div class="text-base text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-violet-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
+              <p>C’est souvent en fin d’année ou juste avant un lancement que l’on se rend compte que le site ne suit plus :</p><ul><li>vos offres ont évolué, mais le site non</li><li>vous avez ajouté des éléments au fil de l’eau</li><li>le résultat est utile, mais plus très lisible</li></ul><p>En optimisant votre site existant maintenant, vous&nbsp;:</p><ul><li>réduisez la charge mentale avant vos prochaines campagnes</li><li>améliorez l’expérience de vos visiteurs</li><li>renforcez la confiance dans votre activité</li><li>préparez le terrain pour les prochaines années, sans gros chantier technique.</li></ul>
+            </div>
           </section>
         
       
@@ -300,16 +341,24 @@
           
           
           
+          
+          
+          
+          
+          
           <figure
             data-preview-block="image-avant-apres"
-            class="bg-white rounded-2xl shadow-lg border border-slate-100 p-4 space-y-3"
+            class="bg-white rounded-none shadow-none max-w-full mx-auto border border-slate-100 p-4 space-y-3"
           >
-            <div
-              class="h-64 w-full rounded-2xl bg-slate-200 bg-cover bg-center"
-              style="background-image:url(https://picsum.photos/1100/500?random=3);"
-            ></div>
+            
+              <img
+                src="/sites/landing-clower-ux/media/vid-20251203-wa0086-ezgif-com-video-to-gif-converter.gif"
+                alt="Comparaison avant après d&#39;une interface de site web"
+                class="w-full h-auto object-fill rounded-lg"
+              />
+            
             <div>
-              <h3 class="text-xl font-semibold">Illustration avant/après</h3>
+              <h3 class="text-xl font-semibold">Comparaison avant après d&#39;une interface de site web</h3>
               <p class="text-sm text-slate-500">Illustration</p>
             </div>
             
@@ -337,9 +386,9 @@
             <h3 class="text-2xl font-semibold mb-2">
               Un process simple, en petites étapes claires.
             </h3>
-            <p class="text-base text-slate-600">
-              &lt;p&gt;Pour que ce soit léger pour vous, le process est découpé en étapes simples, gérées via une collection dédiée. Chaque étape décrit ce qui se passe, ce que vous recevez et ce que cela change pour votre site.&lt;/p&gt;
-            </p>
+            <div class="text-base text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-violet-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
+              <p>Pour que ce soit léger pour vous, le process est découpé en étapes simples, gérées via une collection dédiée. Chaque étape décrit ce qui se passe, ce que vous recevez et ce que cela change pour votre site.</p>
+            </div>
           </section>
         
       
@@ -376,33 +425,49 @@
                 
                   
                   <article class="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-2">
+                    
+                    <img src="https://picsum.photos/400/300?random=20" alt="Étape 1 – Vous m’envoyez votre site" class="w-full h-32 object-cover rounded-lg mb-2" />
+                    
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Publié</p>
                     <h4 class="text-lg font-semibold text-slate-900">Étape 1 – Vous m’envoyez votre site</h4>
-                    <p class="text-sm text-slate-600">Vous partagez l’URL de votre site et quelques mots sur votre activité et vos enjeux.</p>
+                    <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">Vous partagez l’URL de votre site et quelques mots sur votre activité et vos enjeux.</div>
+                    
                   </article>
                   
                 
                   
                   <article class="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-2">
+                    
+                    <img src="https://picsum.photos/400/300?random=21" alt="Étape 2 – Check-Up UX" class="w-full h-32 object-cover rounded-lg mb-2" />
+                    
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Publié</p>
                     <h4 class="text-lg font-semibold text-slate-900">Étape 2 – Check-Up UX</h4>
-                    <p class="text-sm text-slate-600">Je réalise un diagnostic UX de votre site et corrige un premier point clé.</p>
+                    <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">Je réalise un diagnostic UX de votre site et corrige un premier point clé.</div>
+                    
                   </article>
                   
                 
                   
                   <article class="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-2">
+                    
+                    <img src="https://picsum.photos/400/300?random=22" alt="Étape 3 – Intervention Revamp" class="w-full h-32 object-cover rounded-lg mb-2" />
+                    
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Publié</p>
                     <h4 class="text-lg font-semibold text-slate-900">Étape 3 – Intervention Revamp</h4>
-                    <p class="text-sm text-slate-600">Une journée dédiée pour retravailler les sections essentielles et fluidifier l’ensemble.</p>
+                    <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">Une journée dédiée pour retravailler les sections essentielles et fluidifier l’ensemble.</div>
+                    
                   </article>
                   
                 
                   
                   <article class="rounded-xl border border-slate-100 bg-slate-50 p-4 space-y-2">
+                    
+                    <img src="https://picsum.photos/400/300?random=23" alt="Étape 4 – Résultats &amp; suite" class="w-full h-32 object-cover rounded-lg mb-2" />
+                    
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Publié</p>
                     <h4 class="text-lg font-semibold text-slate-900">Étape 4 – Résultats &amp; suite</h4>
-                    <p class="text-sm text-slate-600">Vous repartez avec un site plus clair, plus fluide et prêt pour vos prochaines étapes.</p>
+                    <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">Vous repartez avec un site plus clair, plus fluide et prêt pour vos prochaines étapes.</div>
+                    
                   </article>
                   
                 
@@ -430,9 +495,9 @@
             <h3 class="text-2xl font-semibold mb-2">
               Questions fréquentes
             </h3>
-            <p class="text-base text-slate-600">
-              &lt;p&gt;&lt;strong&gt;Vous travaillez sur quels types de sites&amp;nbsp;?&lt;/strong&gt;&lt;br&gt;WordPress, Webflow, Kirby, Shopify ou solution sur mesure : tant que le site est en ligne, on peut l’analyser et l’améliorer.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Est-ce que c’est une refonte complète&amp;nbsp;?&lt;/strong&gt;&lt;br&gt;Non. Cette offre est pensée pour améliorer l’existant. Si une refonte devient vraiment nécessaire, on pourra la cadrer dans un second temps, sur une base plus solide.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Combien de temps ça prend&amp;nbsp;?&lt;/strong&gt;&lt;br&gt;Le Check-Up UX est rapide. Une intervention de type Revamp se fait en général sur une journée dédiée.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Est-ce que c’est adapté si je prépare un lancement pour l’année prochaine&amp;nbsp;?&lt;/strong&gt;&lt;br&gt;Oui, c’est même le meilleur moment : on consolide vos bases avant de mettre plus d’énergie en communication et en acquisition.&lt;/p&gt;
-            </p>
+            <div class="text-base text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-violet-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
+              <p><strong>Vous travaillez sur quels types de sites&nbsp;?</strong><br>WordPress, Webflow, Kirby, Shopify ou solution sur mesure : tant que le site est en ligne, on peut l’analyser et l’améliorer.</p><p><strong>Est-ce que c’est une refonte complète&nbsp;?</strong><br>Non. Cette offre est pensée pour améliorer l’existant. Si une refonte devient vraiment nécessaire, on pourra la cadrer dans un second temps, sur une base plus solide.</p><p><strong>Combien de temps ça prend&nbsp;?</strong><br>Le Check-Up UX est rapide. Une intervention de type Revamp se fait en général sur une journée dédiée.</p><p><strong>Est-ce que c’est adapté si je prépare un lancement pour l’année prochaine&nbsp;?</strong><br>Oui, c’est même le meilleur moment : on consolide vos bases avant de mettre plus d’énergie en communication et en acquisition.</p>
+            </div>
           </section>
         
       
@@ -455,9 +520,9 @@
             <h3 class="text-2xl font-semibold mb-2">
               On commence par un message simple.
             </h3>
-            <p class="text-base text-slate-600">
-              &lt;p&gt;Si vous sentez que votre site pourrait faire mieux mais que vous ne savez pas par où commencer, envoyez-moi quelques lignes.&lt;/p&gt;&lt;p&gt;On verra ensemble ce qu’on peut déjà améliorer rapidement, sans vous embarquer dans un chantier dont vous n’avez ni le temps ni l’énergie.&lt;/p&gt;
-            </p>
+            <div class="text-base text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-violet-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
+              <p>Si vous sentez que votre site pourrait faire mieux mais que vous ne savez pas par où commencer, envoyez-moi quelques lignes.</p><p>On verra ensemble ce qu’on peut déjà améliorer rapidement, sans vous embarquer dans un chantier dont vous n’avez ni le temps ni l’énergie.</p>
+            </div>
           </section>
         
       
@@ -519,6 +584,12 @@
         
       
     </main>
+
+    
+    
+    
+    
+
     
     
     

@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "apiKey": "AIzaSyBeh6x8mbRAvfHpMiaYCrNnwRo2DsC3FPQ",
+  "rateLimit": {
+    "requestsPerDay": 100,
+    "requestsPerMinute": 10
+  },
+  "systemPromptTemplate": "Tu es l'assistant IA de ClowerEdit, un CMS statique éco-conçu. Tu aides les utilisateurs à créer et optimiser leurs sites web. Tu réponds toujours en français. Tu es concis, pratique et orienté solutions. Quand on te demande de générer du contenu structuré (blocs, pages), tu retournes du JSON valide."
+}

@@ -19,5 +19,26 @@
     "type": "collection",
     "description": "Avis clients structurés.",
     "path": "testimonials.json"
+  },
+  {
+    "id": "offers-revamp",
+    "name": "Offres d’optimisation",
+    "type": "collection",
+    "description": "Mes services pour améliorer un site existant sans refonte complète.",
+    "path": "offers-revamp.json"
+  },
+  {
+    "id": "process-optimisation-site",
+    "name": "Process d’optimisation de site",
+    "type": "collection",
+    "description": "Les étapes du processus d’optimisation d’un site existant.",
+    "path": "process-optimisation-site.json"
+  },
+  {
+    "id": "mes-projets",
+    "name": "Mes Projets",
+    "type": "collection",
+    "description": "Portfolio de projets et collaborations Clower Studio.",
+    "path": "mes-projets.json"
   }
 ]

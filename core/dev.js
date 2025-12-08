@@ -30,6 +30,19 @@ const WORKSPACE_FILES = Object.fromEntries(
 );
 const previewLoader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCache: true });
 const previewEnv = new nunjucks.Environment(previewLoader, { autoescape: true });
+
+// Ajouter le filtre date pour le template preview
+previewEnv.addFilter('date', (str, format) => {
+  const date = str === 'now' ? new Date() : new Date(str);
+  if (isNaN(date.getTime())) return str;
+  // Format simple: Y = année, m = mois, d = jour
+  if (format === 'Y') return date.getFullYear().toString();
+  if (format === 'm') return String(date.getMonth() + 1).padStart(2, '0');
+  if (format === 'd') return String(date.getDate()).padStart(2, '0');
+  if (format === 'Y-m-d') return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return date.toLocaleDateString('fr-FR');
+});
+
 const SITES_DATA_ROOT = path.join(paths.data, 'sites');
 const PUBLIC_SITES_ROOT = path.join(paths.public, 'sites');
 const DEPLOY_CONFIG_FILENAME = 'deploy.json';
@@ -1012,7 +1025,8 @@ async function buildPreviewCss(html) {
   });
   try {
     const css = await fs.readFile(outputPath, 'utf8');
-    return `${css}\n.preview-block-active{outline:2px dashed rgba(156,107,255,0.6);background-color:rgba(156,107,255,0.05);}`;
+    // Utilise un pseudo-élément pour l'effet visuel de sélection sans overrider le background du bloc
+    return `${css}\n.preview-block-active{outline:2px dashed rgba(156,107,255,0.6);position:relative;}.preview-block-active::after{content:'';position:absolute;inset:0;background-color:rgba(156,107,255,0.05);pointer-events:none;z-index:1;}`;
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true });
   }
@@ -1694,7 +1708,7 @@ async function start() {
   // LAYOUT (HEADER & FOOTER)
   // ═══════════════════════════════════════════════════════════════════════
   const readLayoutFile = async (siteSlug, type) => {
-    const layoutPath = path.join(DATA_DIR, 'sites', siteSlug, `${type}.json`);
+    const layoutPath = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), `${type}.json`);
     try {
       const content = await fs.readFile(layoutPath, 'utf-8');
       return JSON.parse(content);
@@ -1704,7 +1718,7 @@ async function start() {
   };
 
   const writeLayoutFile = async (siteSlug, type, data) => {
-    const layoutPath = path.join(DATA_DIR, 'sites', siteSlug, `${type}.json`);
+    const layoutPath = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), `${type}.json`);
     await fs.writeFile(layoutPath, JSON.stringify(data, null, 2), 'utf-8');
   };
 
@@ -2148,24 +2162,105 @@ async function start() {
     }
   });
 
+  // ============================================================================
+  // AI Config Routes (per-site)
+  // ============================================================================
+
+  const getAIConfigPath = (siteSlug) =>
+    path.join(SITES_DATA_ROOT, siteSlug, 'ai.json');
+
+  app.get('/api/sites/:slug/config/ai', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    const filePath = getAIConfigPath(siteSlug);
+    try {
+      let config = { enabled: false, model: 'gemini-2.5-flash', projectPrompt: '' };
+      try {
+        const raw = await fs.readFile(filePath, 'utf8');
+        config = JSON.parse(raw);
+      } catch {
+        // File doesn't exist, return defaults
+      }
+      // Never send the actual API key, just indicate if one exists
+      res.json({
+        enabled: config.enabled !== false,
+        model: config.model || 'gemini-2.5-flash',
+        projectPrompt: config.projectPrompt || '',
+        hasApiKey: !!config.apiKey,
+      });
+    } catch (err) {
+      console.error('[ai-config] read failed', err);
+      res.status(500).json({ message: 'Impossible de lire la configuration IA.' });
+    }
+  });
+
+  app.put('/api/sites/:slug/config/ai', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    const payload = req.body || {};
+    const filePath = getAIConfigPath(siteSlug);
+    try {
+      // Load existing config to preserve API key if not provided
+      let existingConfig = {};
+      try {
+        const raw = await fs.readFile(filePath, 'utf8');
+        existingConfig = JSON.parse(raw);
+      } catch {
+        // File doesn't exist
+      }
+
+      const config = {
+        enabled: payload.enabled !== false,
+        model: payload.model || 'gemini-2.5-flash',
+        projectPrompt: payload.projectPrompt || '',
+        // Keep existing API key if not provided in payload
+        apiKey: payload.apiKey || existingConfig.apiKey || '',
+      };
+
+      await ensureDir(path.dirname(filePath));
+      await fs.writeFile(filePath, JSON.stringify(config, null, 2), 'utf8');
+      res.json({ success: true, message: 'Configuration IA enregistrée.' });
+    } catch (err) {
+      console.error('[ai-config] save failed', err);
+      res.status(500).json({ message: 'Impossible de sauvegarder la configuration IA.' });
+    }
+  });
+
   app.post('/api/preview', requireAuthJson, async (req, res) => {
     const { page, site } = req.body || {};
     if (!page || !Array.isArray(page.blocks)) {
       return res.status(400).json({ message: 'Page invalide.' });
     }
     try {
-      const collectionsData = await buildPreviewCollections(page, site?.slug || '');
+      const siteSlug = site?.slug || '';
+      const collectionsData = await buildPreviewCollections(page, siteSlug);
+      // Load header and footer for preview
+      let header = null;
+      let footer = null;
+      try {
+        header = siteSlug ? await readLayoutFile(siteSlug, 'header') : null;
+        footer = siteSlug ? await readLayoutFile(siteSlug, 'footer') : null;
+      } catch (layoutErr) {
+        console.warn('[preview] Layout load warning:', layoutErr.message);
+      }
       const html = previewEnv.render('preview.njk', {
         page,
         site: site || {},
         collections: collectionsData,
+        header,
+        footer,
       });
       const css = await buildPreviewCss(html);
       const finalHtml = injectPreviewCss(html, css);
       res.json({ html: finalHtml });
     } catch (err) {
-      console.error('[preview] Impossible de rendre la page', err);
-      res.status(500).json({ message: 'Impossible de générer la preview.' });
+      console.error('[preview] Impossible de rendre la page', err.message);
+      console.error('[preview] Stack:', err.stack);
+      res.status(500).json({ message: 'Impossible de générer la preview.', error: err.message });
     }
   });
 
@@ -2185,6 +2280,664 @@ async function start() {
       authenticated: true,
       username: session.username,
     });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AI ASSISTANT ROUTES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Chat avec l'assistant IA
+   * POST /api/sites/:slug/ai/chat
+   */
+  app.post('/api/sites/:slug/ai/chat', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+
+    const { message, clearHistory, includePageContent } = req.body;
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({ message: 'Message requis.' });
+    }
+
+    try {
+      // Importer le service AI dynamiquement (ESM compatibility)
+      const aiServicePath = path.join(paths.root, 'core/lib/ai-service.js');
+      const aiService = await import(aiServicePath);
+      
+      // Charger le contexte du site
+      const siteConfigPath = getSiteConfigPath(siteSlug);
+      const themeConfigPath = getThemeConfigPath(siteSlug);
+      const pagesDir = path.join(SITES_DATA_ROOT, siteSlug, 'pages');
+      const collectionsDir = path.join(SITES_DATA_ROOT, siteSlug, 'collections');
+
+      let siteConfig = {};
+      let theme = {};
+      let pages = [];
+      let pagesFullContent = [];
+      let collections = [];
+
+      try {
+        siteConfig = JSON.parse(await fs.readFile(siteConfigPath, 'utf8').catch(() => '{}'));
+      } catch (e) { /* ignore */ }
+
+      try {
+        theme = JSON.parse(await fs.readFile(themeConfigPath, 'utf8').catch(() => '{}'));
+      } catch (e) { /* ignore */ }
+
+      try {
+        const pageFiles = await fs.readdir(pagesDir).catch(() => []);
+        for (const file of pageFiles) {
+          if (file.endsWith('.json')) {
+            const pageData = JSON.parse(await fs.readFile(path.join(pagesDir, file), 'utf8'));
+            pages.push({ title: pageData.title, slug: pageData.slug, id: file.replace('.json', '') });
+            // Inclure le contenu complet des pages pour l'IA
+            pagesFullContent.push({
+              id: file.replace('.json', ''),
+              ...pageData
+            });
+          }
+        }
+      } catch (e) { /* ignore */ }
+
+      try {
+        const collectionFiles = await fs.readdir(collectionsDir).catch(() => []);
+        collections = collectionFiles.filter(f => f.endsWith('.json')).map(f => f.replace('.json', ''));
+      } catch (e) { /* ignore */ }
+
+      const siteContext = {
+        siteName: siteConfig.title || siteSlug,
+        theme: theme.colors ? {
+          primary: theme.colors.primary,
+          secondary: theme.colors.secondary,
+          accent: theme.colors.accent,
+          background: theme.colors.background
+        } : null,
+        pages,
+        pagesFullContent, // Contenu complet des pages pour l'analyse IA
+        collections
+      };
+
+      const result = await aiService.chat(siteSlug, message.trim(), siteContext, { clearHistory: !!clearHistory });
+
+      if (result.error) {
+        return res.status(500).json({ message: result.error });
+      }
+
+      // Vérifier si l'IA propose une édition
+      let editProposal = null;
+      if (result.json && result.json.action === 'propose-edit') {
+        const { pageId, changes, reason } = result.json;
+        if (pageId && changes) {
+          // Créer automatiquement une proposition d'édition
+          try {
+            const pagePath = path.join(SITES_DATA_ROOT, siteSlug, 'pages', `${pageId}.json`);
+            const raw = await fs.readFile(pagePath, 'utf8');
+            const currentPage = JSON.parse(raw);
+
+            const proposalId = `proposal-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+            pendingEditProposals.set(proposalId, {
+              siteSlug,
+              pageId,
+              currentPage,
+              changes,
+              reason: reason || '',
+              timestamp: new Date().toISOString()
+            });
+
+            // Auto-expiration après 30 minutes
+            setTimeout(() => {
+              pendingEditProposals.delete(proposalId);
+            }, 30 * 60 * 1000);
+
+            editProposal = {
+              proposalId,
+              pageId,
+              pageTitle: currentPage.title,
+              reason: reason || 'Modification proposée par l\'IA',
+              changes
+            };
+          } catch (propErr) {
+            console.warn('[AI] Could not create edit proposal:', propErr.message);
+          }
+        }
+      }
+
+      // Vérifier si l'IA propose une modification du thème
+      let themeProposal = null;
+      if (result.json && result.json.action === 'propose-theme') {
+        const { changes, reason } = result.json;
+        if (changes) {
+          const proposalId = `theme-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+          
+          pendingEditProposals.set(proposalId, {
+            siteSlug,
+            type: 'theme',
+            changes,
+            reason: reason || '',
+            timestamp: new Date().toISOString()
+          });
+
+          // Auto-expiration après 30 minutes
+          setTimeout(() => {
+            pendingEditProposals.delete(proposalId);
+          }, 30 * 60 * 1000);
+
+          themeProposal = {
+            proposalId,
+            reason: reason || 'Modification du thème proposée par l\'IA',
+            changes
+          };
+        }
+      }
+
+      res.json({
+        success: true,
+        response: result.text,
+        json: result.json,
+        editProposal, // Inclure la proposition d'édition de page si elle existe
+        themeProposal // Inclure la proposition de thème si elle existe
+      });
+    } catch (err) {
+      console.error('[AI] Chat error:', err);
+      res.status(500).json({ message: 'Erreur lors de la communication avec l\'assistant IA.' });
+    }
+  });
+
+  /**
+   * Récupère l'historique de conversation
+   * GET /api/sites/:slug/ai/history
+   */
+  app.get('/api/sites/:slug/ai/history', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+
+    try {
+      const aiServicePath = path.join(paths.root, 'core/lib/ai-service.js');
+      const aiService = await import(aiServicePath);
+      const history = aiService.loadConversationHistory(siteSlug);
+      res.json({ success: true, messages: history.messages, lastUpdated: history.lastUpdated });
+    } catch (err) {
+      console.error('[AI] History error:', err);
+      res.status(500).json({ message: 'Erreur lors du chargement de l\'historique.' });
+    }
+  });
+
+  /**
+   * Efface l'historique de conversation
+   * DELETE /api/sites/:slug/ai/history
+   */
+  app.delete('/api/sites/:slug/ai/history', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+
+    try {
+      const aiServicePath = path.join(paths.root, 'core/lib/ai-service.js');
+      const aiService = await import(aiServicePath);
+      aiService.clearHistory(siteSlug);
+      res.json({ success: true, message: 'Historique effacé.' });
+    } catch (err) {
+      console.error('[AI] Clear history error:', err);
+      res.status(500).json({ message: 'Erreur lors de la suppression de l\'historique.' });
+    }
+  });
+
+  /**
+   * Récupère toutes les pages d'un site pour l'IA
+   * GET /api/sites/:slug/ai/pages
+   * Permet à l'IA d'accéder au contenu complet des pages pour analyse
+   */
+  app.get('/api/sites/:slug/ai/pages', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+
+    try {
+      const pagesDir = path.join(SITES_DATA_ROOT, siteSlug, 'pages');
+      const pages = [];
+      
+      try {
+        const files = await fs.readdir(pagesDir);
+        for (const file of files) {
+          if (file.endsWith('.json')) {
+            const raw = await fs.readFile(path.join(pagesDir, file), 'utf8');
+            const pageData = JSON.parse(raw);
+            pages.push({
+              filename: file,
+              ...pageData
+            });
+          }
+        }
+      } catch (e) {
+        // Dossier n'existe pas encore
+      }
+
+      res.json({
+        success: true,
+        pages
+      });
+    } catch (err) {
+      console.error('[AI] Get pages error:', err);
+      res.status(500).json({ message: 'Erreur lors du chargement des pages.' });
+    }
+  });
+
+  /**
+   * Récupère une page spécifique pour l'IA
+   * GET /api/sites/:slug/ai/pages/:pageId
+   */
+  app.get('/api/sites/:slug/ai/pages/:pageId', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const pageId = req.params.pageId;
+    if (!siteSlug || !pageId) {
+      return res.status(400).json({ message: 'Paramètres invalides.' });
+    }
+
+    try {
+      const pagePath = path.join(SITES_DATA_ROOT, siteSlug, 'pages', `${pageId}.json`);
+      const raw = await fs.readFile(pagePath, 'utf8');
+      const pageData = JSON.parse(raw);
+
+      res.json({
+        success: true,
+        page: pageData
+      });
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        return res.status(404).json({ message: 'Page non trouvée.' });
+      }
+      console.error('[AI] Get page error:', err);
+      res.status(500).json({ message: 'Erreur lors du chargement de la page.' });
+    }
+  });
+
+  /**
+   * Propositions d'édition en attente de validation (par session)
+   * Structure: { [proposalId]: { siteSlug, pageId, changes, timestamp } }
+   */
+  const pendingEditProposals = new Map();
+
+  /**
+   * Propose une édition de page via l'IA (nécessite validation utilisateur)
+   * POST /api/sites/:slug/ai/propose-edit
+   * Body: { pageId, changes: { title?, description?, blocks?, seo? }, reason }
+   */
+  app.post('/api/sites/:slug/ai/propose-edit', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+
+    const { pageId, changes, reason } = req.body;
+    if (!pageId || !changes || typeof changes !== 'object') {
+      return res.status(400).json({ message: 'pageId et changes requis.' });
+    }
+
+    try {
+      // Vérifier que la page existe
+      const pagePath = path.join(SITES_DATA_ROOT, siteSlug, 'pages', `${pageId}.json`);
+      const raw = await fs.readFile(pagePath, 'utf8');
+      const currentPage = JSON.parse(raw);
+
+      // Générer un ID unique pour cette proposition
+      const proposalId = `proposal-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+      // Stocker la proposition en attente
+      pendingEditProposals.set(proposalId, {
+        siteSlug,
+        pageId,
+        currentPage,
+        changes,
+        reason: reason || '',
+        timestamp: new Date().toISOString()
+      });
+
+      // Auto-expiration après 30 minutes
+      setTimeout(() => {
+        pendingEditProposals.delete(proposalId);
+      }, 30 * 60 * 1000);
+
+      res.json({
+        success: true,
+        proposalId,
+        message: 'Proposition d\'édition créée. En attente de validation.',
+        preview: {
+          pageId,
+          currentTitle: currentPage.title,
+          changes
+        }
+      });
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        return res.status(404).json({ message: 'Page non trouvée.' });
+      }
+      console.error('[AI] Propose edit error:', err);
+      res.status(500).json({ message: 'Erreur lors de la création de la proposition.' });
+    }
+  });
+
+  /**
+   * Applique une proposition d'édition validée par l'utilisateur
+   * POST /api/sites/:slug/ai/apply-edit
+   * Body: { proposalId }
+   */
+  app.post('/api/sites/:slug/ai/apply-edit', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+
+    const { proposalId } = req.body;
+    if (!proposalId) {
+      return res.status(400).json({ message: 'proposalId requis.' });
+    }
+
+    // Récupérer la proposition
+    const proposal = pendingEditProposals.get(proposalId);
+    if (!proposal) {
+      return res.status(404).json({ message: 'Proposition expirée ou introuvable.' });
+    }
+
+    if (proposal.siteSlug !== siteSlug) {
+      return res.status(403).json({ message: 'Proposition non valide pour ce site.' });
+    }
+
+    try {
+      const pagePath = path.join(SITES_DATA_ROOT, siteSlug, 'pages', `${proposal.pageId}.json`);
+      
+      // Relire la page actuelle (peut avoir changé depuis la proposition)
+      const raw = await fs.readFile(pagePath, 'utf8');
+      const currentPage = JSON.parse(raw);
+
+      // Appliquer les changements
+      const updatedPage = { ...currentPage };
+      
+      if (proposal.changes.title !== undefined) {
+        updatedPage.title = proposal.changes.title;
+      }
+      if (proposal.changes.description !== undefined) {
+        updatedPage.description = proposal.changes.description;
+      }
+      if (proposal.changes.seo !== undefined) {
+        updatedPage.seo = { ...(currentPage.seo || {}), ...proposal.changes.seo };
+      }
+      if (proposal.changes.blocks !== undefined) {
+        // Pour les blocs, on peut soit remplacer tout, soit merger
+        if (Array.isArray(proposal.changes.blocks)) {
+          updatedPage.blocks = proposal.changes.blocks;
+        }
+      }
+      // Changements sur un bloc spécifique
+      if (proposal.changes.blockUpdate) {
+        const { blockId, settings } = proposal.changes.blockUpdate;
+        
+        // Recherche récursive du bloc (supporte les blocs imbriqués dans children)
+        function findAndUpdateBlock(blocks, targetId, newSettings) {
+          for (let i = 0; i < blocks.length; i++) {
+            if (blocks[i].id === targetId) {
+              blocks[i].settings = {
+                ...blocks[i].settings,
+                ...newSettings
+              };
+              console.log(`[AI] ✅ Bloc "${targetId}" mis à jour avec:`, Object.keys(newSettings));
+              return true;
+            }
+            // Recherche dans les enfants (Groupe)
+            if (blocks[i].children && Array.isArray(blocks[i].children)) {
+              if (findAndUpdateBlock(blocks[i].children, targetId, newSettings)) {
+                return true;
+              }
+            }
+          }
+          return false;
+        }
+        
+        const found = findAndUpdateBlock(updatedPage.blocks, blockId, settings);
+        if (!found) {
+          console.warn(`[AI] ⚠️ Bloc "${blockId}" non trouvé dans la page`);
+        }
+      }
+
+      // Sauvegarder la page mise à jour
+      console.log(`[AI] 💾 Sauvegarde de la page ${proposal.pageId} vers ${pagePath}`);
+      await fs.writeFile(pagePath, JSON.stringify(updatedPage, null, 2), 'utf8');
+      console.log(`[AI] ✅ Page ${proposal.pageId} sauvegardée avec succès`);
+
+      // Supprimer la proposition
+      pendingEditProposals.delete(proposalId);
+
+      res.json({
+        success: true,
+        message: 'Modifications appliquées avec succès.',
+        updatedPage
+      });
+    } catch (err) {
+      console.error('[AI] Apply edit error:', err);
+      res.status(500).json({ message: 'Erreur lors de l\'application des modifications.' });
+    }
+  });
+
+  /**
+   * Applique une proposition de modification du thème validée par l'utilisateur
+   * POST /api/sites/:slug/ai/apply-theme
+   * Body: { proposalId }
+   */
+  app.post('/api/sites/:slug/ai/apply-theme', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+
+    const { proposalId } = req.body;
+    if (!proposalId) {
+      return res.status(400).json({ message: 'proposalId requis.' });
+    }
+
+    // Récupérer la proposition
+    const proposal = pendingEditProposals.get(proposalId);
+    if (!proposal) {
+      return res.status(404).json({ message: 'Proposition expirée ou introuvable.' });
+    }
+
+    if (proposal.siteSlug !== siteSlug || proposal.type !== 'theme') {
+      return res.status(403).json({ message: 'Proposition non valide pour ce site.' });
+    }
+
+    try {
+      const themePath = path.join(SITES_DATA_ROOT, siteSlug, 'config', 'theme.json');
+      
+      // Lire le thème actuel
+      let currentTheme = {};
+      try {
+        const raw = await fs.readFile(themePath, 'utf8');
+        currentTheme = JSON.parse(raw);
+      } catch (e) {
+        // Fichier inexistant, on part d'un thème vide
+        currentTheme = { colors: {}, typography: {}, radius: {} };
+      }
+
+      // Appliquer les changements
+      const updatedTheme = { ...currentTheme };
+      
+      if (proposal.changes.colors) {
+        updatedTheme.colors = { ...updatedTheme.colors, ...proposal.changes.colors };
+      }
+      if (proposal.changes.typography) {
+        updatedTheme.typography = { ...updatedTheme.typography, ...proposal.changes.typography };
+      }
+      if (proposal.changes.radius) {
+        updatedTheme.radius = { ...updatedTheme.radius, ...proposal.changes.radius };
+      }
+
+      // Sauvegarder le thème
+      console.log(`[AI] 💾 Sauvegarde du thème vers ${themePath}`);
+      await fs.writeFile(themePath, JSON.stringify(updatedTheme, null, 2), 'utf8');
+      console.log(`[AI] ✅ Thème sauvegardé avec succès`);
+
+      // Supprimer la proposition
+      pendingEditProposals.delete(proposalId);
+
+      res.json({
+        success: true,
+        message: 'Thème mis à jour avec succès.',
+        updatedTheme
+      });
+    } catch (err) {
+      console.error('[AI] Apply theme error:', err);
+      res.status(500).json({ message: 'Erreur lors de l\'application du thème.' });
+    }
+  });
+
+  /**
+   * Rejette une proposition d'édition
+   * DELETE /api/sites/:slug/ai/proposal/:proposalId
+   */
+  app.delete('/api/sites/:slug/ai/proposal/:proposalId', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    const proposalId = req.params.proposalId;
+    
+    if (!siteSlug || !proposalId) {
+      return res.status(400).json({ message: 'Paramètres invalides.' });
+    }
+
+    const proposal = pendingEditProposals.get(proposalId);
+    if (proposal && proposal.siteSlug === siteSlug) {
+      pendingEditProposals.delete(proposalId);
+    }
+
+    res.json({ success: true, message: 'Proposition rejetée.' });
+  });
+
+  /**
+   * Récupère la configuration AI (sans la clé API)
+   * GET /api/ai/config
+   */
+  app.get('/api/ai/config', requireAuthJson, async (req, res) => {
+    try {
+      const aiServicePath = path.join(paths.root, 'core/lib/ai-service.js');
+      const aiService = await import(aiServicePath);
+      const config = aiService.loadAIConfig();
+      // Ne jamais exposer la clé API au client
+      res.json({
+        enabled: config.enabled,
+        hasApiKey: !!config.apiKey,
+        model: config.model,
+        provider: config.provider
+      });
+    } catch (err) {
+      console.error('[AI] Config error:', err);
+      res.status(500).json({ message: 'Erreur lors du chargement de la configuration AI.' });
+    }
+  });
+
+  /**
+   * Récupère la configuration AI d'un site spécifique
+   * GET /api/sites/:slug/ai/config
+   */
+  app.get('/api/sites/:slug/ai/config', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+
+    try {
+      const configPath = path.join(SITES_DATA_ROOT, siteSlug, 'config', 'ai.json');
+      let siteAIConfig = {
+        enabled: true,
+        apiKey: '',
+        model: 'gemini-2.5-flash',
+        projectDescription: ''
+      };
+
+      try {
+        const raw = await fs.readFile(configPath, 'utf8');
+        siteAIConfig = { ...siteAIConfig, ...JSON.parse(raw) };
+      } catch (e) {
+        // Fichier n'existe pas encore, utiliser les valeurs par défaut
+      }
+
+      // Ne jamais renvoyer la clé API au client
+      res.json({
+        success: true,
+        config: {
+          enabled: siteAIConfig.enabled,
+          hasApiKey: !!(siteAIConfig.apiKey && siteAIConfig.apiKey.length > 0),
+          model: siteAIConfig.model,
+          projectDescription: siteAIConfig.projectDescription || ''
+        }
+      });
+    } catch (err) {
+      console.error('[AI] Get site config error:', err);
+      res.status(500).json({ message: 'Erreur lors du chargement de la configuration AI du site.' });
+    }
+  });
+
+  /**
+   * Met à jour la configuration AI d'un site spécifique
+   * PUT /api/sites/:slug/ai/config
+   */
+  app.put('/api/sites/:slug/ai/config', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+
+    const { enabled, apiKey, model, projectDescription } = req.body;
+
+    try {
+      const configDir = path.join(SITES_DATA_ROOT, siteSlug, 'config');
+      const configPath = path.join(configDir, 'ai.json');
+      
+      // S'assurer que le dossier config existe
+      await fs.mkdir(configDir, { recursive: true });
+
+      // Charger config existante
+      let existingConfig = {};
+      try {
+        const raw = await fs.readFile(configPath, 'utf8');
+        existingConfig = JSON.parse(raw);
+      } catch (e) {
+        // Fichier n'existe pas
+      }
+
+      // Mettre à jour la config
+      const updatedConfig = {
+        enabled: typeof enabled === 'boolean' ? enabled : existingConfig.enabled ?? true,
+        model: model || existingConfig.model || 'gemini-2.5-flash',
+        projectDescription: typeof projectDescription === 'string' ? projectDescription : existingConfig.projectDescription || ''
+      };
+
+      // Si une nouvelle clé API est fournie et non vide, la mettre à jour
+      if (apiKey && typeof apiKey === 'string' && apiKey.trim().length > 0) {
+        updatedConfig.apiKey = apiKey.trim();
+      } else if (existingConfig.apiKey) {
+        // Garder l'ancienne clé si elle existe
+        updatedConfig.apiKey = existingConfig.apiKey;
+      }
+
+      await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2), 'utf8');
+
+      res.json({
+        success: true,
+        message: 'Configuration AI mise à jour.',
+        config: {
+          enabled: updatedConfig.enabled,
+          hasApiKey: !!(updatedConfig.apiKey && updatedConfig.apiKey.length > 0),
+          model: updatedConfig.model,
+          projectDescription: updatedConfig.projectDescription
+        }
+      });
+    } catch (err) {
+      console.error('[AI] Update site config error:', err);
+      res.status(500).json({ message: 'Erreur lors de la mise à jour de la configuration AI.' });
+    }
   });
 
   app.get('/admin/sites', adminGuardMiddleware, (req, res) => {

@@ -1,0 +1,46 @@
+{
+  "items": [
+    {
+      "id": "projet-swapi",
+      "title": "Swapi – Plateforme de troc textile",
+      "status": "Publié",
+      "summary": "Amélioration UX, stabilisation et évolutions d’une plateforme de troc de vêtements.",
+      "slug": "/mes-projets-swapi-plateforme-de-troc-textile",
+      "content": "<p>Intervention sur une plateforme existante : amélioration de la navigation, clarification du parcours utilisateur, travail sur la cohérence des écrans et la gestion des échanges.</p><p>Objectif : rendre l’outil plus fluide et plus agréable à utiliser sans repartir de zéro.</p>",
+      "image": "https://picsum.photos/600/350?random=200",
+      "updatedAt": "2025-12-06T13:20:50.422Z",
+      "cta": {
+        "text": "Voir le projet",
+        "url": "/projets/swapi"
+      }
+    },
+    {
+      "id": "projet-familiedu",
+      "title": "familiEdu – Outil pour l’instruction en famille",
+      "status": "Publié",
+      "summary": "Conception et développement d’un outil web pour aider les familles en IEF.",
+      "slug": "/mes-projets-familiedu-outil-pour-l-instruction-en-famille",
+      "content": "<p>Plateforme en cours de développement pensée pour aider les familles en instruction en famille à structurer, suivre et présenter leurs apprentissages.</p><p>Travail sur l’UX, l’architecture, les formulaires intelligents et la cohérence globale de l’outil.</p>",
+      "image": "https://picsum.photos/600/350?random=201",
+      "updatedAt": "2025-12-06T13:20:50.423Z",
+      "cta": {
+        "text": "Découvrir le projet",
+        "url": "/projets/familiedu"
+      }
+    },
+    {
+      "id": "projet-melanie-kinesio",
+      "title": "Mélanie – Site de kinésiologie",
+      "status": "Publié",
+      "summary": "Site vitrine doux et rassurant pour un cabinet de kinésiologie.",
+      "slug": "/mes-projets-melanie-site-de-kinesiologie",
+      "content": "<p>Accompagnement sur la structure du site, la hiérarchie des informations et l’ambiance visuelle, avec un focus sur la clarté et la confiance pour les patient·es.</p>",
+      "image": "https://picsum.photos/600/350?random=202",
+      "updatedAt": "2025-12-06T13:20:50.423Z",
+      "cta": {
+        "text": "Voir un aperçu",
+        "url": "/projets/melanie-kinesiologie"
+      }
+    }
+  ]
+}

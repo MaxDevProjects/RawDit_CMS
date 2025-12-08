@@ -1,0 +1,239 @@
+{
+  "id": "home",
+  "title": "Clower Studio – Artisan du web utile et cohérent",
+  "slug": "/",
+  "description": "Accueil de Clower Studio, studio web indépendant qui améliore des sites existants pour des projets utiles et engagés.",
+  "badges": [],
+  "blocks": [
+    {
+      "id": "hero-home",
+      "type": "Hero",
+      "label": "Hero Home",
+      "settings": {
+        "title": "Améliorer des sites qui ont déjà une histoire.",
+        "subtitle": "Rendons votre présence numérique plus performante et plus cohérente.",
+        "ctaLabel": "Découvrir l'offre d'optimisation",
+        "ctaUrl": "/optimisation-site-existant",
+        "image": "/sites/clower-studio/media/capture-d-ecran-2025-10-30-182720.png",
+        "align": "center",
+        "layout": "fullwidth-bg",
+        "height": "min-h-[85vh]",
+        "overlay": "bg-black/30",
+        "titleSize": "text-4xl",
+        "contentAlign": "items-center",
+        "bg": "",
+        "borderRadius": "rounded-none",
+        "shadow": "shadow-none",
+        "textAlign": "text-center"
+      },
+      "props": []
+    },
+    {
+      "id": "paragraph-home-intro",
+      "type": "Paragraphe",
+      "label": "Intro Clower",
+      "settings": {
+        "title": "Clower Studio, c’est quoi ?",
+        "content": "<p>Clower Studio est un studio web indépendant qui accompagne des projets utiles – éducation, parentalité, santé, initiatives engagées – à faire évoluer leur présence en ligne sans tout casser.</p><p>Je conçois, développe et améliore des interfaces web avec une obsession&nbsp;: la clarté, l’alignement et le respect de vos ressources (temps, énergie, budget, impact).</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      },
+      "props": []
+    },
+    {
+      "id": "home-group-miui8uw3-631",
+      "label": "Groupe de sections 1",
+      "type": "Groupe",
+      "status": "Brouillon",
+      "description": "Conteneur pour imbriquer plusieurs sous-blocs.",
+      "props": [
+        {
+          "label": "Disposition",
+          "value": "Verticale"
+        }
+      ],
+      "settings": {
+        "layout": "grid",
+        "columnsMobile": "",
+        "columnsDesktop": "md:grid-cols-3",
+        "gap": "gap-4",
+        "itemsAlign": "items-center",
+        "bg": "",
+        "borderRadius": "",
+        "shadow": ""
+      },
+      "children": [
+        {
+          "id": "paragraph-pilier-1",
+          "type": "Paragraphe",
+          "label": "Pilier 1",
+          "settings": {
+            "title": "1. Partir de l’existant",
+            "content": "<p>Vous avez déjà un site, un projet, une base. L’idée n’est pas de tout jeter pour repartir de zéro, mais d’améliorer ce qui est déjà là, étape par étape.</p>",
+            "align": "left",
+            "titleSize": "text-xl",
+            "textSize": "text-sm",
+            "spacing": "space-y-2"
+          },
+          "props": []
+        },
+        {
+          "id": "paragraph-pilier-2",
+          "type": "Paragraphe",
+          "label": "Pilier 2",
+          "settings": {
+            "title": "2. Clarifier l’expérience",
+            "content": "<p>Navigation, lisibilité, structure des pages, appels à l’action… On simplifie, on clarifie, on fluidifie pour que vos visiteurs sachent vraiment quoi faire.</p>",
+            "align": "left",
+            "titleSize": "text-xl",
+            "textSize": "text-sm",
+            "spacing": "space-y-2"
+          },
+          "props": []
+        },
+        {
+          "id": "paragraph-pilier-3",
+          "type": "Paragraphe",
+          "label": "Pilier 3",
+          "settings": {
+            "title": "3. Soigner le fond et la forme",
+            "content": "<p>Une esthétique sobre, des animations légères, des textes clairs et un code propre. L’objectif&nbsp;: un site beau, utile et agréable à maintenir.</p>",
+            "align": "left",
+            "titleSize": "text-xl",
+            "textSize": "text-sm",
+            "spacing": "space-y-2"
+          },
+          "props": []
+        }
+      ]
+    },
+    {
+      "id": "paragraph-focus-offre",
+      "type": "Paragraphe",
+      "label": "Offre du moment : optimiser un site existant",
+      "settings": {
+        "title": "Offre du moment : optimiser un site existant",
+        "content": "<p>Beaucoup de projets arrivent à un moment où leur site ne suit plus&nbsp;: l’activité a évolué, le contenu s’est empilé, l’interface n’est plus vraiment alignée.</p><p>Plutôt que de lancer une refonte complète, je propose une offre dédiée à l’<strong>optimisation de site existant</strong> : Check-Up UX + Revamp ciblé.</p><p>Idéal pour alléger la fin d’année, préparer un lancement, ou simplement remettre de l’ordre sans tout remettre en question.</p>",
+        "align": "",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4",
+        "bg": "",
+        "borderRadius": "",
+        "shadow": ""
+      },
+      "props": [],
+      "description": "<p>Beaucoup de projets arrivent à un moment où leur site ne suit plus&nbsp;: l’activité a évolué, le contenu s’est empilé, l’interface n’est plus vraiment alignée.</p><p>Plutôt que de lancer une refonte complète, je propose une offre dédiée à l’<strong>optimisation de site existant</strong> : Check-Up UX + Revamp ciblé.</p><p>Idéal pour alléger la fin d’année, préparer un lancement, ou simplement remettre de l’ordre sans tout remettre en question.</p>"
+    },
+    {
+      "id": "collection-home-offer",
+      "type": "CollectionGrid",
+      "label": "Cartes offre optimisation",
+      "settings": {
+        "collectionId": "offers-revamp",
+        "limit": 2,
+        "columnsMobile": "1",
+        "columnsDesktop": "2",
+        "gap": "gap-6",
+        "cardRounded": "rounded-2xl"
+      },
+      "props": [],
+      "collectionId": "offers-revamp"
+    },
+    {
+      "id": "paragraph-home-projects-intro",
+      "type": "Paragraphe",
+      "label": "Intro projets",
+      "settings": {
+        "title": "Quelques projets représentatifs",
+        "content": "<p>Je travaille principalement avec des projets qui ont un impact humain&nbsp;: éducation, enfance, parentalité, santé, initiatives locales et associatives.</p><p>Voici une sélection de projets pour lesquels j’ai travaillé sur l’UX, le design ou l’amélioration d’un site existant.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      },
+      "props": []
+    },
+    {
+      "id": "collection-home-projects",
+      "type": "CollectionGrid",
+      "label": "Grille projets",
+      "settings": {
+        "collectionId": "mes-projets",
+        "limit": 3,
+        "columnsMobile": "1",
+        "columnsDesktop": "3",
+        "gap": "gap-4",
+        "cardRounded": "rounded-xl"
+      },
+      "props": [],
+      "collectionId": "mes-projets"
+    },
+    {
+      "id": "paragraph-home-about",
+      "type": "Paragraphe",
+      "label": "Bloc à propos teasé",
+      "settings": {
+        "title": "Qui se cache derrière Clower Studio&nbsp;?",
+        "content": "<p>Je m’appelle Maxime. Je suis développeur et designer indépendant, père de trois enfants, et je vis une grande partie de l’année en mouvement avec ma famille.</p><p>Ce mode de vie influence ma façon de travailler&nbsp;: chercher la sobriété, l’essentiel, des outils qui tiennent la route dans le temps et des projets qui ont du sens.</p><p>Si vous voulez en savoir plus sur ma façon de travailler et mon parcours, c’est par ici.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      },
+      "props": []
+    },
+    {
+      "id": "image-home-about",
+      "type": "Image",
+      "label": "Image à propos placeholder",
+      "settings": {
+        "src": "https://picsum.photos/900/450?random=102",
+        "alt": "Photo ambiance travail créatif",
+        "showCaption": false,
+        "caption": "",
+        "rounded": "rounded-2xl",
+        "shadow": "shadow-lg",
+        "maxWidth": "max-w-3xl",
+        "align": "mx-auto"
+      },
+      "props": []
+    },
+    {
+      "id": "paragraph-home-contact-intro",
+      "type": "Paragraphe",
+      "label": "Intro contact Home",
+      "settings": {
+        "title": "Vous avez déjà un site et vous sentez qu’il pourrait faire mieux&nbsp;?",
+        "content": "<p>Pas besoin d’un gros cahier des charges pour démarrer. Vous pouvez simplement m’envoyer l’URL de votre site et quelques mots sur votre activité et vos préoccupations du moment.</p><p>On fera un premier point ensemble, tranquillement, pour voir si une optimisation ciblée peut vous aider à avancer.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      },
+      "props": []
+    },
+    {
+      "id": "form-home-contact",
+      "type": "Form",
+      "label": "Formulaire contact Home",
+      "settings": {
+        "formTitle": "Me parler de votre site",
+        "actionUrl": "https://formspree.io/f/votre-id",
+        "method": "POST",
+        "serviceName": "Formspree",
+        "submitLabel": "Envoyer mon message",
+        "successMessage": "Merci ! Je reviens vers vous rapidement.",
+        "maxWidth": "max-w-lg",
+        "align": "mx-auto"
+      },
+      "props": []
+    }
+  ],
+  "seo": {
+    "title": "Clower Studio – Améliorer un site existant sans tout refaire",
+    "description": "Studio web indépendant. J’aide les projets engagés à améliorer leurs sites existants : UX, navigation, clarté, cohérence et design sobre."
+  }
+}

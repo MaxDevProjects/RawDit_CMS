@@ -1,0 +1,56 @@
+{
+  "id": "projets",
+  "title": "Projets – Clower Studio",
+  "slug": "/projets",
+  "description": "Sélection de projets et collaborations accompagnés par Clower Studio.",
+  "badges": [],
+  "blocks": [
+    {
+      "id": "hero-projets",
+      "type": "Hero",
+      "label": "Hero Projets",
+      "settings": {
+        "title": "Projets & collaborations",
+        "subtitle": "Une sélection de projets pour lesquels j’ai amélioré des sites, conçu des interfaces ou accompagné des équipes dans leurs choix techniques.",
+        "ctaLabel": "Me parler de votre projet",
+        "ctaUrl": "/contact",
+        "image": "https://picsum.photos/1200/500?random=120",
+        "align": "center",
+        "layout": "flex-row",
+        "height": "min-h-[50vh]",
+        "overlay": "bg-black/20",
+        "titleSize": "text-4xl"
+      }
+    },
+    {
+      "id": "paragraph-projets-intro",
+      "type": "Paragraphe",
+      "label": "Intro projets",
+      "settings": {
+        "title": "Des projets engagés, des sites qui évoluent.",
+        "content": "<p>Je travaille principalement avec des projets qui ont un impact humain&nbsp;: plateformes éducatives, outils pour la parentalité, projets autour de la santé, de l’enfance ou d’initiatives locales.</p><p>Mon rôle varie selon les missions&nbsp;: parfois développement sur mesure, parfois optimisation UX de sites existants, parfois accompagnement long terme.</p>",
+        "align": "left",
+        "titleSize": "text-2xl",
+        "textSize": "text-base",
+        "spacing": "space-y-4"
+      }
+    },
+    {
+      "id": "collection-projets",
+      "type": "CollectionGrid",
+      "label": "Grille des projets",
+      "settings": {
+        "collectionId": "mes-projets",
+        "limit": 9,
+        "columnsMobile": "1",
+        "columnsDesktop": "3",
+        "gap": "gap-6",
+        "cardRounded": "rounded-xl"
+      }
+    }
+  ],
+  "seo": {
+    "title": "Projets & réalisations | Clower Studio",
+    "description": "Une sélection de projets sur lesquels j’ai travaillé : optimisation UX, développement sur mesure, accompagnement de sites existants."
+  }
+}

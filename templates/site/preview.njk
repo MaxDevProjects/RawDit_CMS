@@ -39,13 +39,71 @@
   </head>
   <body class="font-['Inter'] text-slate-900">
     {% set collectionMap = collections or {} %}
-    <header class="bg-white shadow-sm border-b border-slate-100">
-      <div class="max-w-5xl mx-auto px-6 py-8 space-y-2">
-        <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Preview responsive</p>
-        <h1 class="text-3xl font-bold">{{ site.title or 'Site' }}</h1>
-        <p class="text-sm text-slate-500">{{ page.slug or '/' }}</p>
-      </div>
-    </header>
+    
+    {# ═══════════════════════════════════════════════════════════════════ #}
+    {# HEADER DYNAMIQUE                                                     #}
+    {# ═══════════════════════════════════════════════════════════════════ #}
+    {% if header %}
+      {% set headerBg = header.style.bg if header.style and header.style.bg else 'bg-white' %}
+      {% set headerPosition = header.style.position if header.style and header.style.position else 'static' %}
+      {% set positionClass = 'sticky top-0 z-50' if headerPosition == 'sticky' else ('fixed top-0 left-0 right-0 z-50' if headerPosition == 'fixed' else '') %}
+      <header class="{{ headerBg }} {{ positionClass }} shadow-sm border-b border-slate-100">
+        <div class="max-w-6xl mx-auto px-6 py-4">
+          <nav class="flex items-center justify-between gap-6">
+            {# Logo #}
+            <a href="{{ header.logo.url or '/' }}" class="flex items-center gap-3 font-bold text-xl">
+              {% if header.logo.src %}
+                <img src="{{ header.logo.src }}" alt="{{ header.logo.alt or site.title or 'Logo' }}" class="h-8 w-auto" />
+              {% endif %}
+              {% if header.logo.alt and not header.logo.src %}
+                <span>{{ header.logo.alt }}</span>
+              {% elif not header.logo.src %}
+                <span>{{ site.title or 'Site' }}</span>
+              {% endif %}
+            </a>
+            {# Navigation #}
+            {% if header.nav and header.nav | length > 0 %}
+              <ul class="hidden md:flex items-center gap-6">
+                {% for item in header.nav %}
+                  <li>
+                    <a href="{{ item.url or '#' }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                      {{ item.label or item.url }}
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+            {# CTA #}
+            {% if header.cta and header.cta.text %}
+              {% set ctaStyle = header.cta.style or 'primary' %}
+              {% if ctaStyle == 'primary' %}
+                {% set ctaClass = 'bg-violet-600 text-white hover:bg-violet-700' %}
+              {% elif ctaStyle == 'secondary' %}
+                {% set ctaClass = 'border border-violet-600 text-violet-600 hover:bg-violet-50' %}
+              {% else %}
+                {% set ctaClass = 'text-violet-600 hover:text-violet-700' %}
+              {% endif %}
+              <a href="{{ header.cta.url or '#' }}" class="hidden sm:inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaClass }}">
+                {{ header.cta.text }}
+              </a>
+            {% endif %}
+          </nav>
+        </div>
+      </header>
+      {# Spacer for fixed header #}
+      {% if headerPosition == 'fixed' %}
+        <div class="h-16"></div>
+      {% endif %}
+    {% else %}
+      {# Header par défaut si pas de config #}
+      <header class="bg-white shadow-sm border-b border-slate-100">
+        <div class="max-w-5xl mx-auto px-6 py-8 space-y-2">
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Preview responsive</p>
+          <h1 class="text-3xl font-bold">{{ site.title or 'Site' }}</h1>
+          <p class="text-sm text-slate-500">{{ page.slug or '/' }}</p>
+        </div>
+      </header>
+    {% endif %}
 
     <main class="max-w-5xl mx-auto px-6 py-10 space-y-6">
       {# Helper pour normaliser les classes - ajoute le préfixe si manquant #}
@@ -59,83 +117,116 @@
         {%- endif -%}
       {% endmacro %}
 
-      {% for block in page.blocks or [] %}
+      {# ═══════════════════════════════════════════════════════════════════ #}
+      {# MACRO RENDER BLOCK - Rendu complet d'un bloc (réutilisable)         #}
+      {# ═══════════════════════════════════════════════════════════════════ #}
+      {% macro renderBlock(block, isChild, collectionMap) %}
         {% set raw_type = (block.type or '') %}
         {% set type = raw_type | lower %}
         {% set settings = block.settings or {} %}
+        
         {% if type == 'hero' %}
           {% set content_align = settings.contentAlign or 'items-center' %}
+          {% set text_align = settings.textAlign or 'text-center items-center' %}
           {% set has_image = settings.image %}
-          {# Layout (position image/texte) #}
-          {% set layout = settings.layout or 'flex-col' %}
+          {% set layout = settings.layout or 'fullwidth-bg' %}
+          {% set is_fullwidth = layout == 'fullwidth-bg' %}
           {% set is_row = 'row' in layout %}
           {% set is_reverse = 'reverse' in layout %}
-          {# Hauteur de section #}
           {% set height = settings.height or 'min-h-[50vh]' %}
-          {# Overlay #}
           {% set overlay = settings.overlay or 'bg-black/0' %}
-          {# Taille du titre #}
           {% set title_size = settings.titleSize or 'text-4xl' %}
-          {# Style card #}
           {% set hero_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-gradient-to-br from-violet-50 to-white' %}
           {% set hero_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-3xl' %}
           {% set hero_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-none' %}
-          {# Classes de grille selon layout #}
-          {% if is_row %}
-            {% set grid_class = 'grid gap-10 lg:grid-cols-2 ' ~ content_align %}
-          {% else %}
-            {% set grid_class = 'flex flex-col gap-8 ' ~ content_align %}
-          {% endif %}
-          <section
-            data-preview-block="{{ block.id }}"
-            class="relative overflow-hidden {{ hero_bg }} {{ hero_radius }} {{ hero_shadow }} {{ height }} px-10 py-16"
-          >
-            {# Overlay sur l'image de fond si présent #}
-            {% if overlay != 'bg-black/0' %}
-              <div class="absolute inset-0 {{ overlay }}"></div>
-            {% endif %}
-            <div class="relative z-10 {{ grid_class }} {% if is_reverse %}lg:flex-row-reverse{% endif %}">
-              {# Contenu texte #}
-              <div class="flex flex-col gap-4 {% if is_row %}{% else %}items-center text-center{% endif %}" {% if is_reverse %}style="order: 2"{% endif %}>
-                <p class="text-xs uppercase tracking-[0.3em] text-violet-400">
+          
+          {% if is_fullwidth %}
+            {# Mode fullwidth avec image en background #}
+            <section
+              data-preview-block="{{ block.id }}"
+              class="relative overflow-hidden {{ hero_radius }} {{ hero_shadow }} {{ height }} flex {{ content_align }} justify-center"
+              {% if has_image %}style="background-image: url('{{ settings.image }}'); background-size: cover; background-position: center;"{% else %}class="{{ hero_bg }}"{% endif %}
+            >
+              {# Overlay #}
+              {% if overlay != 'bg-black/0' or has_image %}
+                <div class="absolute inset-0 {{ overlay if overlay != 'bg-black/0' else 'bg-black/30' }}"></div>
+              {% endif %}
+              {# Contenu centré #}
+              <div class="relative z-10 w-full max-w-4xl mx-auto px-8 py-16 flex flex-col gap-6 {{ text_align }}">
+                <p class="text-xs uppercase tracking-[0.3em] {% if has_image %}text-white/80{% else %}text-violet-400{% endif %}">
                   {{ block.status or 'Brouillon' }}
                 </p>
-                <h2 class="{{ title_size }} font-bold leading-tight">
+                <h2 class="{{ title_size }} font-bold leading-tight {% if has_image %}text-white drop-shadow-lg{% else %}text-slate-900{% endif %}">
                   {{ settings.title or block.label or 'Titre du hero' }}
                 </h2>
-                <div class="text-lg text-slate-600 max-w-2xl [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic">
+                <div class="text-lg max-w-2xl {% if has_image %}text-white/90{% else %}text-slate-600{% endif %} [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:underline [&>strong]:font-semibold [&>em]:italic">
                   {{ (settings.subtitle or block.description or 'Ajoutez un sous-titre inspirant pour ce hero.') | safe }}
                 </div>
                 {% if settings.ctaLabel %}
                   <a
                     href="{{ settings.ctaUrl or '#' }}"
-                    class="inline-flex w-fit items-center justify-center rounded-full bg-violet-600 px-5 py-2 text-white text-sm font-semibold hover:bg-violet-500"
+                    class="inline-flex w-fit items-center justify-center rounded-full {% if has_image %}bg-white text-slate-900 hover:bg-white/90{% else %}bg-violet-600 text-white hover:bg-violet-500{% endif %} px-6 py-3 text-sm font-semibold shadow-lg"
                   >
                     {{ settings.ctaLabel }}
                   </a>
                 {% endif %}
               </div>
-              {# Image #}
-              {% if has_image %}
-                <div class="flex justify-center {% if is_row %}lg:justify-end{% endif %}" {% if is_reverse %}style="order: 1"{% endif %}>
-                  <div class="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/60 shadow-2xl ring-1 ring-violet-100/80">
-                    <div
-                      class="h-64 w-full bg-slate-200 bg-cover bg-center"
-                      style="{{ 'background-image:url(' ~ settings.image ~ ');' }}"
-                      aria-label="Illustration du hero"
-                    ></div>
-                    <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
-                  </div>
-                </div>
+            </section>
+          {% else %}
+            {# Mode classique avec image à côté ou au-dessus #}
+            {% if is_row %}
+              {% set grid_class = 'grid gap-10 lg:grid-cols-2 ' ~ content_align %}
+            {% else %}
+              {% set grid_class = 'flex flex-col gap-8 ' ~ content_align %}
+            {% endif %}
+            <section
+              data-preview-block="{{ block.id }}"
+              class="relative overflow-hidden {{ hero_bg }} {{ hero_radius }} {{ hero_shadow }} {{ height }} px-10 py-16"
+            >
+              {% if overlay != 'bg-black/0' %}
+                <div class="absolute inset-0 {{ overlay }}"></div>
               {% endif %}
-            </div>
-          </section>
+              <div class="relative z-10 {{ grid_class }} {% if is_reverse %}lg:flex-row-reverse{% endif %}">
+                <div class="flex flex-col gap-4 {% if is_row %}{% else %}items-center text-center{% endif %}" {% if is_reverse %}style="order: 2"{% endif %}>
+                  <p class="text-xs uppercase tracking-[0.3em] text-violet-400">
+                    {{ block.status or 'Brouillon' }}
+                  </p>
+                  <h2 class="{{ title_size }} font-bold leading-tight">
+                    {{ settings.title or block.label or 'Titre du hero' }}
+                  </h2>
+                  <div class="text-lg text-slate-600 max-w-2xl [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic">
+                    {{ (settings.subtitle or block.description or 'Ajoutez un sous-titre inspirant pour ce hero.') | safe }}
+                  </div>
+                  {% if settings.ctaLabel %}
+                    <a
+                      href="{{ settings.ctaUrl or '#' }}"
+                      class="inline-flex w-fit items-center justify-center rounded-full bg-violet-600 px-5 py-2 text-white text-sm font-semibold hover:bg-violet-500"
+                    >
+                      {{ settings.ctaLabel }}
+                    </a>
+                  {% endif %}
+                </div>
+                {% if has_image %}
+                  <div class="flex justify-center {% if is_row %}lg:justify-end{% endif %}" {% if is_reverse %}style="order: 1"{% endif %}>
+                    <div class="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/60 shadow-2xl ring-1 ring-violet-100/80">
+                      <div
+                        class="h-64 w-full bg-slate-200 bg-cover bg-center"
+                        style="{{ 'background-image:url(' ~ settings.image ~ ');' }}"
+                        aria-label="Illustration du hero"
+                      ></div>
+                      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            </section>
+          {% endif %}
+        
         {% elif type == 'paragraphe' or type == 'texte' %}
           {% set text_class = settings.align if settings.align and 'text-' in settings.align else 'text-left' %}
           {% set para_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
           {% set para_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set para_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
-          {# Tailles du titre et du texte #}
           {% set title_size = settings.titleSize or 'text-2xl' %}
           {% set text_size = settings.textSize or 'text-base' %}
           {% set spacing = settings.spacing or 'space-y-4' %}
@@ -150,19 +241,32 @@
               {{ (settings.content or block.description or 'Ajoutez votre texte éditorial ici.') | safe }}
             </div>
           </section>
+        
         {% elif type == 'image' %}
           {% set src = settings.src or '' %}
           {% set img_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
           {% set img_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set img_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
+          {% set img_height = settings.height if settings.height else 'h-64' %}
+          {% set img_object_fit = settings.objectFit if settings.objectFit else 'object-cover' %}
+          {% set img_max_width = settings.maxWidth if settings.maxWidth else 'max-w-full' %}
+          {% set img_align = settings.align if settings.align else 'mx-auto' %}
+          {% set img_rounded = settings.rounded if settings.rounded else 'rounded-2xl' %}
           <figure
             data-preview-block="{{ block.id }}"
-            class="{{ img_bg }} {{ img_radius }} {{ img_shadow }} border border-slate-100 p-4 space-y-3"
+            class="{{ img_bg }} {{ img_radius }} {{ img_shadow }} {{ img_max_width }} {{ img_align }} border border-slate-100 p-4 space-y-3"
           >
-            <div
-              class="h-64 w-full rounded-2xl bg-slate-200 bg-cover bg-center"
-              style="{{ src and ('background-image:url(' ~ src ~ ');') or '' }}"
-            ></div>
+            {% if src %}
+              <img
+                src="{{ src }}"
+                alt="{{ settings.alt or block.label or 'Image' }}"
+                class="w-full {{ img_height }} {{ img_object_fit }} {{ img_rounded }}"
+              />
+            {% else %}
+              <div class="w-full {{ img_height }} {{ img_rounded }} bg-slate-200 flex items-center justify-center text-slate-400">
+                <span class="text-4xl">🖼️</span>
+              </div>
+            {% endif %}
             <div>
               <h3 class="text-xl font-semibold">{{ block.label or 'Bloc image' }}</h3>
               <p class="text-sm text-slate-500">{{ block.description or 'Illustration' }}</p>
@@ -171,6 +275,7 @@
               <figcaption class="text-xs text-slate-500">{{ settings.caption }}</figcaption>
             {% endif %}
           </figure>
+        
         {% elif type == 'groupe' or type == 'sections' or type == 'grid' %}
           {% set mobile_class = settings.columnsMobile if settings.columnsMobile and 'grid-cols' in settings.columnsMobile else 'grid-cols-1' %}
           {% set desktop_class = settings.columnsDesktop if settings.columnsDesktop and 'grid-cols' in settings.columnsDesktop else 'md:grid-cols-3' %}
@@ -179,28 +284,183 @@
           {% set group_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
           {% set group_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set group_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
+          {% set children = block.children or [] %}
           <section
             data-preview-block="{{ block.id }}"
             class="{{ group_bg }} {{ group_radius }} {{ group_shadow }} border border-slate-100 p-6 space-y-3"
           >
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-lg font-semibold">{{ block.label or 'Bloc groupe' }}</h3>
-                <p class="text-sm text-slate-500">
-                  {{ block.description or 'Disposition responsive' }}
-                </p>
+            {% if children | length == 0 %}
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-semibold">{{ block.label or 'Bloc groupe' }}</h3>
+                  <p class="text-sm text-slate-500">
+                    {{ block.description or 'Glissez des blocs ici pour créer une disposition' }}
+                  </p>
+                </div>
+                <span class="text-xs text-slate-400">
+                  {{ mobile_class }} · {{ desktop_class }}
+                </span>
               </div>
-              <span class="text-xs text-slate-400">
-                {{ mobile_class }} · {{ desktop_class }}
-              </span>
-            </div>
-          <div class="grid {{ gap_class }} {{ mobile_class }} {{ desktop_class }} {{ items_align }}">
-            <div class="h-24 rounded-2xl bg-slate-50 border border-slate-100"></div>
-            <div class="h-24 rounded-2xl bg-slate-50 border border-slate-100"></div>
-            <div class="h-24 rounded-2xl bg-slate-50 border border-slate-100"></div>
-            <div class="h-24 rounded-2xl bg-slate-50 border border-slate-100"></div>
-          </div>
-        </section>
+              <div class="grid {{ gap_class }} {{ mobile_class }} {{ desktop_class }} {{ items_align }}">
+                <div class="h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm">+</div>
+                <div class="h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm">+</div>
+                <div class="h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm">+</div>
+              </div>
+            {% else %}
+              <div class="grid {{ gap_class }} {{ mobile_class }} {{ desktop_class }} {{ items_align }}">
+                {% for child in children %}
+                  {% set c_type = (child.type or '') | lower %}
+                  {% set c_settings = child.settings or {} %}
+                  <div class="group-child-wrapper" data-preview-block="{{ child.id }}">
+                    {# ─── Rendu complet des enfants (inline, pas de récursion) ─── #}
+                    {% if c_type == 'hero' %}
+                      {% set c_content_align = c_settings.contentAlign or 'items-center' %}
+                      {% set c_has_image = c_settings.image %}
+                      {% set c_layout = c_settings.layout or 'flex-col' %}
+                      {% set c_is_row = 'row' in c_layout %}
+                      {% set c_height = c_settings.height or 'min-h-[30vh]' %}
+                      {% set c_title_size = c_settings.titleSize or 'text-2xl' %}
+                      {% set c_hero_bg = c_settings.bg if c_settings.bg and 'bg-' in c_settings.bg else 'bg-gradient-to-br from-violet-50 to-white' %}
+                      {% set c_hero_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-2xl' %}
+                      <div class="relative overflow-hidden {{ c_hero_bg }} {{ c_hero_radius }} {{ c_height }} px-6 py-8">
+                        <div class="flex flex-col gap-3 {{ c_content_align }}">
+                          <h3 class="{{ c_title_size }} font-bold leading-tight">
+                            {{ c_settings.title or child.label or 'Titre' }}
+                          </h3>
+                          <div class="text-sm text-slate-600">
+                            {{ (c_settings.subtitle or child.description or '') | safe }}
+                          </div>
+                          {% if c_settings.ctaLabel %}
+                            <a href="{{ c_settings.ctaUrl or '#' }}" class="inline-flex rounded-full bg-violet-600 px-4 py-2 text-white text-sm font-semibold hover:bg-violet-500">
+                              {{ c_settings.ctaLabel }}
+                            </a>
+                          {% endif %}
+                        </div>
+                        {% if c_has_image %}
+                          <div class="mt-4">
+                            <img src="{{ c_settings.image }}" alt="" class="w-full h-32 object-cover rounded-xl" />
+                          </div>
+                        {% endif %}
+                      </div>
+                    
+                    {% elif c_type == 'paragraphe' or c_type == 'texte' %}
+                      {% set c_text_class = c_settings.align if c_settings.align and 'text-' in c_settings.align else 'text-left' %}
+                      {% set c_para_bg = c_settings.bg if c_settings.bg and 'bg-' in c_settings.bg else 'bg-white' %}
+                      {% set c_para_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-xl' %}
+                      {% set c_title_size = c_settings.titleSize or 'text-lg' %}
+                      {% set c_text_size = c_settings.textSize or 'text-sm' %}
+                      <div class="{{ c_para_bg }} {{ c_para_radius }} p-4 border border-slate-100 {{ c_text_class }}">
+                        {% if c_settings.title %}
+                          <h4 class="{{ c_title_size }} font-semibold mb-2">{{ c_settings.title }}</h4>
+                        {% endif %}
+                        <div class="{{ c_text_size }} text-slate-600 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">
+                          {{ (c_settings.content or child.description or 'Texte...') | safe }}
+                        </div>
+                      </div>
+                    
+                    {% elif c_type == 'image' %}
+                      {% set c_src = c_settings.src or '' %}
+                      {% set c_img_height = c_settings.height if c_settings.height else 'h-48' %}
+                      {% set c_img_object_fit = c_settings.objectFit if c_settings.objectFit else 'object-cover' %}
+                      {% set c_img_rounded = c_settings.rounded if c_settings.rounded else 'rounded-xl' %}
+                      {% if c_src %}
+                        <img src="{{ c_src }}" alt="{{ c_settings.alt or child.label or 'Image' }}" class="w-full {{ c_img_height }} {{ c_img_object_fit }} {{ c_img_rounded }}" />
+                      {% else %}
+                        <div class="w-full {{ c_img_height }} {{ c_img_rounded }} bg-slate-200 flex items-center justify-center text-slate-400">
+                          <span class="text-3xl">🖼️</span>
+                        </div>
+                      {% endif %}
+                      {% if c_settings.showCaption and c_settings.caption %}
+                        <p class="text-xs text-slate-500 mt-1">{{ c_settings.caption }}</p>
+                      {% endif %}
+                    
+                    {% elif c_type == 'bouton' or c_type == 'button' or c_type == 'cta' %}
+                      {% set c_btn_bg = c_settings.bg if c_settings.bg and 'bg-' in c_settings.bg else 'bg-violet-600' %}
+                      {% set c_btn_text_color = c_settings.textColor if c_settings.textColor else 'text-white' %}
+                      {% set c_btn_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-xl' %}
+                      {% set c_btn_size = c_settings.size or 'px-5 py-2.5' %}
+                      <a href="{{ c_settings.url or '#' }}" class="inline-flex items-center gap-2 {{ c_btn_radius }} {{ c_btn_bg }} {{ c_btn_size }} text-sm font-semibold {{ c_btn_text_color }} hover:opacity-90 transition-opacity">
+                        {{ c_settings.text or child.label or 'Bouton' }}
+                        {% if c_settings.icon %}
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                          </svg>
+                        {% endif %}
+                      </a>
+                    
+                    {% elif c_type == 'titre' or c_type == 'heading' %}
+                      {% set c_level = c_settings.level or 'h3' %}
+                      {% set c_heading_size = c_settings.size or 'text-2xl' %}
+                      {% set c_heading_align = c_settings.align or 'text-left' %}
+                      {% set c_heading_color = c_settings.color if c_settings.color else 'text-slate-900' %}
+                      <div class="{{ c_heading_align }}">
+                        <{{ c_level }} class="{{ c_heading_size }} font-bold {{ c_heading_color }}">
+                          {{ c_settings.text or child.label or 'Titre' }}
+                        </{{ c_level }}>
+                      </div>
+                    
+                    {% elif c_type == 'espaceur' or c_type == 'spacer' %}
+                      {% set c_spacer_height = c_settings.height or 'h-8' %}
+                      <div class="{{ c_spacer_height }}"></div>
+                    
+                    {% elif c_type == 'card' or c_type == 'carte' %}
+                      {% set c_card_bg = c_settings.bg if c_settings.bg and 'bg-' in c_settings.bg else 'bg-white' %}
+                      {% set c_card_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-xl' %}
+                      {% set c_card_shadow = c_settings.shadow if c_settings.shadow and 'shadow' in c_settings.shadow else 'shadow-sm' %}
+                      <div class="{{ c_card_bg }} {{ c_card_radius }} {{ c_card_shadow }} border border-slate-100 p-4 space-y-2">
+                        {% if c_settings.image %}
+                          <img src="{{ c_settings.image }}" alt="{{ c_settings.title or '' }}" class="w-full h-32 object-cover rounded-lg" />
+                        {% endif %}
+                        <h4 class="text-lg font-semibold">{{ c_settings.title or child.label or 'Carte' }}</h4>
+                        <p class="text-sm text-slate-600">{{ c_settings.description or child.description or '' }}</p>
+                        {% if c_settings.ctaText %}
+                          <a href="{{ c_settings.ctaUrl or '#' }}" class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:text-violet-700">
+                            {{ c_settings.ctaText }}
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                          </a>
+                        {% endif %}
+                      </div>
+                    
+                    {% elif c_type == 'divider' or c_type == 'separateur' %}
+                      {% set c_divider_color = c_settings.color or 'border-slate-200' %}
+                      <div class="py-2">
+                        <hr class="w-full {{ c_divider_color }} border-t" />
+                      </div>
+                    
+                    {% elif c_type == 'video' %}
+                      {% set c_video_src = c_settings.src or c_settings.url or '' %}
+                      {% set c_video_embed = c_settings.embedCode or '' %}
+                      {% set c_video_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-xl' %}
+                      <div class="bg-slate-900 {{ c_video_radius }} overflow-hidden aspect-video">
+                        {% if c_video_embed %}
+                          {{ c_video_embed | safe }}
+                        {% elif c_video_src %}
+                          <video src="{{ c_video_src }}" controls class="w-full h-full object-cover"></video>
+                        {% else %}
+                          <div class="w-full h-full flex items-center justify-center text-white/60">
+                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                          </div>
+                        {% endif %}
+                      </div>
+                    
+                    {% else %}
+                      {# Bloc générique pour enfant non reconnu #}
+                      <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-xs text-slate-500 uppercase">{{ child.type }}</p>
+                        <p class="text-sm font-medium">{{ child.label or 'Bloc' }}</p>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </section>
+        
         {% elif type == 'collectiongrid' or type == 'collection grid' or raw_type == 'CollectionGrid' %}
           {% set cid = block.collectionId or settings.collectionId %}
           {% set limit = settings.limit or 6 %}
@@ -256,6 +516,7 @@
               </div>
             {% endif %}
           </section>
+        
         {% elif type == 'form' or type == 'formulaire' or raw_type == 'Form' %}
           {% set formTitle = settings.formTitle or 'Contactez-nous' %}
           {% set actionUrl = settings.actionUrl or '#' %}
@@ -308,6 +569,7 @@
               </div>
             </form>
           </section>
+        
         {% elif type == 'newsletterembed' or type == 'newsletter' or raw_type == 'NewsletterEmbed' %}
           {% set nlTitle = settings.title or 'Restez informé' %}
           {% set embedCode = settings.embedCode or '' %}
@@ -338,6 +600,90 @@
               </div>
             {% endif %}
           </section>
+        
+        {% elif type == 'bouton' or type == 'button' or type == 'cta' %}
+          {% set btn_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-violet-600' %}
+          {% set btn_text_color = settings.textColor if settings.textColor else 'text-white' %}
+          {% set btn_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-xl' %}
+          {% set btn_size = settings.size or 'px-6 py-3' %}
+          {% set btn_align = settings.align or 'text-left' %}
+          <div data-preview-block="{{ block.id }}" class="{{ btn_align }}">
+            <a 
+              href="{{ settings.url or '#' }}" 
+              class="inline-flex items-center gap-2 {{ btn_radius }} {{ btn_bg }} {{ btn_size }} text-sm font-semibold {{ btn_text_color }} hover:opacity-90 transition-opacity"
+            >
+              {{ settings.text or block.label or 'Bouton' }}
+              {% if settings.icon %}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              {% endif %}
+            </a>
+          </div>
+        
+        {% elif type == 'titre' or type == 'heading' %}
+          {% set level = settings.level or 'h2' %}
+          {% set heading_size = settings.size or 'text-3xl' %}
+          {% set heading_align = settings.align or 'text-left' %}
+          {% set heading_color = settings.color if settings.color else 'text-slate-900' %}
+          <div data-preview-block="{{ block.id }}" class="{{ heading_align }}">
+            <{{ level }} class="{{ heading_size }} font-bold {{ heading_color }}">
+              {{ settings.text or block.label or 'Titre' }}
+            </{{ level }}>
+          </div>
+        
+        {% elif type == 'espaceur' or type == 'spacer' %}
+          {% set spacer_height = settings.height or 'h-12' %}
+          <div data-preview-block="{{ block.id }}" class="{{ spacer_height }}"></div>
+        
+        {% elif type == 'card' or type == 'carte' %}
+          {% set card_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
+          {% set card_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
+          {% set card_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
+          <div data-preview-block="{{ block.id }}" class="{{ card_bg }} {{ card_radius }} {{ card_shadow }} border border-slate-100 p-6 space-y-3">
+            {% if settings.image %}
+              <img src="{{ settings.image }}" alt="{{ settings.title or '' }}" class="w-full h-40 object-cover rounded-xl" />
+            {% endif %}
+            <h3 class="text-xl font-semibold">{{ settings.title or block.label or 'Carte' }}</h3>
+            <p class="text-sm text-slate-600">{{ settings.description or block.description or '' }}</p>
+            {% if settings.ctaText %}
+              <a href="{{ settings.ctaUrl or '#' }}" class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:text-violet-700">
+                {{ settings.ctaText }}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+            {% endif %}
+          </div>
+        
+        {% elif type == 'divider' or type == 'separateur' %}
+          {% set divider_color = settings.color or 'border-slate-200' %}
+          {% set divider_width = settings.width or 'w-full' %}
+          {% set divider_style = settings.style or 'border-solid' %}
+          <div data-preview-block="{{ block.id }}" class="py-4">
+            <hr class="{{ divider_width }} {{ divider_color }} {{ divider_style }} border-t mx-auto" />
+          </div>
+        
+        {% elif type == 'video' %}
+          {% set video_src = settings.src or settings.url or '' %}
+          {% set video_embed = settings.embedCode or '' %}
+          {% set video_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-slate-900' %}
+          {% set video_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
+          <div data-preview-block="{{ block.id }}" class="{{ video_bg }} {{ video_radius }} overflow-hidden aspect-video">
+            {% if video_embed %}
+              {{ video_embed | safe }}
+            {% elif video_src %}
+              <video src="{{ video_src }}" controls class="w-full h-full object-cover"></video>
+            {% else %}
+              <div class="w-full h-full flex items-center justify-center text-white/60">
+                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+            {% endif %}
+          </div>
+        
         {% else %}
           <section
             data-preview-block="{{ block.id }}"
@@ -346,12 +692,107 @@
             Ce type de bloc ("{{ block.type or 'Bloc' }}") n'a pas encore de preview dédiée.
           </section>
         {% endif %}
+      {% endmacro %}
+
+      {% for block in page.blocks or [] %}
+        {{ renderBlock(block, false, collectionMap) }}
       {% else %}
         <section class="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
           Ajoutez vos premiers blocs pour visualiser la page.
         </section>
       {% endfor %}
     </main>
+
+    {# ═══════════════════════════════════════════════════════════════════ #}
+    {# FOOTER DYNAMIQUE                                                     #}
+    {# ═══════════════════════════════════════════════════════════════════ #}
+    {% if footer %}
+      {% set footerBg = footer.style.bg if footer.style and footer.style.bg else 'bg-slate-900 text-white' %}
+      {% set colsCount = footer.style.columnsCount if footer.style and footer.style.columnsCount else '4' %}
+      {% set gridCols = 'md:grid-cols-' ~ colsCount %}
+      <footer class="{{ footerBg }} mt-16">
+        <div class="max-w-6xl mx-auto px-6 py-12">
+          {# Colonnes de liens #}
+          {% if footer.columns and footer.columns | length > 0 %}
+            <div class="grid grid-cols-2 {{ gridCols }} gap-8 mb-8">
+              {% for column in footer.columns %}
+                <div>
+                  {% if column.title %}
+                    <h4 class="font-semibold mb-4 text-sm uppercase tracking-wide opacity-80">{{ column.title }}</h4>
+                  {% endif %}
+                  {% if column.links and column.links | length > 0 %}
+                    <ul class="space-y-2">
+                      {% for link in column.links %}
+                        <li>
+                          <a href="{{ link.url or '#' }}" class="text-sm opacity-70 hover:opacity-100 transition-opacity">
+                            {{ link.label or link.url }}
+                          </a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          
+          {# Réseaux sociaux #}
+          {% if footer.socials %}
+            {% set hasSocials = footer.socials.linkedin or footer.socials.twitter or footer.socials.instagram or footer.socials.facebook or footer.socials.youtube or footer.socials.github %}
+            {% if hasSocials %}
+              <div class="flex items-center gap-4 mb-8">
+                {% if footer.socials.linkedin %}
+                  <a href="{{ footer.socials.linkedin }}" target="_blank" rel="noopener" class="opacity-70 hover:opacity-100 transition-opacity" aria-label="LinkedIn">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                  </a>
+                {% endif %}
+                {% if footer.socials.twitter %}
+                  <a href="{{ footer.socials.twitter }}" target="_blank" rel="noopener" class="opacity-70 hover:opacity-100 transition-opacity" aria-label="Twitter">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  </a>
+                {% endif %}
+                {% if footer.socials.instagram %}
+                  <a href="{{ footer.socials.instagram }}" target="_blank" rel="noopener" class="opacity-70 hover:opacity-100 transition-opacity" aria-label="Instagram">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                  </a>
+                {% endif %}
+                {% if footer.socials.facebook %}
+                  <a href="{{ footer.socials.facebook }}" target="_blank" rel="noopener" class="opacity-70 hover:opacity-100 transition-opacity" aria-label="Facebook">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                  </a>
+                {% endif %}
+                {% if footer.socials.youtube %}
+                  <a href="{{ footer.socials.youtube }}" target="_blank" rel="noopener" class="opacity-70 hover:opacity-100 transition-opacity" aria-label="YouTube">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  </a>
+                {% endif %}
+                {% if footer.socials.github %}
+                  <a href="{{ footer.socials.github }}" target="_blank" rel="noopener" class="opacity-70 hover:opacity-100 transition-opacity" aria-label="GitHub">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                  </a>
+                {% endif %}
+              </div>
+            {% endif %}
+          {% endif %}
+          
+          {# Copyright et liens légaux #}
+          <div class="border-t border-current/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm opacity-70">
+            <p>{{ footer.copyright or ('© ' ~ 'now' | date('Y') ~ ' ' ~ (site.title or 'Site') ~ '. Tous droits réservés.') }}</p>
+            {% if footer.legal %}
+              <div class="flex items-center gap-4">
+                {% if footer.legal.url %}
+                  <a href="{{ footer.legal.url }}" class="hover:opacity-100 transition-opacity">Mentions légales</a>
+                {% endif %}
+                {% if footer.legal.privacyUrl %}
+                  <a href="{{ footer.legal.privacyUrl }}" class="hover:opacity-100 transition-opacity">Confidentialité</a>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </footer>
+    {% endif %}
+
     {# US9.B2 - Analytics body end code injection #}
     {% if site.analytics and site.analytics.bodyEndCode %}
     {{ site.analytics.bodyEndCode | safe }}

@@ -1,10 +1,10 @@
 {
   "colors": {
-    "primary": "gray-700",
+    "primary": "slate-900",
     "secondary": "slate-400",
     "accent": "slate-900",
-    "background": "slate-50",
-    "text": "slate-900"
+    "background": "teal-500",
+    "text": "slate-50"
   },
   "typography": {
     "headings": "Inter, sans-serif",

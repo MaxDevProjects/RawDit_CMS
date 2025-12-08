@@ -2,6 +2,185 @@
 {% set pageTitle = "Paramètres" %}
 {% set activeWorkspaceTab = "settings" %}
 
+{# Macro pour les options de couleurs Tailwind complètes #}
+{% macro colorOptions() %}
+  <optgroup label="Neutres">
+    <option value="white" data-color="#ffffff">⬜ Blanc</option>
+    <option value="transparent" data-color="transparent">⬜ Transparent</option>
+    <option value="black" data-color="#000000">⬛ Noir</option>
+  </optgroup>
+  <optgroup label="Slate (Gris bleuté)">
+    <option value="slate-50" data-color="#f8fafc">🔲 Slate-50</option>
+    <option value="slate-100" data-color="#f1f5f9">🔲 Slate-100</option>
+    <option value="slate-200" data-color="#e2e8f0">🔲 Slate-200</option>
+    <option value="slate-300" data-color="#cbd5e1">🔲 Slate-300</option>
+    <option value="slate-400" data-color="#94a3b8">🔲 Slate-400</option>
+    <option value="slate-500" data-color="#64748b">🔲 Slate-500</option>
+    <option value="slate-600" data-color="#475569">🔲 Slate-600</option>
+    <option value="slate-700" data-color="#334155">🔲 Slate-700</option>
+    <option value="slate-800" data-color="#1e293b">🔲 Slate-800</option>
+    <option value="slate-900" data-color="#0f172a">🔲 Slate-900</option>
+  </optgroup>
+  <optgroup label="Gray (Gris neutre)">
+    <option value="gray-50" data-color="#f9fafb">🔲 Gray-50</option>
+    <option value="gray-100" data-color="#f3f4f6">🔲 Gray-100</option>
+    <option value="gray-200" data-color="#e5e7eb">🔲 Gray-200</option>
+    <option value="gray-300" data-color="#d1d5db">🔲 Gray-300</option>
+    <option value="gray-400" data-color="#9ca3af">🔲 Gray-400</option>
+    <option value="gray-500" data-color="#6b7280">🔲 Gray-500</option>
+    <option value="gray-600" data-color="#4b5563">🔲 Gray-600</option>
+    <option value="gray-700" data-color="#374151">🔲 Gray-700</option>
+    <option value="gray-800" data-color="#1f2937">🔲 Gray-800</option>
+    <option value="gray-900" data-color="#111827">🔲 Gray-900</option>
+  </optgroup>
+  <optgroup label="Violet">
+    <option value="violet-50" data-color="#f5f3ff">🟪 Violet-50</option>
+    <option value="violet-100" data-color="#ede9fe">🟪 Violet-100</option>
+    <option value="violet-200" data-color="#ddd6fe">🟪 Violet-200</option>
+    <option value="violet-300" data-color="#c4b5fd">🟪 Violet-300</option>
+    <option value="violet-400" data-color="#a78bfa">🟪 Violet-400</option>
+    <option value="violet-500" data-color="#8b5cf6">🟪 Violet-500</option>
+    <option value="violet-600" data-color="#7c3aed">🟪 Violet-600</option>
+    <option value="violet-700" data-color="#6d28d9">🟪 Violet-700</option>
+    <option value="violet-800" data-color="#5b21b6">🟪 Violet-800</option>
+    <option value="violet-900" data-color="#4c1d95">🟪 Violet-900</option>
+  </optgroup>
+  <optgroup label="Blue (Bleu)">
+    <option value="blue-50" data-color="#eff6ff">🟦 Blue-50</option>
+    <option value="blue-100" data-color="#dbeafe">🟦 Blue-100</option>
+    <option value="blue-200" data-color="#bfdbfe">🟦 Blue-200</option>
+    <option value="blue-300" data-color="#93c5fd">🟦 Blue-300</option>
+    <option value="blue-400" data-color="#60a5fa">🟦 Blue-400</option>
+    <option value="blue-500" data-color="#3b82f6">🟦 Blue-500</option>
+    <option value="blue-600" data-color="#2563eb">🟦 Blue-600</option>
+    <option value="blue-700" data-color="#1d4ed8">🟦 Blue-700</option>
+    <option value="blue-800" data-color="#1e40af">🟦 Blue-800</option>
+    <option value="blue-900" data-color="#1e3a8a">🟦 Blue-900</option>
+  </optgroup>
+  <optgroup label="Sky (Bleu ciel)">
+    <option value="sky-50" data-color="#f0f9ff">🔵 Sky-50</option>
+    <option value="sky-100" data-color="#e0f2fe">🔵 Sky-100</option>
+    <option value="sky-200" data-color="#bae6fd">🔵 Sky-200</option>
+    <option value="sky-300" data-color="#7dd3fc">🔵 Sky-300</option>
+    <option value="sky-400" data-color="#38bdf8">🔵 Sky-400</option>
+    <option value="sky-500" data-color="#0ea5e9">🔵 Sky-500</option>
+    <option value="sky-600" data-color="#0284c7">🔵 Sky-600</option>
+    <option value="sky-700" data-color="#0369a1">🔵 Sky-700</option>
+  </optgroup>
+  <optgroup label="Emerald (Émeraude)">
+    <option value="emerald-50" data-color="#ecfdf5">🟩 Emerald-50</option>
+    <option value="emerald-100" data-color="#d1fae5">🟩 Emerald-100</option>
+    <option value="emerald-200" data-color="#a7f3d0">🟩 Emerald-200</option>
+    <option value="emerald-300" data-color="#6ee7b7">🟩 Emerald-300</option>
+    <option value="emerald-400" data-color="#34d399">🟩 Emerald-400</option>
+    <option value="emerald-500" data-color="#10b981">🟩 Emerald-500</option>
+    <option value="emerald-600" data-color="#059669">🟩 Emerald-600</option>
+    <option value="emerald-700" data-color="#047857">🟩 Emerald-700</option>
+  </optgroup>
+  <optgroup label="Green (Vert)">
+    <option value="green-50" data-color="#f0fdf4">🟢 Green-50</option>
+    <option value="green-100" data-color="#dcfce7">🟢 Green-100</option>
+    <option value="green-200" data-color="#bbf7d0">🟢 Green-200</option>
+    <option value="green-300" data-color="#86efac">🟢 Green-300</option>
+    <option value="green-400" data-color="#4ade80">🟢 Green-400</option>
+    <option value="green-500" data-color="#22c55e">🟢 Green-500</option>
+    <option value="green-600" data-color="#16a34a">🟢 Green-600</option>
+    <option value="green-700" data-color="#15803d">🟢 Green-700</option>
+  </optgroup>
+  <optgroup label="Yellow (Jaune)">
+    <option value="yellow-50" data-color="#fefce8">🟨 Yellow-50</option>
+    <option value="yellow-100" data-color="#fef9c3">🟨 Yellow-100</option>
+    <option value="yellow-200" data-color="#fef08a">🟨 Yellow-200</option>
+    <option value="yellow-300" data-color="#fde047">🟨 Yellow-300</option>
+    <option value="yellow-400" data-color="#facc15">🟨 Yellow-400</option>
+    <option value="yellow-500" data-color="#eab308">🟨 Yellow-500</option>
+  </optgroup>
+  <optgroup label="Amber (Ambre)">
+    <option value="amber-50" data-color="#fffbeb">🟧 Amber-50</option>
+    <option value="amber-100" data-color="#fef3c7">🟧 Amber-100</option>
+    <option value="amber-200" data-color="#fde68a">🟧 Amber-200</option>
+    <option value="amber-300" data-color="#fcd34d">🟧 Amber-300</option>
+    <option value="amber-400" data-color="#fbbf24">🟧 Amber-400</option>
+    <option value="amber-500" data-color="#f59e0b">🟧 Amber-500</option>
+  </optgroup>
+  <optgroup label="Orange">
+    <option value="orange-50" data-color="#fff7ed">🟠 Orange-50</option>
+    <option value="orange-100" data-color="#ffedd5">🟠 Orange-100</option>
+    <option value="orange-200" data-color="#fed7aa">🟠 Orange-200</option>
+    <option value="orange-300" data-color="#fdba74">🟠 Orange-300</option>
+    <option value="orange-400" data-color="#fb923c">🟠 Orange-400</option>
+    <option value="orange-500" data-color="#f97316">🟠 Orange-500</option>
+    <option value="orange-600" data-color="#ea580c">🟠 Orange-600</option>
+    <option value="orange-700" data-color="#c2410c">🟠 Orange-700</option>
+  </optgroup>
+  <optgroup label="Red (Rouge)">
+    <option value="red-50" data-color="#fef2f2">🟥 Red-50</option>
+    <option value="red-100" data-color="#fee2e2">🟥 Red-100</option>
+    <option value="red-200" data-color="#fecaca">🟥 Red-200</option>
+    <option value="red-300" data-color="#fca5a5">🟥 Red-300</option>
+    <option value="red-400" data-color="#f87171">🟥 Red-400</option>
+    <option value="red-500" data-color="#ef4444">🟥 Red-500</option>
+    <option value="red-600" data-color="#dc2626">🟥 Red-600</option>
+    <option value="red-700" data-color="#b91c1c">🟥 Red-700</option>
+  </optgroup>
+  <optgroup label="Rose">
+    <option value="rose-50" data-color="#fff1f2">🌸 Rose-50</option>
+    <option value="rose-100" data-color="#ffe4e6">🌸 Rose-100</option>
+    <option value="rose-200" data-color="#fecdd3">🌸 Rose-200</option>
+    <option value="rose-300" data-color="#fda4af">🌸 Rose-300</option>
+    <option value="rose-400" data-color="#fb7185">🌸 Rose-400</option>
+    <option value="rose-500" data-color="#f43f5e">🌸 Rose-500</option>
+  </optgroup>
+  <optgroup label="Pink (Rose vif)">
+    <option value="pink-50" data-color="#fdf2f8">💗 Pink-50</option>
+    <option value="pink-100" data-color="#fce7f3">💗 Pink-100</option>
+    <option value="pink-200" data-color="#fbcfe8">💗 Pink-200</option>
+    <option value="pink-300" data-color="#f9a8d4">💗 Pink-300</option>
+    <option value="pink-400" data-color="#f472b6">💗 Pink-400</option>
+    <option value="pink-500" data-color="#ec4899">💗 Pink-500</option>
+  </optgroup>
+  <optgroup label="Fuchsia">
+    <option value="fuchsia-50" data-color="#fdf4ff">💜 Fuchsia-50</option>
+    <option value="fuchsia-100" data-color="#fae8ff">💜 Fuchsia-100</option>
+    <option value="fuchsia-200" data-color="#f5d0fe">💜 Fuchsia-200</option>
+    <option value="fuchsia-300" data-color="#f0abfc">💜 Fuchsia-300</option>
+    <option value="fuchsia-400" data-color="#e879f9">💜 Fuchsia-400</option>
+    <option value="fuchsia-500" data-color="#d946ef">💜 Fuchsia-500</option>
+  </optgroup>
+  <optgroup label="Purple (Mauve)">
+    <option value="purple-50" data-color="#faf5ff">🔮 Purple-50</option>
+    <option value="purple-100" data-color="#f3e8ff">🔮 Purple-100</option>
+    <option value="purple-200" data-color="#e9d5ff">🔮 Purple-200</option>
+    <option value="purple-300" data-color="#d8b4fe">🔮 Purple-300</option>
+    <option value="purple-400" data-color="#c084fc">🔮 Purple-400</option>
+    <option value="purple-500" data-color="#a855f7">🔮 Purple-500</option>
+  </optgroup>
+  <optgroup label="Indigo">
+    <option value="indigo-50" data-color="#eef2ff">🔷 Indigo-50</option>
+    <option value="indigo-100" data-color="#e0e7ff">🔷 Indigo-100</option>
+    <option value="indigo-200" data-color="#c7d2fe">🔷 Indigo-200</option>
+    <option value="indigo-300" data-color="#a5b4fc">🔷 Indigo-300</option>
+    <option value="indigo-400" data-color="#818cf8">🔷 Indigo-400</option>
+    <option value="indigo-500" data-color="#6366f1">🔷 Indigo-500</option>
+  </optgroup>
+  <optgroup label="Teal (Sarcelle)">
+    <option value="teal-50" data-color="#f0fdfa">🩵 Teal-50</option>
+    <option value="teal-100" data-color="#ccfbf1">🩵 Teal-100</option>
+    <option value="teal-200" data-color="#99f6e4">🩵 Teal-200</option>
+    <option value="teal-300" data-color="#5eead4">🩵 Teal-300</option>
+    <option value="teal-400" data-color="#2dd4bf">🩵 Teal-400</option>
+    <option value="teal-500" data-color="#14b8a6">🩵 Teal-500</option>
+  </optgroup>
+  <optgroup label="Cyan">
+    <option value="cyan-50" data-color="#ecfeff">🔹 Cyan-50</option>
+    <option value="cyan-100" data-color="#cffafe">🔹 Cyan-100</option>
+    <option value="cyan-200" data-color="#a5f3fc">🔹 Cyan-200</option>
+    <option value="cyan-300" data-color="#67e8f9">🔹 Cyan-300</option>
+    <option value="cyan-400" data-color="#22d3ee">🔹 Cyan-400</option>
+    <option value="cyan-500" data-color="#06b6d4">🔹 Cyan-500</option>
+  </optgroup>
+{% endmacro %}
+
 {% block sidebar_start %}
   <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
     <h2 class="text-sm font-semibold mb-2">Accès</h2>
@@ -52,6 +231,17 @@
           aria-selected="false"
         >
           Analytics
+        </button>
+        <button
+          type="button"
+          data-settings-tab="ai"
+          class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 inline-flex items-center gap-1.5"
+          aria-selected="false"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+          IA
         </button>
       </div>
     </div>
@@ -167,23 +357,48 @@
       <div class="grid gap-4 md:grid-cols-3">
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Couleur primaire</span>
-          <select data-theme-primary class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
+          <div class="relative flex items-center gap-2">
+            <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #8b5cf6;"></span>
+            <select data-theme-primary class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
+              {{ colorOptions() }}
+            </select>
+          </div>
         </label>
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Secondaire</span>
-          <select data-theme-secondary class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
+          <div class="relative flex items-center gap-2">
+            <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #0ea5e9;"></span>
+            <select data-theme-secondary class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
+              {{ colorOptions() }}
+            </select>
+          </div>
         </label>
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Accent</span>
-          <select data-theme-accent class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
+          <div class="relative flex items-center gap-2">
+            <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #f97316;"></span>
+            <select data-theme-accent class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
+              {{ colorOptions() }}
+            </select>
+          </div>
         </label>
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Fond</span>
-          <select data-theme-background class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
+          <div class="relative flex items-center gap-2">
+            <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #ffffff;"></span>
+            <select data-theme-background class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
+              {{ colorOptions() }}
+            </select>
+          </div>
         </label>
         <label class="space-y-1 block">
           <span class="text-xs font-semibold text-slate-600">Texte</span>
-          <select data-theme-text class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></select>
+          <div class="relative flex items-center gap-2">
+            <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #1e293b;"></span>
+            <select data-theme-text class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
+              {{ colorOptions() }}
+            </select>
+          </div>
         </label>
       </div>
 
@@ -345,6 +560,115 @@
               class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
             >
               Enregistrer les scripts
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- AI Assistant Panel -->
+      <section data-settings-panel="ai" class="space-y-6 hidden">
+        <div class="space-y-1">
+          <p class="text-xs uppercase tracking-tight text-slate-500">Intelligence Artificielle</p>
+          <h2 class="text-lg font-semibold text-slate-900">Configuration de l'assistant IA</h2>
+          <p class="text-sm text-slate-600">
+            Configure l'API Gemini et les prompts pour l'assistant IA de ce site.
+          </p>
+        </div>
+
+        <form data-ai-config-form class="space-y-5 max-w-2xl">
+          <!-- Activation -->
+          <div class="flex items-center justify-between p-4 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl border border-violet-100">
+            <div>
+              <p class="text-sm font-semibold text-slate-800">Activer l'assistant IA</p>
+              <p class="text-xs text-slate-500">Permet d'utiliser le chatbot IA pour ce site</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" data-ai-enabled class="sr-only peer" checked />
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-violet-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+            </label>
+          </div>
+
+          <!-- Clé API -->
+          <label class="space-y-2 block">
+            <span class="text-xs font-semibold text-slate-600">Clé API Gemini</span>
+            <div class="relative">
+              <input
+                type="password"
+                data-ai-api-key
+                class="w-full rounded-xl border border-slate-300 px-3 py-2 pr-10 font-mono text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+                placeholder="AIza..."
+                autocomplete="off"
+              />
+            </div>
+            <p class="text-xs text-slate-400">Obtenez votre clé sur <a href="https://aistudio.google.com/apikey" target="_blank" class="text-violet-600 hover:underline">Google AI Studio</a></p>
+          </label>
+
+          <!-- Modèle -->
+          <label class="space-y-2 block">
+            <span class="text-xs font-semibold text-slate-600">Modèle Gemini</span>
+            <select
+              data-ai-model
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+            >
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommandé)</option>
+              <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro (Plus lent, plus précis)</option>
+            </select>
+          </label>
+
+          <!-- Prompt Description Projet -->
+          <div class="space-y-2">
+            <label class="block">
+              <span class="text-xs font-semibold text-slate-600">Description du projet</span>
+              <p class="text-xs text-slate-400 mt-0.5">Ce contexte est ajouté au prompt pour aider l'IA à comprendre votre site</p>
+            </label>
+            <textarea
+              rows="4"
+              data-ai-project-prompt
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              placeholder="Ex: Ce site est le portfolio de mon agence de design UX. Nous créons des expériences digitales pour des startups tech. Notre ton est professionnel mais accessible..."
+            ></textarea>
+          </div>
+
+          <!-- Prompt Système (Immuable, affiché en lecture seule) -->
+          <details class="group">
+            <summary class="cursor-pointer text-xs font-semibold text-slate-600 hover:text-[#9C6BFF] flex items-center gap-2">
+              <span class="group-open:rotate-90 transition-transform">▶</span>
+              Voir le prompt système (lecture seule)
+            </summary>
+            <div class="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <p class="text-xs text-slate-500 mb-2">Ce prompt est utilisé pour guider l'IA. Il contient les instructions sur la création de pages et blocs.</p>
+              <pre class="text-xs text-slate-700 whitespace-pre-wrap bg-white p-3 rounded-lg border border-slate-100 max-h-64 overflow-y-auto">Tu es l'assistant IA de ClowerEdit, un CMS statique éco-conçu.
+
+Tu aides les utilisateurs à créer et optimiser leurs sites web.
+Tu réponds toujours en français. Tu es concis, pratique et orienté solutions.
+
+=== STRUCTURE DES PAGES ===
+Une page contient : title, slug, description, seo, blocks
+
+=== TYPES DE BLOCS DISPONIBLES ===
+• Hero : { type: "Hero", settings: {...} }
+• Paragraphe : { type: "Paragraphe", settings: {...} }
+• Image : { type: "Image", settings: {...} }
+• Groupe : { type: "Groupe", settings: {...} }
+• CollectionGrid : { type: "CollectionGrid", settings: {...} }
+• Form : { type: "Form", settings: {...} }
+• NewsletterEmbed : { type: "NewsletterEmbed", settings: {...} }
+
+=== COLLECTIONS ===
+Les collections sont des listes de contenus (projets, articles...).
+Format item : { id, title, status, summary, content, image, cta }</pre>
+            </div>
+          </details>
+
+          <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
+            <p data-ai-feedback role="status" class="text-sm text-slate-500"></p>
+            <button
+              type="submit"
+              data-ai-save
+              class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+            >
+              Enregistrer la configuration IA
             </button>
           </div>
         </form>

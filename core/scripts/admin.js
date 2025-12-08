@@ -647,6 +647,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // Onglets Contenu / Apparence
     const blockTabs = document.querySelectorAll('[data-block-tab]');
     let activeBlockTab = 'content';
+
+    // Onglets panneau gauche (Blocs / Pages)
+    const leftPanelTabs = document.querySelectorAll('[data-left-tab]');
+    const leftPanelBlocks = document.querySelector('[data-left-panel="blocks"]');
+    const leftPanelPages = document.querySelector('[data-left-panel="pages"]');
+    let activeLeftTab = 'blocks';
+
+    // Fonction pour switcher entre les onglets Blocs/Pages du panneau gauche
+    const switchLeftTab = (tabName) => {
+      activeLeftTab = tabName;
+      leftPanelTabs.forEach((tab) => {
+        const isActive = tab.dataset.leftTab === tabName;
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        if (isActive) {
+          tab.classList.add('text-[#9C6BFF]');
+          tab.classList.remove('text-slate-500', 'hover:text-slate-700');
+          tab.classList.add('after:absolute', 'after:bottom-0', 'after:left-0', 'after:right-0', 'after:h-0.5', 'after:bg-[#9C6BFF]');
+        } else {
+          tab.classList.remove('text-[#9C6BFF]');
+          tab.classList.add('text-slate-500', 'hover:text-slate-700');
+          tab.classList.remove('after:absolute', 'after:bottom-0', 'after:left-0', 'after:right-0', 'after:h-0.5', 'after:bg-[#9C6BFF]');
+        }
+      });
+      // Afficher/masquer les panels
+      if (leftPanelBlocks) {
+        leftPanelBlocks.classList.toggle('hidden', tabName !== 'blocks');
+      }
+      if (leftPanelPages) {
+        leftPanelPages.classList.toggle('hidden', tabName !== 'pages');
+      }
+    };
+
+    // Event listeners pour les onglets du panneau gauche
+    leftPanelTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        switchLeftTab(tab.dataset.leftTab);
+      });
+    });
     
     // Déclarations des éléments d'actions du formulaire (avant switchBlockTab)
     const blockFormActions = document.querySelector('[data-block-form-actions]');
@@ -726,6 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
           layout: 'hero-layout',
           height: 'hero-height',
           contentAlign: 'hero-content-align',
+          textAlign: 'hero-text-align',
           overlay: 'hero-overlay',
           titleSize: 'hero-title-size',
           // Card style
@@ -764,6 +803,8 @@ document.addEventListener('DOMContentLoaded', () => {
           rounded: 'image-rounded',
           shadow: 'image-shadow',
           maxWidth: 'image-max-width',
+          height: 'image-height',
+          objectFit: 'image-object-fit',
           align: 'image-align',
           // Card style
           bg: 'image-bg',
@@ -1052,6 +1093,20 @@ document.addEventListener('DOMContentLoaded', () => {
           blockForm.querySelector('[name="collection-columns-desktop"]')?.value || '3';
         updateCollectionMiniPreview(mobileValue, desktopValue);
       }
+      // Mise à jour des previews de couleur
+      blockForm.querySelectorAll('[data-color-select]').forEach((select) => {
+        const selectedOption = select.options[select.selectedIndex];
+        const color = selectedOption?.dataset?.color || '#ffffff';
+        const colorPreview = select.closest('.relative')?.querySelector('[data-color-preview]');
+        if (colorPreview) {
+          if (color === 'transparent') {
+            colorPreview.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+          } else {
+            colorPreview.style.backgroundColor = color;
+            colorPreview.style.background = '';
+          }
+        }
+      });
     };
     const collectFormValues = (config) => {
       if (!blockForm || !config) {
@@ -1093,21 +1148,27 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!page) {
         return null;
       }
+      
+      // Fonction pour sérialiser un bloc (utilisé pour les blocs et leurs enfants)
+      const serializeBlock = (block) => ({
+        id: block.id,
+        type: block.type,
+        label: block.label,
+        status: block.status,
+        description: block.description,
+        props: block.props || [],
+        settings: block.settings || {},
+        collectionId: block.collectionId || block.settings?.collectionId || '',
+        children: (block.children || []).map(serializeBlock),
+      });
+      
       return {
         id: page.id,
         title: page.title,
         slug: page.slug,
         badges: [...(page.badges || [])],
-        blocks: (page.blocks || []).map((block) => ({
-          id: block.id,
-          type: block.type,
-          label: block.label,
-          status: block.status,
-          description: block.description,
-          props: block.props || [],
-          settings: block.settings || {},
-          collectionId: block.collectionId || block.settings?.collectionId || '',
-        })),
+        seo: page.seo || {},
+        blocks: (page.blocks || []).map(serializeBlock),
       };
     };
     const getLoadingPreviewHtml = () =>
@@ -1592,6 +1653,182 @@ document.addEventListener('DOMContentLoaded', () => {
         previewHighlightOverlay.style.borderColor = blockId ? 'rgba(156, 107, 255, 0.5)' : 'transparent';
       }
     };
+    // Fonction pour créer un élément de bloc (utilisé pour les blocs et les enfants de groupe)
+    const createBlockItemElement = (block, isNested = false, parentId = null) => {
+      const isActive = block.id === activeBlockId;
+      const blockType = (block.type || '').toLowerCase();
+      const isGroup = blockType === 'groupe' || blockType === 'group' || blockType === 'sections' || blockType === 'grid';
+      
+      const item = document.createElement('div');
+      item.dataset.blockItem = 'true';
+      item.dataset.blockId = block.id;
+      if (parentId) item.dataset.parentBlockId = parentId;
+      if (isGroup) item.dataset.isGroup = 'true';
+      item.setAttribute('role', 'option');
+      item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      item.setAttribute('draggable', 'true');
+      item.tabIndex = 0;
+      item.className = [
+        'relative flex items-center gap-3 rounded-2xl border px-3 py-2 text-left transition group',
+        isNested ? 'ml-6 border-dashed' : '',
+        isActive
+          ? 'bg-slate-100 border-[#9C6BFF]/40 shadow-sm'
+          : 'border-slate-200 hover:border-[#9C6BFF]/40',
+      ].join(' ');
+      
+      const accent = document.createElement('span');
+      accent.className = `absolute inset-y-2 left-0 w-1 rounded-full bg-[#9C6BFF] ${isActive ? '' : 'hidden'}`;
+      item.appendChild(accent);
+
+      const content = document.createElement('div');
+      content.className = 'flex flex-1 items-center gap-3';
+      
+      const handle = document.createElement('div');
+      handle.className = 'hidden lg:flex cursor-grab active:cursor-grabbing flex-shrink-0 items-center text-lg text-slate-400 hover:text-slate-600 transition-colors select-none';
+      handle.innerHTML = '⋮⋮';
+      handle.setAttribute('title', 'Glisser pour réordonner');
+      content.appendChild(handle);
+
+      const textWrapper = document.createElement('div');
+      textWrapper.className = 'flex-1';
+      
+      const meta = document.createElement('div');
+      meta.className = 'flex items-center gap-2 text-[11px] uppercase tracking-wide text-slate-500';
+      
+      const typeBadge = document.createElement('span');
+      typeBadge.className = 'rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600';
+      typeBadge.textContent = block.type;
+      
+      const statusBadge = document.createElement('span');
+      statusBadge.className = 'text-slate-400';
+      statusBadge.textContent = block.status;
+      
+      meta.appendChild(typeBadge);
+      if (isGroup) {
+        const childCount = (block.children || []).length;
+        const childBadge = document.createElement('span');
+        childBadge.className = 'rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-600';
+        childBadge.textContent = `${childCount} élément${childCount !== 1 ? 's' : ''}`;
+        meta.appendChild(childBadge);
+      }
+      meta.appendChild(statusBadge);
+      
+      const title = document.createElement('p');
+      title.className = 'mt-1 text-sm font-semibold text-slate-900';
+      const displayLabel = (block.settings && block.settings.title) || block.label || 'Bloc sans titre';
+      title.textContent = displayLabel;
+      
+      textWrapper.appendChild(meta);
+      textWrapper.appendChild(title);
+      
+      if (blockType === 'collectiongrid' && block.collectionId) {
+        const collectionName = designCollections.find((entry) => entry.id === block.collectionId)?.name || block.collectionId;
+        const info = document.createElement('p');
+        info.className = 'text-xs text-slate-400';
+        info.textContent = `Collection : ${collectionName}`;
+        textWrapper.appendChild(info);
+      }
+      
+      content.appendChild(textWrapper);
+      item.appendChild(content);
+
+      const actions = document.createElement('div');
+      actions.className = 'flex flex-col gap-1 text-xs text-slate-400';
+
+      const moveButtons = document.createElement('div');
+      moveButtons.className = 'flex items-center gap-1 lg:hidden';
+      const moveUp = document.createElement('button');
+      moveUp.type = 'button';
+      moveUp.className = 'rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-500';
+      moveUp.textContent = '↑';
+      moveUp.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (parentId) {
+          moveChildBlockByOffset(parentId, block.id, -1);
+        } else {
+          moveBlockByOffset(block.id, -1);
+        }
+      });
+      const moveDown = document.createElement('button');
+      moveDown.type = 'button';
+      moveDown.className = 'rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-500';
+      moveDown.textContent = '↓';
+      moveDown.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (parentId) {
+          moveChildBlockByOffset(parentId, block.id, 1);
+        } else {
+          moveBlockByOffset(block.id, 1);
+        }
+      });
+      moveButtons.appendChild(moveUp);
+      moveButtons.appendChild(moveDown);
+      actions.appendChild(moveButtons);
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'inline-flex items-center justify-center rounded-lg border border-transparent px-2 py-1 text-[12px] text-rose-500 hover:text-rose-700';
+      deleteButton.innerHTML = '🗑️';
+      deleteButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (parentId) {
+          removeChildFromGroup(parentId, block.id);
+        } else {
+          openBlockDeleteModal(block.id);
+        }
+      });
+
+      actions.appendChild(deleteButton);
+      item.appendChild(actions);
+
+      item.addEventListener('click', () => {
+        setActiveBlock(block.id, parentId);
+      });
+      item.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          setActiveBlock(block.id, parentId);
+        }
+      });
+      
+      return { item, isGroup, block };
+    };
+    
+    // Fonction pour créer la zone de drop pour un groupe
+    const createGroupDropZone = (parentBlock) => {
+      const dropZone = document.createElement('div');
+      dropZone.dataset.groupDropZone = parentBlock.id;
+      dropZone.className = 'ml-6 border-2 border-dashed border-slate-200 rounded-xl p-3 text-center text-xs text-slate-400 hover:border-violet-300 hover:bg-violet-50/50 transition-colors cursor-pointer';
+      dropZone.innerHTML = '<span class="pointer-events-none">📦 Glissez un bloc ici ou cliquez pour ajouter</span>';
+      
+      // Événements de drag & drop
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('border-violet-400', 'bg-violet-50');
+      });
+      dropZone.addEventListener('dragleave', (e) => {
+        e.stopPropagation();
+        dropZone.classList.remove('border-violet-400', 'bg-violet-50');
+      });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('border-violet-400', 'bg-violet-50');
+        const blockId = e.dataTransfer.getData('text/plain');
+        if (blockId && blockId !== parentBlock.id) {
+          moveBlockToGroup(blockId, parentBlock.id);
+        }
+      });
+      
+      // Clic pour ajouter un bloc au groupe
+      dropZone.addEventListener('click', () => {
+        openAddBlockToGroupModal(parentBlock.id);
+      });
+      
+      return dropZone;
+    };
+
     const renderBlockList = (page) => {
       if (!blockList) {
         return;
@@ -1608,121 +1845,95 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       blockList.classList.remove('hidden');
       blockListEmpty?.classList.add('hidden');
+      
       blocks.forEach((block) => {
-        const isActive = block.id === activeBlockId;
-        const item = document.createElement('div');
-        item.dataset.blockItem = 'true';
-        item.dataset.blockId = block.id;
-        item.setAttribute('role', 'option');
-        item.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        item.setAttribute('draggable', 'true');
-        item.tabIndex = 0;
-        item.className = [
-          'relative flex items-center gap-3 rounded-2xl border px-3 py-2 text-left transition group',
-          isActive
-            ? 'bg-slate-100 border-[#9C6BFF]/40 shadow-sm'
-            : 'border-slate-200 hover:border-[#9C6BFF]/40',
-        ].join(' ');
-        const accent = document.createElement('span');
-        accent.className = `absolute inset-y-2 left-0 w-1 rounded-full bg-[#9C6BFF] ${
-          isActive ? '' : 'hidden'
-        }`;
-        item.appendChild(accent);
-
-        const content = document.createElement('div');
-        content.className = 'flex flex-1 items-center gap-3';
-        const handle = document.createElement('div');
-        handle.className =
-          'hidden lg:flex cursor-grab active:cursor-grabbing flex-shrink-0 items-center text-lg text-slate-400 hover:text-slate-600 transition-colors select-none';
-        handle.innerHTML = '⋮⋮';
-        handle.setAttribute('title', 'Glisser pour réordonner');
-        content.appendChild(handle);
-
-        const textWrapper = document.createElement('div');
-        textWrapper.className = 'flex-1';
-        const meta = document.createElement('div');
-        meta.className = 'flex items-center gap-2 text-[11px] uppercase tracking-wide text-slate-500';
-        const typeBadge = document.createElement('span');
-        typeBadge.className =
-          'rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600';
-        typeBadge.textContent = block.type;
-        const statusBadge = document.createElement('span');
-        statusBadge.className = 'text-slate-400';
-        statusBadge.textContent = block.status;
-        meta.appendChild(typeBadge);
-        meta.appendChild(statusBadge);
-        const title = document.createElement('p');
-        title.className = 'mt-1 text-sm font-semibold text-slate-900';
-        const displayLabel =
-          (block.settings && block.settings.title) || block.label || 'Bloc sans titre';
-        title.textContent = displayLabel;
-        textWrapper.appendChild(meta);
-        textWrapper.appendChild(title);
-        const blockType = (block.type || '').toLowerCase();
-        if (blockType === 'collectiongrid' && block.collectionId) {
-          const collectionName =
-            designCollections.find((entry) => entry.id === block.collectionId)?.name ||
-            block.collectionId;
-          const info = document.createElement('p');
-          info.className = 'text-xs text-slate-400';
-          info.textContent = `Collection : ${collectionName}`;
-          textWrapper.appendChild(info);
-        }
-        content.appendChild(textWrapper);
-        item.appendChild(content);
-
-        const actions = document.createElement('div');
-        actions.className = 'flex flex-col gap-1 text-xs text-slate-400';
-
-        const moveButtons = document.createElement('div');
-        moveButtons.className = 'flex items-center gap-1 lg:hidden';
-        const moveUp = document.createElement('button');
-        moveUp.type = 'button';
-        moveUp.className =
-          'rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-500';
-        moveUp.textContent = '↑';
-        moveUp.addEventListener('click', (event) => {
-          event.stopPropagation();
-          moveBlockByOffset(block.id, -1);
-        });
-        const moveDown = document.createElement('button');
-        moveDown.type = 'button';
-        moveDown.className =
-          'rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-500';
-        moveDown.textContent = '↓';
-        moveDown.addEventListener('click', (event) => {
-          event.stopPropagation();
-          moveBlockByOffset(block.id, 1);
-        });
-        moveButtons.appendChild(moveUp);
-        moveButtons.appendChild(moveDown);
-        actions.appendChild(moveButtons);
-
-        const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';
-        deleteButton.className =
-          'inline-flex items-center justify-center rounded-lg border border-transparent px-2 py-1 text-[12px] text-rose-500 hover:text-rose-700';
-        deleteButton.innerHTML = '🗑️';
-        deleteButton.addEventListener('click', (event) => {
-          event.stopPropagation();
-          openBlockDeleteModal(block.id);
-        });
-
-        actions.appendChild(deleteButton);
-        item.appendChild(actions);
-
-        item.addEventListener('click', () => {
-          setActiveBlock(block.id);
-        });
-        item.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            setActiveBlock(block.id);
-          }
-        });
+        const { item, isGroup } = createBlockItemElement(block, false, null);
         blockList.appendChild(item);
+        
+        // Si c'est un groupe, afficher les enfants et la zone de drop
+        if (isGroup) {
+          const children = block.children || [];
+          children.forEach((child) => {
+            const { item: childItem } = createBlockItemElement(child, true, block.id);
+            blockList.appendChild(childItem);
+          });
+          // Zone de drop pour ajouter des blocs au groupe
+          const dropZone = createGroupDropZone(block);
+          blockList.appendChild(dropZone);
+        }
       });
     };
+    
+    // Fonctions pour gérer les enfants des groupes
+    const moveBlockToGroup = (blockId, groupId) => {
+      if (!currentPage) return;
+      const blockIndex = currentPage.blocks.findIndex((b) => b.id === blockId);
+      const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
+      if (blockIndex === -1 || !groupBlock) return;
+      
+      // Ne pas permettre de déplacer un groupe dans un groupe
+      const block = currentPage.blocks[blockIndex];
+      const blockType = (block.type || '').toLowerCase();
+      if (blockType === 'groupe' || blockType === 'group') {
+        showToast('Impossible d\'imbriquer des groupes', 'error');
+        return;
+      }
+      
+      // Retirer le bloc de la liste principale
+      const [movedBlock] = currentPage.blocks.splice(blockIndex, 1);
+      
+      // Ajouter au groupe
+      if (!groupBlock.children) groupBlock.children = [];
+      groupBlock.children.push(movedBlock);
+      
+      renderBlockList(currentPage);
+      savePageBlocks();
+      showToast(`Bloc ajouté au groupe`);
+    };
+    
+    const removeChildFromGroup = (groupId, childId) => {
+      if (!currentPage) return;
+      const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
+      if (!groupBlock || !groupBlock.children) return;
+      
+      const childIndex = groupBlock.children.findIndex((c) => c.id === childId);
+      if (childIndex === -1) return;
+      
+      // Retirer l'enfant du groupe et le remettre dans la liste principale après le groupe
+      const [child] = groupBlock.children.splice(childIndex, 1);
+      const groupIndex = currentPage.blocks.findIndex((b) => b.id === groupId);
+      currentPage.blocks.splice(groupIndex + 1, 0, child);
+      
+      renderBlockList(currentPage);
+      savePageBlocks();
+      showToast(`Bloc sorti du groupe`);
+    };
+    
+    const moveChildBlockByOffset = (groupId, childId, offset) => {
+      if (!currentPage) return;
+      const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
+      if (!groupBlock || !groupBlock.children) return;
+      
+      const currentIndex = groupBlock.children.findIndex((c) => c.id === childId);
+      if (currentIndex === -1) return;
+      
+      const newIndex = currentIndex + offset;
+      if (newIndex < 0 || newIndex >= groupBlock.children.length) return;
+      
+      const [child] = groupBlock.children.splice(currentIndex, 1);
+      groupBlock.children.splice(newIndex, 0, child);
+      
+      renderBlockList(currentPage);
+      savePageBlocks();
+    };
+    
+    const openAddBlockToGroupModal = (groupId) => {
+      // Utiliser le même modal d'ajout de bloc, mais avec le contexte du groupe
+      pendingGroupIdForNewBlock = groupId;
+      openBlockPicker();
+    };
+    
+    let pendingGroupIdForNewBlock = null;
 
     // === Delete page handlers (defined before renderPageLists) ===
     const openDeletePageModal = (page) => {
@@ -1849,22 +2060,70 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!currentPage || !Array.isArray(currentPage.blocks)) {
         return null;
       }
-      return currentPage.blocks.find((block) => block.id === activeBlockId) || null;
+      // Chercher le bloc dans la liste principale ou dans les enfants des groupes
+      let block = currentPage.blocks.find((block) => block.id === activeBlockId);
+      if (!block) {
+        for (const b of currentPage.blocks) {
+          if (b.children) {
+            block = b.children.find((child) => child.id === activeBlockId);
+            if (block) break;
+          }
+        }
+      }
+      return block || null;
     };
-    const setActiveBlock = (blockId) => {
+    
+    // Variable pour stocker le parent du bloc actif (si c'est un enfant de groupe)
+    let activeBlockParentId = null;
+    
+    const setActiveBlock = (blockId, parentId = null) => {
       if (!currentPage) {
         return;
       }
       if (!blockId) {
         activeBlockId = null;
+        activeBlockParentId = null;
         renderBlockList(currentPage);
         renderBlockDetails(null);
         applyPreviewHighlight(null);
         return;
       }
-      const targetBlock =
-        currentPage.blocks.find((block) => block.id === blockId) || currentPage.blocks[0] || null;
+      
+      let targetBlock = null;
+      
+      // Chercher dans les blocs principaux
+      targetBlock = currentPage.blocks.find((block) => block.id === blockId);
+      
+      // Si pas trouvé et qu'on a un parentId, chercher dans les enfants du parent
+      if (!targetBlock && parentId) {
+        const parentBlock = currentPage.blocks.find((b) => b.id === parentId);
+        if (parentBlock && parentBlock.children) {
+          targetBlock = parentBlock.children.find((child) => child.id === blockId);
+        }
+      }
+      
+      // Sinon chercher dans tous les groupes
+      if (!targetBlock) {
+        for (const b of currentPage.blocks) {
+          if (b.children) {
+            const found = b.children.find((child) => child.id === blockId);
+            if (found) {
+              targetBlock = found;
+              parentId = b.id;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Fallback sur le premier bloc
+      if (!targetBlock) {
+        targetBlock = currentPage.blocks[0] || null;
+        parentId = null;
+      }
+      
       activeBlockId = targetBlock?.id || null;
+      activeBlockParentId = parentId;
       renderBlockList(currentPage);
       renderBlockDetails(targetBlock);
       applyPreviewHighlight(activeBlockId);
@@ -1985,6 +2244,24 @@ document.addEventListener('DOMContentLoaded', () => {
         newBlock.settings.collectionId = firstCollectionId;
         newBlock.settings.limit = newBlock.settings.limit || 6;
       }
+      
+      // Si on ajoute à un groupe
+      if (pendingGroupIdForNewBlock) {
+        const groupBlock = currentPage.blocks.find((b) => b.id === pendingGroupIdForNewBlock);
+        if (groupBlock) {
+          if (!groupBlock.children) groupBlock.children = [];
+          groupBlock.children.push(newBlock);
+          pendingGroupIdForNewBlock = null;
+          renderBlockList(currentPage);
+          savePageBlocks();
+          setActiveBlock(newBlock.id, groupBlock.id);
+          closeBlockLibrary();
+          showToast('Bloc ajouté au groupe');
+          return;
+        }
+        pendingGroupIdForNewBlock = null;
+      }
+      
       const nextBlocks = [...(currentPage.blocks || []), newBlock];
       updateCurrentPageBlocks(nextBlocks);
       setActivePage(currentPage.id, { preserveBlock: true });
@@ -2823,6 +3100,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!target || !target.name) {
         return;
       }
+      // Mise à jour du preview de couleur pour les color selects
+      if (target.hasAttribute('data-color-select')) {
+        const selectedOption = target.options[target.selectedIndex];
+        const color = selectedOption?.dataset?.color || '#ffffff';
+        const colorPreview = target.closest('.relative')?.querySelector('[data-color-preview]');
+        if (colorPreview) {
+          if (color === 'transparent') {
+            colorPreview.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+          } else {
+            colorPreview.style.backgroundColor = color;
+            colorPreview.style.background = '';
+          }
+        }
+      }
       const panel = target.closest('[data-block-panel]');
       if (panel && panel.dataset.blockPanel === 'appearance') {
         const block = getActiveBlock();
@@ -3017,6 +3308,42 @@ document.addEventListener('DOMContentLoaded', () => {
     blockList?.addEventListener('dragleave', handleBlockDragLeave);
     blockList?.addEventListener('drop', handleBlockDrop);
     loadPagesFromServer();
+
+    // Écouter l'événement de rafraîchissement déclenché par l'IA
+    document.addEventListener('ai-page-updated', async (e) => {
+      console.log('[design] Rafraîchissement déclenché par IA', e.detail);
+      try {
+        // Recharger les pages depuis le serveur
+        const loadedPages = await fetchPagesFromServer();
+        pages = (Array.isArray(loadedPages) ? loadedPages : []).map((page) =>
+          normalizePageData(page),
+        );
+        
+        // Trouver et mettre à jour la page active
+        if (e.detail?.pageId) {
+          const updatedPage = pages.find(p => p.id === e.detail.pageId);
+          if (updatedPage) {
+            currentPage = updatedPage;
+            activePageId = updatedPage.id;
+            // Rafraîchir la preview avec la page mise à jour
+            refreshPreview(currentPage);
+            // Rafraîchir la liste des blocs
+            renderBlockList(currentPage);
+            showToast('Page mise à jour par l\'IA');
+          }
+        } else if (activePageId) {
+          // Rafraîchir la page active actuelle
+          const activePage = pages.find(p => p.id === activePageId);
+          if (activePage) {
+            currentPage = activePage;
+            refreshPreview(currentPage);
+            renderBlockList(currentPage);
+          }
+        }
+      } catch (err) {
+        console.error('[design] Erreur rafraîchissement IA:', err);
+      }
+    });
   }
 
   function initContentWorkspace() {
@@ -3059,6 +3386,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const headerNavAddBtn = document.querySelector('[data-header-nav-add]');
     const headerSaveBtn = document.querySelector('[data-header-save]');
     const headerNavItemTemplate = document.querySelector('[data-template-header-nav-item]');
+    const headerPagesList = document.querySelector('[data-header-pages-list]');
+    let sitePages = []; // Pages du site pour les checkboxes
+    let selectedNavPages = []; // Pages sélectionnées pour le menu (avec ordre)
     
     // Footer fields
     const footerFields = {
@@ -3085,6 +3415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let footerData = { columns: [], socials: {}, copyright: '', legal: {}, style: {} };
     
     const safeSiteSlugForLayout = stripLeadingSlash(workspaceContext?.slugValue || storedSite.slug || '');
+    const slug = safeSiteSlugForLayout; // Alias pour les fonctions qui utilisent slug
     const layoutApiBase = safeSiteSlugForLayout ? `/api/sites/${encodeURIComponent(safeSiteSlugForLayout)}/layout` : null;
     
     // View switching
@@ -3141,26 +3472,76 @@ document.addEventListener('DOMContentLoaded', () => {
     // ─────────────────────────────────────────────────────────────────────
     // HEADER FUNCTIONS
     // ─────────────────────────────────────────────────────────────────────
-    const addNavItem = (label = '', url = '') => {
-      if (!headerNavItemTemplate || !headerNavList) return;
-      const clone = headerNavItemTemplate.content.cloneNode(true);
-      const item = clone.querySelector('[data-nav-item]');
-      const labelInput = clone.querySelector('[name="nav-label"]');
-      const urlInput = clone.querySelector('[name="nav-url"]');
-      const removeBtn = clone.querySelector('[data-nav-remove]');
-      if (labelInput) labelInput.value = label;
-      if (urlInput) urlInput.value = url;
-      removeBtn?.addEventListener('click', () => item?.remove());
-      headerNavList.appendChild(clone);
+    
+    // Charger la liste des pages du site pour les checkboxes
+    const loadSitePagesForHeader = async () => {
+      if (!slug || !headerPagesList) return;
+      try {
+        const response = await fetch(`/api/sites/${slug}/pages`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Erreur chargement pages');
+        sitePages = await response.json();
+        renderPageCheckboxes();
+      } catch (err) {
+        console.error('[header] load pages error', err);
+        headerPagesList.innerHTML = '<p class="text-xs text-red-500">Erreur chargement pages</p>';
+      }
+    };
+    
+    // Afficher les checkboxes pour chaque page
+    const renderPageCheckboxes = () => {
+      if (!headerPagesList) return;
+      headerPagesList.innerHTML = '';
+      
+      if (sitePages.length === 0) {
+        headerPagesList.innerHTML = '<p class="text-xs text-slate-400 italic">Aucune page disponible</p>';
+        return;
+      }
+      
+      sitePages.forEach(page => {
+        const pageSlug = page.slug || page.id;
+        const pageTitle = page.title || pageSlug;
+        const pageUrl = pageSlug === 'index' ? '/' : `/${pageSlug}`;
+        
+        // Vérifier si cette page est sélectionnée dans la nav
+        const isSelected = selectedNavPages.some(nav => nav.url === pageUrl);
+        
+        const label = document.createElement('label');
+        label.className = 'flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors';
+        label.innerHTML = `
+          <input type="checkbox" name="nav-page" value="${pageUrl}" data-page-title="${pageTitle}"
+                 class="w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                 ${isSelected ? 'checked' : ''}>
+          <span class="flex-1 text-sm text-slate-700">${pageTitle}</span>
+          <span class="text-xs text-slate-400">${pageUrl}</span>
+        `;
+        
+        // Mettre à jour selectedNavPages quand on coche/décoche
+        const checkbox = label.querySelector('input');
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) {
+            // Ajouter à la liste
+            if (!selectedNavPages.some(nav => nav.url === pageUrl)) {
+              selectedNavPages.push({ label: pageTitle, url: pageUrl });
+            }
+          } else {
+            // Retirer de la liste
+            selectedNavPages = selectedNavPages.filter(nav => nav.url !== pageUrl);
+          }
+        });
+        
+        headerPagesList.appendChild(label);
+      });
     };
     
     const collectHeaderData = () => {
+      // Collecter les pages cochées dans l'ordre actuel
       const nav = [];
-      headerNavList?.querySelectorAll('[data-nav-item]').forEach(item => {
-        const label = item.querySelector('[name="nav-label"]')?.value?.trim() || '';
-        const url = item.querySelector('[name="nav-url"]')?.value?.trim() || '';
-        if (label || url) nav.push({ label, url });
+      headerPagesList?.querySelectorAll('input[name="nav-page"]:checked').forEach(checkbox => {
+        const url = checkbox.value;
+        const label = checkbox.dataset.pageTitle || url;
+        nav.push({ label, url });
       });
+      
       return {
         logo: {
           src: headerFields.logo?.value?.trim() || '',
@@ -3180,7 +3561,7 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     };
     
-    const populateHeaderForm = (data) => {
+    const populateHeaderForm = async (data) => {
       if (!data) return;
       if (headerFields.logo) headerFields.logo.value = data.logo?.src || '';
       if (headerFields.logoAlt) headerFields.logoAlt.value = data.logo?.alt || '';
@@ -3190,9 +3571,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (headerFields.ctaStyle) headerFields.ctaStyle.value = data.cta?.style || 'primary';
       if (headerFields.position) headerFields.position.value = data.style?.position || 'static';
       if (headerFields.bg) headerFields.bg.value = data.style?.bg || 'bg-white';
-      // Populate nav items
-      if (headerNavList) headerNavList.innerHTML = '';
-      (data.nav || []).forEach(item => addNavItem(item.label, item.url));
+      
+      // Stocker les pages sélectionnées pour les checkboxes
+      selectedNavPages = data.nav || [];
+      
+      // Charger les pages et afficher les checkboxes
+      await loadSitePagesForHeader();
+      
       // Update status indicator
       const hasData = data.logo?.src || data.nav?.length > 0 || data.cta?.text;
       if (headerStatusIndicator) {
@@ -3201,9 +3586,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headerStatusIndicator.title = hasData ? 'Configuré' : 'Non configuré';
       }
     };
-    
-    headerNavAddBtn?.addEventListener('click', () => addNavItem());
-    
+
     headerSaveBtn?.addEventListener('click', async () => {
       if (!layoutApiBase) return;
       headerSaveBtn.disabled = true;
@@ -4564,7 +4947,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!preview) return;
         const tokenToHex = (token) => {
           if (!token) return null;
+          // Gérer les cas spéciaux white, black, transparent
+          if (token === 'white') return '#ffffff';
+          if (token === 'black') return '#000000';
+          if (token === 'transparent') return 'transparent';
+          
           const [h,s]=token.split('-');
+          if (!h || !s) return null; // Format invalide
+          
           const map = {
             slate:'#e2e8f0',gray:'#d1d5db',zinc:'#d4d4d8',neutral:'#d4d4d4',stone:'#d6d3d1',
             red:'#ef4444',orange:'#f97316',amber:'#f59e0b',yellow:'#eab308',lime:'#84cc16',
@@ -4598,6 +4988,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const setColorFields = (key, value) => {
         if (colorSelects[key]) colorSelects[key].value = value;
       };
+      
+      // Fonction pour mettre à jour le preview de couleur d'un select
+      const updateColorSelectPreview = (select) => {
+        if (!select) return;
+        const selectedOption = select.options[select.selectedIndex];
+        const color = selectedOption?.dataset?.color || '#ffffff';
+        const colorPreview = select.closest('.relative')?.querySelector('[data-color-preview]');
+        if (colorPreview) {
+          if (color === 'transparent') {
+            colorPreview.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+          } else {
+            colorPreview.style.backgroundColor = color;
+            colorPreview.style.background = '';
+          }
+        }
+      };
+      
+      // Initialiser les previews de couleur et ajouter les listeners
+      const initColorPreviews = () => {
+        Object.values(colorSelects).forEach((select) => {
+          if (!select) return;
+          updateColorSelectPreview(select);
+          select.addEventListener('change', () => updateColorSelectPreview(select));
+        });
+      };
 
       Object.keys(colorSelects).forEach((key) => {
         colorSelects[key]?.addEventListener('change', syncPreview);
@@ -4623,12 +5038,15 @@ document.addEventListener('DOMContentLoaded', () => {
           if (radiusMedium) radiusMedium.value = payload.radius?.medium || '16px';
           if (radiusLarge) radiusLarge.value = payload.radius?.large || '24px';
           syncPreview();
+          // Mettre à jour les previews de couleur après chargement
+          Object.values(colorSelects).forEach(updateColorSelectPreview);
         } catch (err) {
           console.error('[settings] load theme failed', err);
         }
       };
 
       fillColorOptions();
+      initColorPreviews();
       applyButton?.addEventListener('click', async (event) => {
         event.preventDefault();
         if (!themeApi) {
@@ -4676,6 +5094,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       fillColorOptions();
+      initColorPreviews();
       loadTheme();
       syncPreview();
     }
@@ -4839,6 +5258,100 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       loadAnalyticsConfig();
+    }
+
+    // AI Config form (US - AI Assistant)
+    const aiConfigForm = document.querySelector('[data-ai-config-form]');
+    if (aiConfigForm) {
+      const apiKeyInput = aiConfigForm.querySelector('[data-ai-api-key]');
+      const modelSelect = aiConfigForm.querySelector('[data-ai-model]');
+      const projectPromptTextarea = aiConfigForm.querySelector('[data-ai-project-prompt]');
+      const enabledCheckbox = aiConfigForm.querySelector('[data-ai-enabled]');
+      const aiFeedback = aiConfigForm.querySelector('[data-ai-feedback]');
+      const aiSaveButton = aiConfigForm.querySelector('[data-ai-save]');
+
+      const safeSiteSlug = stripLeadingSlash(
+        workspaceContext?.slugValue || storedSite.slug || '',
+      );
+      const aiConfigApi = safeSiteSlug
+        ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/ai`
+        : null;
+
+      const setAIFeedback = (message, tone = 'muted') => {
+        if (!aiFeedback) return;
+        const color =
+          tone === 'success'
+            ? 'text-emerald-600'
+            : tone === 'error'
+              ? 'text-rose-600'
+              : 'text-slate-500';
+        aiFeedback.textContent = message || '';
+        aiFeedback.className = `text-sm ${color}`;
+      };
+
+      const loadAIConfig = async () => {
+        if (!aiConfigApi) return;
+        try {
+          const response = await fetch(aiConfigApi, { headers: { Accept: 'application/json' } });
+          if (!response.ok) return;
+          const payload = await response.json().catch(() => ({}));
+          // API key is masked, we show placeholder if it exists
+          if (apiKeyInput) {
+            apiKeyInput.value = '';
+            apiKeyInput.placeholder = payload.hasApiKey ? '••••••••••••••••' : 'Clé API Gemini';
+          }
+          if (modelSelect) modelSelect.value = payload.model || 'gemini-2.5-flash';
+          if (projectPromptTextarea) projectPromptTextarea.value = payload.projectPrompt || '';
+          if (enabledCheckbox) enabledCheckbox.checked = payload.enabled !== false;
+        } catch (err) {
+          console.error('[settings] load AI config failed', err);
+        }
+      };
+
+      aiConfigForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!aiConfigApi) {
+          setAIFeedback('Aucun site actif.', 'error');
+          return;
+        }
+        aiSaveButton && (aiSaveButton.disabled = true);
+        setAIFeedback('');
+        try {
+          const payload = {
+            model: modelSelect?.value || 'gemini-2.5-flash',
+            projectPrompt: projectPromptTextarea?.value || '',
+            enabled: enabledCheckbox?.checked ?? true,
+          };
+          // Only include apiKey if the user entered one (not empty)
+          const apiKeyValue = apiKeyInput?.value?.trim();
+          if (apiKeyValue) {
+            payload.apiKey = apiKeyValue;
+          }
+
+          const response = await fetch(aiConfigApi, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.success === false) {
+            throw new Error(result.message || 'Sauvegarde impossible.');
+          }
+          setAIFeedback(result.message || 'Configuration IA enregistrée.', 'success');
+          // Clear the API key field after successful save
+          if (apiKeyInput) {
+            apiKeyInput.value = '';
+            apiKeyInput.placeholder = '••••••••••••••••';
+          }
+        } catch (err) {
+          console.error('[settings] save AI config failed', err);
+          setAIFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
+        } finally {
+          aiSaveButton && (aiSaveButton.disabled = false);
+        }
+      });
+
+      loadAIConfig();
     }
   }
 
@@ -5379,4 +5892,722 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadMedia();
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AI CHAT - Assistant IA contextuel
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const aiChatToggle = document.getElementById('ai-chat-toggle');
+  const aiChatPanel = document.getElementById('ai-chat-panel');
+  const aiChatOverlay = document.getElementById('ai-chat-overlay');
+  const aiChatClose = document.getElementById('ai-chat-close');
+  const aiChatClear = document.getElementById('ai-chat-clear');
+  const aiChatForm = document.getElementById('ai-chat-form');
+  const aiChatInput = document.getElementById('ai-chat-input');
+  const aiChatMessages = document.getElementById('ai-chat-messages');
+  const aiChatStatus = document.getElementById('ai-chat-status');
+  const aiChatNoApi = document.getElementById('ai-chat-no-api');
+  const aiQuickButtons = document.querySelectorAll('[data-ai-quick]');
+
+  let aiChatOpen = false;
+  let aiIsLoading = false;
+  let aiConfigChecked = false;
+  let aiHasApiKey = false;
+
+  /**
+   * Ouvre le panel de chat IA
+   */
+  function openAIChat() {
+    if (!aiChatPanel) return;
+    aiChatOpen = true;
+    aiChatPanel.classList.remove('translate-x-full');
+    aiChatPanel.setAttribute('aria-hidden', 'false');
+    aiChatOverlay?.classList.remove('opacity-0', 'pointer-events-none');
+    aiChatOverlay?.classList.add('opacity-100');
+    document.body.classList.add('overflow-hidden');
+    aiChatInput?.focus();
+
+    // Vérifier la config AI au premier ouverture
+    if (!aiConfigChecked) {
+      checkAIConfig();
+    }
+  }
+
+  /**
+   * Ferme le panel de chat IA
+   */
+  function closeAIChat() {
+    if (!aiChatPanel) return;
+    aiChatOpen = false;
+    aiChatPanel.classList.add('translate-x-full');
+    aiChatPanel.setAttribute('aria-hidden', 'true');
+    aiChatOverlay?.classList.add('opacity-0', 'pointer-events-none');
+    aiChatOverlay?.classList.remove('opacity-100');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  /**
+   * Vérifie si l'API AI est configurée
+   */
+  async function checkAIConfig() {
+    const siteSlug = stripLeadingSlash(storedSite.slug || '');
+    if (!siteSlug) {
+      aiChatNoApi?.classList.remove('hidden');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/sites/${encodeURIComponent(siteSlug)}/config/ai`);
+      if (!response.ok) throw new Error('Config check failed');
+      const config = await response.json();
+      aiConfigChecked = true;
+      aiHasApiKey = config.hasApiKey;
+      
+      if (!config.enabled || !config.hasApiKey) {
+        aiChatNoApi?.classList.remove('hidden');
+      } else {
+        aiChatNoApi?.classList.add('hidden');
+        // Charger l'historique
+        loadAIChatHistory();
+      }
+    } catch (err) {
+      console.error('[AI] Config check failed:', err);
+      aiChatNoApi?.classList.remove('hidden');
+    }
+  }
+
+  /**
+   * Charge l'historique de conversation
+   */
+  async function loadAIChatHistory() {
+    const siteSlug = stripLeadingSlash(storedSite.slug || '');
+    if (!siteSlug || !aiChatMessages) return;
+    
+    try {
+      const response = await fetch(`/api/sites/${encodeURIComponent(siteSlug)}/ai/history`);
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      if (data.messages && data.messages.length > 0) {
+        // Effacer le message de bienvenue
+        const welcomeMsg = aiChatMessages.querySelector('[data-ai-welcome]');
+        if (welcomeMsg) welcomeMsg.remove();
+        
+        // Afficher les messages
+        data.messages.forEach(msg => {
+          appendAIMessage(msg.content, msg.role === 'user' ? 'user' : 'assistant');
+        });
+        
+        // Scroll vers le bas
+        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+      }
+    } catch (err) {
+      console.error('[AI] History load failed:', err);
+    }
+  }
+
+  /**
+   * Ajoute un message au chat
+   */
+  function appendAIMessage(content, role = 'assistant') {
+    if (!aiChatMessages) return;
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'flex gap-3';
+    
+    if (role === 'user') {
+      msgDiv.innerHTML = `
+        <div class="flex-1"></div>
+        <div class="max-w-[80%] bg-violet-600 text-white rounded-2xl rounded-tr-none p-3">
+          <p class="text-sm whitespace-pre-wrap">${escapeHtml(content)}</p>
+        </div>
+        <div class="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+        </div>
+      `;
+    } else {
+      // Formatter le contenu Markdown basique
+      const formattedContent = formatAIResponse(content);
+      msgDiv.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex-shrink-0 flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+        </div>
+        <div class="flex-1 bg-slate-50 rounded-2xl rounded-tl-none p-3 overflow-x-auto">
+          <div class="text-sm text-slate-700 prose prose-sm max-w-none [&>pre]:bg-slate-800 [&>pre]:text-slate-100 [&>pre]:rounded-lg [&>pre]:p-3 [&>pre]:overflow-x-auto [&>code]:bg-slate-200 [&>code]:px-1 [&>code]:rounded">${formattedContent}</div>
+        </div>
+      `;
+    }
+    
+    aiChatMessages.appendChild(msgDiv);
+    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+  }
+
+  /**
+   * Affiche un indicateur de chargement
+   */
+  function showAILoading() {
+    if (!aiChatMessages) return;
+    
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'flex gap-3';
+    loadingDiv.id = 'ai-loading-indicator';
+    loadingDiv.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex-shrink-0 flex items-center justify-center">
+        <svg class="w-4 h-4 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+      </div>
+      <div class="flex-1 bg-slate-50 rounded-2xl rounded-tl-none p-3">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+          <div class="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+          <div class="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+        </div>
+      </div>
+    `;
+    
+    aiChatMessages.appendChild(loadingDiv);
+    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+  }
+
+  /**
+   * Cache l'indicateur de chargement
+   */
+  function hideAILoading() {
+    const loadingDiv = document.getElementById('ai-loading-indicator');
+    loadingDiv?.remove();
+  }
+
+  /**
+   * Formate la réponse de l'IA (Markdown basique)
+   */
+  function formatAIResponse(text) {
+    if (!text) return '';
+    
+    // Escape HTML d'abord
+    let formatted = escapeHtml(text);
+    
+    // Code blocks ```
+    formatted = formatted.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      return `<pre class="language-${lang || 'text'}"><code>${code.trim()}</code></pre>`;
+    });
+    
+    // Inline code `
+    formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+    
+    // Bold **text**
+    formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    
+    // Italic *text*
+    formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    
+    // Titres
+    formatted = formatted.replace(/^### (.+)$/gm, '<h4 class="font-semibold text-slate-900 mt-3 mb-1">$1</h4>');
+    formatted = formatted.replace(/^## (.+)$/gm, '<h3 class="font-semibold text-slate-900 mt-3 mb-1">$1</h3>');
+    formatted = formatted.replace(/^# (.+)$/gm, '<h2 class="font-bold text-slate-900 mt-3 mb-2">$1</h2>');
+    
+    // Listes
+    formatted = formatted.replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>');
+    formatted = formatted.replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4">$2</li>');
+    
+    // Paragraphes (lignes vides)
+    formatted = formatted.replace(/\n\n/g, '</p><p class="mb-2">');
+    formatted = '<p class="mb-2">' + formatted + '</p>';
+    
+    // Nettoyer les <p> vides
+    formatted = formatted.replace(/<p class="mb-2"><\/p>/g, '');
+    
+    return formatted;
+  }
+
+  /**
+   * Échappe le HTML
+   */
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
+   * Envoie un message au chat IA
+   */
+  async function sendAIMessage(message) {
+    const siteSlug = stripLeadingSlash(storedSite.slug || '');
+    if (!message || !siteSlug || aiIsLoading) return;
+    
+    aiIsLoading = true;
+    aiChatInput.disabled = true;
+    
+    // Effacer le message de bienvenue au premier message
+    const welcomeMsg = aiChatMessages?.querySelector('[data-ai-welcome]');
+    if (welcomeMsg) welcomeMsg.remove();
+    
+    // Afficher le message de l'utilisateur
+    appendAIMessage(message, 'user');
+    
+    // Afficher le loader
+    showAILoading();
+    
+    try {
+      const response = await fetch(`/api/sites/${encodeURIComponent(siteSlug)}/ai/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      
+      hideAILoading();
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || 'Erreur de communication');
+      }
+      
+      const data = await response.json();
+      
+      if (data.response) {
+        appendAIMessage(data.response, 'assistant');
+      }
+      
+      // Gérer les propositions d'édition de page
+      if (data.editProposal) {
+        appendEditProposal(data.editProposal);
+      }
+      
+      // Gérer les propositions de modification du thème
+      if (data.themeProposal) {
+        appendThemeProposal(data.themeProposal);
+      }
+      
+    } catch (err) {
+      hideAILoading();
+      appendAIMessage(`❌ Erreur: ${err.message}`, 'assistant');
+    } finally {
+      aiIsLoading = false;
+      aiChatInput.disabled = false;
+      aiChatInput.focus();
+    }
+  }
+
+  /**
+   * Affiche une proposition d'édition avec boutons de validation
+   */
+  function appendEditProposal(proposal) {
+    if (!aiChatMessages || !proposal) return;
+    
+    const proposalDiv = document.createElement('div');
+    proposalDiv.className = 'flex gap-3 mt-2';
+    proposalDiv.dataset.proposalId = proposal.proposalId;
+    
+    // Construire le résumé des changements
+    let changesHtml = '';
+    if (proposal.changes) {
+      if (proposal.changes.title) {
+        changesHtml += `<li>Titre → <strong>${escapeHtml(proposal.changes.title)}</strong></li>`;
+      }
+      if (proposal.changes.description) {
+        changesHtml += `<li>Description → ${escapeHtml(proposal.changes.description.substring(0, 80))}...</li>`;
+      }
+      if (proposal.changes.seo) {
+        if (proposal.changes.seo.metaTitle) {
+          changesHtml += `<li>Meta title → ${escapeHtml(proposal.changes.seo.metaTitle)}</li>`;
+        }
+        if (proposal.changes.seo.metaDescription) {
+          changesHtml += `<li>Meta description → ${escapeHtml(proposal.changes.seo.metaDescription.substring(0, 60))}...</li>`;
+        }
+      }
+      if (proposal.changes.blockUpdate) {
+        changesHtml += `<li>Bloc "${proposal.changes.blockUpdate.blockId}" modifié</li>`;
+        if (proposal.changes.blockUpdate.settings) {
+          const settings = proposal.changes.blockUpdate.settings;
+          if (settings.title) changesHtml += `<li class="ml-4">→ title: ${escapeHtml(settings.title)}</li>`;
+          if (settings.content) changesHtml += `<li class="ml-4">→ content modifié</li>`;
+        }
+      }
+    }
+    
+    proposalDiv.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-amber-500 flex-shrink-0 flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+      </div>
+      <div class="flex-1 bg-amber-50 border border-amber-200 rounded-2xl rounded-tl-none p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Proposition d'édition</span>
+        </div>
+        <p class="text-sm font-medium text-slate-800 mb-1">Page : ${escapeHtml(proposal.pageTitle || proposal.pageId)}</p>
+        ${proposal.reason ? `<p class="text-sm text-slate-600 mb-2">${escapeHtml(proposal.reason)}</p>` : ''}
+        <ul class="text-xs text-slate-600 space-y-1 mb-3 list-disc ml-4">
+          ${changesHtml || '<li>Modifications proposées</li>'}
+        </ul>
+        <div class="flex gap-2">
+          <button 
+            class="ai-apply-edit px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center gap-1"
+            data-proposal-id="${proposal.proposalId}"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Appliquer
+          </button>
+          <button 
+            class="ai-reject-edit px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1"
+            data-proposal-id="${proposal.proposalId}"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Rejeter
+          </button>
+        </div>
+      </div>
+    `;
+    
+    aiChatMessages.appendChild(proposalDiv);
+    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    
+    // Attacher les événements aux boutons
+    proposalDiv.querySelector('.ai-apply-edit')?.addEventListener('click', handleApplyEdit);
+    proposalDiv.querySelector('.ai-reject-edit')?.addEventListener('click', handleRejectEdit);
+  }
+
+  /**
+   * Affiche une proposition de modification du thème avec boutons de validation
+   */
+  function appendThemeProposal(proposal) {
+    if (!aiChatMessages || !proposal) return;
+    
+    const proposalDiv = document.createElement('div');
+    proposalDiv.className = 'flex gap-3 mt-2';
+    proposalDiv.dataset.proposalId = proposal.proposalId;
+    
+    // Construire le résumé des changements de couleurs
+    let colorsHtml = '';
+    if (proposal.changes?.colors) {
+      const colors = proposal.changes.colors;
+      for (const [key, value] of Object.entries(colors)) {
+        colorsHtml += `<li class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded border border-slate-300" style="background: ${getTailwindColorCss(value)}"></span>
+          <span>${key}: <strong>${escapeHtml(value)}</strong></span>
+        </li>`;
+      }
+    }
+    
+    // Typographies
+    let typoHtml = '';
+    if (proposal.changes?.typography) {
+      const typo = proposal.changes.typography;
+      if (typo.headings) typoHtml += `<li>Titres → <strong>${escapeHtml(typo.headings)}</strong></li>`;
+      if (typo.body) typoHtml += `<li>Textes → <strong>${escapeHtml(typo.body)}</strong></li>`;
+    }
+    
+    proposalDiv.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-purple-500 flex-shrink-0 flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+        </svg>
+      </div>
+      <div class="flex-1 bg-purple-50 border border-purple-200 rounded-2xl rounded-tl-none p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded">Modification du thème</span>
+        </div>
+        ${proposal.reason ? `<p class="text-sm text-slate-600 mb-3">${escapeHtml(proposal.reason)}</p>` : ''}
+        ${colorsHtml ? `
+          <p class="text-xs font-medium text-slate-700 mb-1">Couleurs :</p>
+          <ul class="text-xs text-slate-600 space-y-1 mb-3">${colorsHtml}</ul>
+        ` : ''}
+        ${typoHtml ? `
+          <p class="text-xs font-medium text-slate-700 mb-1">Typographies :</p>
+          <ul class="text-xs text-slate-600 space-y-1 mb-3 list-disc ml-4">${typoHtml}</ul>
+        ` : ''}
+        <div class="flex gap-2">
+          <button 
+            class="ai-apply-theme px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors flex items-center gap-1"
+            data-proposal-id="${proposal.proposalId}"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Appliquer
+          </button>
+          <button 
+            class="ai-reject-theme px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1"
+            data-proposal-id="${proposal.proposalId}"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Rejeter
+          </button>
+        </div>
+      </div>
+    `;
+    
+    aiChatMessages.appendChild(proposalDiv);
+    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    
+    // Attacher les événements aux boutons
+    proposalDiv.querySelector('.ai-apply-theme')?.addEventListener('click', handleApplyTheme);
+    proposalDiv.querySelector('.ai-reject-theme')?.addEventListener('click', handleRejectEdit); // Réutilise la même logique de rejet
+  }
+  
+  /**
+   * Convertit une couleur Tailwind en CSS approximatif pour preview
+   */
+  function getTailwindColorCss(colorName) {
+    const colors = {
+      'white': '#ffffff', 'black': '#000000', 'transparent': 'transparent',
+      'slate-50': '#f8fafc', 'slate-100': '#f1f5f9', 'slate-200': '#e2e8f0', 'slate-300': '#cbd5e1', 'slate-400': '#94a3b8', 'slate-500': '#64748b', 'slate-600': '#475569', 'slate-700': '#334155', 'slate-800': '#1e293b', 'slate-900': '#0f172a',
+      'gray-50': '#f9fafb', 'gray-100': '#f3f4f6', 'gray-200': '#e5e7eb', 'gray-300': '#d1d5db', 'gray-400': '#9ca3af', 'gray-500': '#6b7280', 'gray-600': '#4b5563', 'gray-700': '#374151', 'gray-800': '#1f2937', 'gray-900': '#111827',
+      'violet-50': '#f5f3ff', 'violet-100': '#ede9fe', 'violet-200': '#ddd6fe', 'violet-300': '#c4b5fd', 'violet-400': '#a78bfa', 'violet-500': '#8b5cf6', 'violet-600': '#7c3aed', 'violet-700': '#6d28d9', 'violet-800': '#5b21b6', 'violet-900': '#4c1d95',
+      'purple-50': '#faf5ff', 'purple-100': '#f3e8ff', 'purple-200': '#e9d5ff', 'purple-300': '#d8b4fe', 'purple-400': '#c084fc', 'purple-500': '#a855f7', 'purple-600': '#9333ea', 'purple-700': '#7e22ce', 'purple-800': '#6b21a8', 'purple-900': '#581c87',
+      'blue-50': '#eff6ff', 'blue-100': '#dbeafe', 'blue-200': '#bfdbfe', 'blue-300': '#93c5fd', 'blue-400': '#60a5fa', 'blue-500': '#3b82f6', 'blue-600': '#2563eb', 'blue-700': '#1d4ed8', 'blue-800': '#1e40af', 'blue-900': '#1e3a8a',
+      'emerald-50': '#ecfdf5', 'emerald-100': '#d1fae5', 'emerald-200': '#a7f3d0', 'emerald-300': '#6ee7b7', 'emerald-400': '#34d399', 'emerald-500': '#10b981', 'emerald-600': '#059669', 'emerald-700': '#047857', 'emerald-800': '#065f46', 'emerald-900': '#064e3b',
+      'teal-50': '#f0fdfa', 'teal-100': '#ccfbf1', 'teal-200': '#99f6e4', 'teal-300': '#5eead4', 'teal-400': '#2dd4bf', 'teal-500': '#14b8a6', 'teal-600': '#0d9488', 'teal-700': '#0f766e', 'teal-800': '#115e59', 'teal-900': '#134e4a',
+      'amber-50': '#fffbeb', 'amber-100': '#fef3c7', 'amber-200': '#fde68a', 'amber-300': '#fcd34d', 'amber-400': '#fbbf24', 'amber-500': '#f59e0b', 'amber-600': '#d97706', 'amber-700': '#b45309', 'amber-800': '#92400e', 'amber-900': '#78350f',
+      'red-50': '#fef2f2', 'red-100': '#fee2e2', 'red-200': '#fecaca', 'red-300': '#fca5a5', 'red-400': '#f87171', 'red-500': '#ef4444', 'red-600': '#dc2626', 'red-700': '#b91c1c', 'red-800': '#991b1b', 'red-900': '#7f1d1d'
+    };
+    return colors[colorName] || '#9C6BFF';
+  }
+
+  /**
+   * Applique une proposition de modification du thème
+   */
+  async function handleApplyTheme(e) {
+    const proposalId = e.target.closest('[data-proposal-id]')?.dataset.proposalId;
+    const siteSlug = stripLeadingSlash(storedSite.slug || '');
+    if (!proposalId || !siteSlug) return;
+    
+    const btn = e.target.closest('button');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin">⏳</span> Application...';
+    
+    try {
+      const response = await fetch(`/api/sites/${encodeURIComponent(siteSlug)}/ai/apply-theme`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proposalId })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Remplacer la card par un message de succès
+        const proposalCard = document.querySelector(`[data-proposal-id="${proposalId}"]`);
+        if (proposalCard) {
+          proposalCard.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-purple-500 flex-shrink-0 flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div class="flex-1 bg-purple-50 border border-purple-200 rounded-2xl rounded-tl-none p-3">
+              <p class="text-sm text-purple-700">✅ Thème mis à jour avec succès !</p>
+              <p class="text-xs text-purple-600 mt-1">Rechargez la preview pour voir les changements.</p>
+            </div>
+          `;
+        }
+        showToast('Thème mis à jour !');
+        
+        // Déclencher un événement personnalisé pour rafraîchir
+        document.dispatchEvent(new CustomEvent('ai-theme-updated', {
+          detail: { updatedTheme: data.updatedTheme }
+        }));
+      } else {
+        throw new Error(data.message || 'Erreur lors de l\'application');
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Réessayer`;
+      showToast(`Erreur: ${err.message}`);
+    }
+  }
+
+  /**
+   * Applique une proposition d'édition validée
+   */
+  async function handleApplyEdit(e) {
+    const proposalId = e.target.closest('[data-proposal-id]')?.dataset.proposalId;
+    const siteSlug = stripLeadingSlash(storedSite.slug || '');
+    if (!proposalId || !siteSlug) return;
+    
+    const btn = e.target.closest('button');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin">⏳</span> Application...';
+    
+    try {
+      const response = await fetch(`/api/sites/${encodeURIComponent(siteSlug)}/ai/apply-edit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proposalId })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Remplacer la card par un message de succès
+        const proposalCard = document.querySelector(`[data-proposal-id="${proposalId}"]`);
+        if (proposalCard) {
+          proposalCard.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-emerald-500 flex-shrink-0 flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div class="flex-1 bg-emerald-50 border border-emerald-200 rounded-2xl rounded-tl-none p-3">
+              <p class="text-sm text-emerald-700">✅ Modifications appliquées avec succès !</p>
+              <p class="text-xs text-emerald-600 mt-1">La preview se met à jour automatiquement.</p>
+            </div>
+          `;
+        }
+        showToast('Modifications appliquées !');
+        
+        // Déclencher un événement personnalisé pour rafraîchir la preview
+        const pageId = data.updatedPage?.id || null;
+        document.dispatchEvent(new CustomEvent('ai-page-updated', {
+          detail: { pageId, updatedPage: data.updatedPage }
+        }));
+      } else {
+        throw new Error(data.message || 'Erreur lors de l\'application');
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Réessayer`;
+      showToast(`Erreur: ${err.message}`);
+    }
+  }
+
+  /**
+   * Rejette une proposition d'édition
+   */
+  async function handleRejectEdit(e) {
+    const proposalId = e.target.closest('[data-proposal-id]')?.dataset.proposalId;
+    const siteSlug = stripLeadingSlash(storedSite.slug || '');
+    if (!proposalId || !siteSlug) return;
+    
+    try {
+      await fetch(`/api/sites/${encodeURIComponent(siteSlug)}/ai/proposal/${proposalId}`, {
+        method: 'DELETE'
+      });
+      
+      // Remplacer la card par un message de rejet
+      const proposalCard = document.querySelector(`[data-proposal-id="${proposalId}"]`);
+      if (proposalCard) {
+        proposalCard.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-slate-400 flex-shrink-0 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </div>
+          <div class="flex-1 bg-slate-100 rounded-2xl rounded-tl-none p-3">
+            <p class="text-sm text-slate-500">Proposition rejetée.</p>
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.error('[AI] Reject edit error:', err);
+    }
+  }
+
+  /**
+   * Efface l'historique du chat
+   */
+  async function clearAIHistory() {
+    const siteSlug = stripLeadingSlash(storedSite.slug || '');
+    if (!siteSlug || !aiChatMessages) return;
+    
+    try {
+      await fetch(`/api/sites/${encodeURIComponent(siteSlug)}/ai/history`, { method: 'DELETE' });
+      
+      // Vider les messages
+      aiChatMessages.innerHTML = '';
+      
+      // Réafficher le message de bienvenue
+      aiChatMessages.innerHTML = `
+        <div class="flex gap-3" data-ai-welcome>
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex-shrink-0 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <div class="flex-1 bg-slate-50 rounded-2xl rounded-tl-none p-3">
+            <p class="text-sm text-slate-700">
+              Salut ! 👋 Je suis ton assistant IA pour ce site. Je peux t'aider à :
+            </p>
+            <ul class="mt-2 text-sm text-slate-600 space-y-1">
+              <li>🎨 Suggérer des palettes de couleurs</li>
+              <li>✍️ Générer du contenu pour tes blocs</li>
+              <li>📄 Créer des structures de pages</li>
+              <li>🔍 Améliorer ton SEO</li>
+              <li>✏️ <strong>Analyser et modifier tes pages</strong> (avec validation)</li>
+            </ul>
+          </div>
+        </div>
+      `;
+      
+      showToast('Historique effacé');
+    } catch (err) {
+      console.error('[AI] Clear history failed:', err);
+      showToast('Erreur lors de l\'effacement');
+    }
+  }
+
+  // Prompts rapides
+  const quickPrompts = {
+    colors: 'Suggère-moi 3 palettes de couleurs harmonieuses pour mon site. Pour chaque palette, donne les couleurs Tailwind: primary, secondary, accent, et background.',
+    hero: 'Génère un bloc Hero en JSON avec un titre accrocheur, un sous-titre engageant et un CTA.',
+    seo: 'Analyse mon site et suggère des améliorations SEO pour le meta title et la meta description de ma page d\'accueil.',
+    landing: 'Génère la structure JSON d\'une landing page complète avec: Hero, 3 sections de contenu, et un CTA final.',
+    analyze: 'Analyse le contenu de toutes mes pages et propose des améliorations concrètes. Pour chaque suggestion d\'amélioration de texte ou de structure, utilise le format propose-edit pour que je puisse valider.',
+    improveHome: 'Analyse ma page d\'accueil et propose une amélioration du titre ou du Hero pour le rendre plus impactant. Utilise le format propose-edit.'
+  };
+
+  // Event listeners
+  aiChatToggle?.addEventListener('click', () => {
+    if (aiChatOpen) {
+      closeAIChat();
+    } else {
+      openAIChat();
+    }
+  });
+
+  aiChatClose?.addEventListener('click', closeAIChat);
+  aiChatOverlay?.addEventListener('click', closeAIChat);
+
+  aiChatClear?.addEventListener('click', () => {
+    if (confirm('Effacer tout l\'historique de conversation ?')) {
+      clearAIHistory();
+    }
+  });
+
+  aiChatForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const message = aiChatInput?.value?.trim();
+    if (message) {
+      aiChatInput.value = '';
+      sendAIMessage(message);
+    }
+  });
+
+  aiQuickButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.aiQuick;
+      const prompt = quickPrompts[action];
+      if (prompt) {
+        sendAIMessage(prompt);
+      }
+    });
+  });
+
+  // Fermer avec Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && aiChatOpen) {
+      closeAIChat();
+    }
+  });
 });

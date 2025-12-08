@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/MaxDevProjects/Clower-edit#readme",
   "dependencies": {
+    "@google/genai": "^1.31.0",
     "@tailwindcss/cli": "^4.1.17",
     "basic-ftp": "^5.0.5",
     "bcryptjs": "^2.4.3",

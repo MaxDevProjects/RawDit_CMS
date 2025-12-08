@@ -8,7 +8,7 @@
     {
       "id": "hero-optimisation-site",
       "type": "Hero",
-      "label": "Hero principal",
+      "label": "Hero Optimisation",
       "settings": {
         "title": "Améliorer votre site sans repartir de zéro.",
         "subtitle": "Votre site existe déjà, mais quelque chose cloche : navigation confuse, design plus vraiment aligné avec votre projet, visiteurs qui ne savent pas où cliquer. Je vous aide à améliorer l’UX, la clarté et le rendu de votre site sans tout casser.",
@@ -17,15 +17,10 @@
         "image": "https://picsum.photos/1200/600?random=1",
         "align": "center",
         "layout": "flex-row",
-        "height": "min-h-[75vh]",
-        "overlay": "bg-black/0",
-        "titleSize": "text-4xl",
-        "contentAlign": "items-start",
-        "bg": "bg-transparent",
-        "borderRadius": "rounded-none",
-        "shadow": "shadow-none"
-      },
-      "props": []
+        "height": "min-h-[60vh]",
+        "overlay": "bg-black/20",
+        "titleSize": "text-4xl"
+      }
     },
     {
       "id": "paragraph-probleme",
@@ -38,8 +33,7 @@
         "titleSize": "text-2xl",
         "textSize": "text-base",
         "spacing": "space-y-4"
-      },
-      "props": []
+      }
     },
     {
       "id": "image-focus-ux",
@@ -54,8 +48,7 @@
         "shadow": "shadow-lg",
         "maxWidth": "max-w-4xl",
         "align": "mx-auto"
-      },
-      "props": []
+      }
     },
     {
       "id": "paragraph-philo",
@@ -68,8 +61,7 @@
         "titleSize": "text-2xl",
         "textSize": "text-base",
         "spacing": "space-y-4"
-      },
-      "props": []
+      }
     },
     {
       "id": "paragraph-offres-intro",
@@ -82,8 +74,7 @@
         "titleSize": "text-2xl",
         "textSize": "text-base",
         "spacing": "space-y-4"
-      },
-      "props": []
+      }
     },
     {
       "id": "collection-offres-revamp",
@@ -96,9 +87,7 @@
         "columnsDesktop": "2",
         "gap": "gap-6",
         "cardRounded": "rounded-2xl"
-      },
-      "props": [],
-      "collectionId": "offers-revamp"
+      }
     },
     {
       "id": "paragraph-why-now",
@@ -111,28 +100,22 @@
         "titleSize": "text-2xl",
         "textSize": "text-base",
         "spacing": "space-y-4"
-      },
-      "props": []
+      }
     },
     {
       "id": "image-avant-apres",
       "type": "Image",
-      "label": "Comparaison avant après d'une interface de site web",
+      "label": "Illustration avant/après",
       "settings": {
-        "src": "/sites/landing-clower-ux/media/vid-20251203-wa0086-ezgif-com-video-to-gif-converter.gif",
+        "src": "https://picsum.photos/1100/500?random=3",
         "alt": "Comparaison avant après d'une interface de site web",
         "showCaption": true,
         "caption": "Objectif : passer d’un site un peu flou à une expérience claire, fluide et professionnelle.",
-        "rounded": "rounded-lg",
-        "shadow": "shadow-none",
-        "maxWidth": "max-w-full",
-        "align": "mx-auto",
-        "bg": "bg-white",
-        "borderRadius": "rounded-none",
-        "height": "h-auto",
-        "objectFit": "object-fill"
-      },
-      "props": []
+        "rounded": "rounded-2xl",
+        "shadow": "shadow-lg",
+        "maxWidth": "max-w-4xl",
+        "align": "mx-auto"
+      }
     },
     {
       "id": "paragraph-process-intro",
@@ -145,8 +128,7 @@
         "titleSize": "text-2xl",
         "textSize": "text-base",
         "spacing": "space-y-4"
-      },
-      "props": []
+      }
     },
     {
       "id": "collection-process-optimisation",
@@ -159,9 +141,7 @@
         "columnsDesktop": "4",
         "gap": "gap-4",
         "cardRounded": "rounded-xl"
-      },
-      "props": [],
-      "collectionId": "process-optimisation-site"
+      }
     },
     {
       "id": "paragraph-faq",
@@ -174,8 +154,7 @@
         "titleSize": "text-2xl",
         "textSize": "text-base",
         "spacing": "space-y-4"
-      },
-      "props": []
+      }
     },
     {
       "id": "paragraph-contact-intro",
@@ -188,13 +167,12 @@
         "titleSize": "text-2xl",
         "textSize": "text-base",
         "spacing": "space-y-4"
-      },
-      "props": []
+      }
     },
     {
-      "id": "form-contact",
+      "id": "form-contact-offre",
       "type": "Form",
-      "label": "Formulaire de contact",
+      "label": "Formulaire de contact offre",
       "settings": {
         "formTitle": "Me parler de votre site",
         "actionUrl": "https://formspree.io/f/votre-id",
@@ -204,8 +182,7 @@
         "successMessage": "Merci ! Je reviens vers vous rapidement.",
         "maxWidth": "max-w-lg",
         "align": "mx-auto"
-      },
-      "props": []
+      }
     }
   ],
   "seo": {

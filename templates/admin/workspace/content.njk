@@ -36,10 +36,10 @@
     aria-hidden="true"
   ></div>
 
-  {# Sidebar drawer #}
+  {# Sidebar drawer (mobile: fixed, desktop: static) #}
   <section
     data-content-drawer
-    class="fixed inset-y-0 left-0 z-40 w-[320px] max-w-[90vw] -translate-x-full transform transition-transform duration-300 lg:relative lg:inset-auto lg:translate-x-0 lg:h-auto"
+    class="fixed inset-y-0 left-0 z-40 w-[280px] max-w-[90vw] -translate-x-full transform transition-transform duration-300 lg:relative lg:inset-auto lg:z-auto lg:w-full lg:max-w-none lg:translate-x-0 lg:transform-none"
     aria-label="Navigation des contenus"
   >
     <div class="h-full overflow-y-auto bg-white shadow-2xl lg:h-auto lg:overflow-visible lg:rounded-2xl lg:border lg:border-slate-200 lg:shadow-sm">
@@ -156,12 +156,14 @@
           <input type="text" name="header-logo-url" value="/" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
         </label>
       </fieldset>
-      {# Navigation #}
+      {# Navigation - Sélection des pages #}
       <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
-        <legend class="px-2 text-sm font-semibold text-slate-700">Liens de navigation</legend>
-        <p class="text-xs text-slate-500">Ajoutez les liens du menu principal.</p>
-        <div data-header-nav-list class="space-y-2"></div>
-        <button type="button" data-header-nav-add class="w-full rounded-lg border-2 border-dashed border-slate-300 py-3 text-sm font-medium text-slate-500 hover:border-violet-400 hover:text-violet-600 transition-colors">+ Ajouter un lien</button>
+        <legend class="px-2 text-sm font-semibold text-slate-700">Pages du menu</legend>
+        <p class="text-xs text-slate-500">Cochez les pages à afficher dans le menu de navigation.</p>
+        <div data-header-pages-list class="space-y-2 max-h-64 overflow-y-auto">
+          <p class="text-xs text-slate-400 italic">Chargement des pages...</p>
+        </div>
+        <p class="text-[11px] text-slate-400">💡 L'ordre des pages dans le menu correspond à l'ordre de sélection.</p>
       </fieldset>
       {# CTA #}
       <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">

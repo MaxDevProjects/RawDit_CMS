@@ -1,0 +1,20 @@
+{
+  "columns": [],
+  "socials": {
+    "linkedin": "",
+    "twitter": "",
+    "instagram": "",
+    "facebook": "",
+    "youtube": "",
+    "github": ""
+  },
+  "copyright": "",
+  "legal": {
+    "url": "",
+    "privacyUrl": ""
+  },
+  "style": {
+    "bg": "bg-slate-900 text-white",
+    "columnsCount": "4"
+  }
+}
