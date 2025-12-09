@@ -435,17 +435,28 @@
           </button>
         </div>
         <label class="space-y-1 block">
-          <span class="text-xs font-medium text-slate-600">Titre</span>
+          <span class="text-xs font-medium text-slate-600">Nom court</span>
+          <input
+            type="text"
+            data-add-page-name
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#9C6BFF] focus:ring-1 focus:ring-[#9C6BFF]"
+            placeholder="Accueil, Services, Contact..."
+            required
+          />
+          <p class="text-[11px] text-slate-500">Affiché dans la navigation et l'admin.</p>
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-medium text-slate-600">Titre complet (SEO)</span>
           <input
             type="text"
             data-add-page-title
             class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#9C6BFF] focus:ring-1 focus:ring-[#9C6BFF]"
-            placeholder="Accueil, Services..."
-            required
+            placeholder="Services – Mon Site"
           />
+          <p class="text-[11px] text-slate-500">Optionnel. Si vide, utilise le nom court.</p>
         </label>
         <label class="space-y-1 block">
-          <span class="text-xs font-medium text-slate-600">Slug</span>
+          <span class="text-xs font-medium text-slate-600">Slug (URL)</span>
           <input
             type="text"
             data-add-page-slug
@@ -453,7 +464,7 @@
             placeholder="/services"
             required
           />
-          <p class="text-[11px] text-slate-500">Utiliser un slug unique par page.</p>
+          <p class="text-[11px] text-slate-500">URL unique de la page (commence par /).</p>
         </label>
         <button
           type="submit"
@@ -512,6 +523,13 @@
       <div class="flex items-center gap-2 text-xs">
         <button
           type="button"
+          data-page-props-toggle
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 font-semibold text-slate-700 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          Propriétés
+        </button>
+        <button
+          type="button"
           data-seo-toggle
           class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 font-semibold text-slate-700 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
         >
@@ -529,6 +547,84 @@
           Ouvrir la page
         </button>
       </div>
+    </div>
+
+    <!-- Section Propriétés de la page dépliable -->
+    <div data-page-props-panel class="hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-[11px] uppercase tracking-tight text-slate-500">Configuration</p>
+          <p class="text-sm font-semibold text-slate-900">Propriétés de la page</p>
+        </div>
+        <button
+          type="button"
+          data-page-props-close
+          class="text-slate-400 hover:text-slate-600"
+          aria-label="Fermer le panneau propriétés"
+        >
+          ✕
+        </button>
+      </div>
+      <form data-page-props-form class="space-y-4">
+        <div class="space-y-1">
+          <label for="page-name" class="block text-sm font-medium text-slate-700">Nom court</label>
+          <input
+            type="text"
+            id="page-name"
+            name="page-name"
+            data-page-name
+            placeholder="Accueil, Services, Contact..."
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/20"
+          />
+          <p class="text-xs text-slate-500">Nom affiché dans la navigation et l'admin (ex: "À propos").</p>
+        </div>
+        <div class="space-y-1">
+          <label for="page-title" class="block text-sm font-medium text-slate-700">Titre complet</label>
+          <input
+            type="text"
+            id="page-title"
+            name="page-title"
+            data-page-title-input
+            placeholder="À propos – Mon Site"
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/20"
+          />
+          <p class="text-xs text-slate-500">Titre complet de la page (balise &lt;title&gt;).</p>
+        </div>
+        <div class="space-y-1">
+          <label for="page-slug" class="block text-sm font-medium text-slate-700">Slug (URL)</label>
+          <input
+            type="text"
+            id="page-slug"
+            name="page-slug"
+            data-page-slug-input
+            placeholder="/a-propos"
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/20"
+          />
+          <p class="text-xs text-slate-500">URL de la page (commence par /).</p>
+        </div>
+        <div class="space-y-1">
+          <label for="page-description" class="block text-sm font-medium text-slate-700">Description</label>
+          <textarea
+            id="page-description"
+            name="page-description"
+            data-page-description
+            rows="2"
+            placeholder="Brève description de la page..."
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/20"
+          ></textarea>
+          <p class="text-xs text-slate-500">Description interne (utilisée aussi comme fallback SEO).</p>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <span data-page-props-feedback class="text-sm text-slate-500"></span>
+          <button
+            type="submit"
+            data-page-props-save
+            class="rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8B5CF6] disabled:opacity-50"
+          >
+            Enregistrer
+          </button>
+        </div>
+      </form>
     </div>
 
     <!-- Section SEO dépliable -->
@@ -1471,7 +1567,8 @@
           Voir le template JSON complet avec tous les blocs
         </summary>
         <pre data-template-json class="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 overflow-x-auto max-h-[40vh] overflow-y-auto"><code>{
-  "title": "Ma page exemple",
+  "name": "Ma page",
+  "title": "Ma page exemple – Mon Site",
   "slug": "/ma-page-exemple",
   "description": "Description courte de la page pour l'admin",
   "seo": {
@@ -1589,7 +1686,8 @@
         <pre class="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 overflow-x-auto max-h-[40vh] overflow-y-auto"><code>{
   "pages": [
     {
-      "title": "Nos réalisations",
+      "name": "Réalisations",
+      "title": "Nos réalisations – Mon Site",
       "slug": "/realisations",
       "description": "Découvrez nos projets",
       "blocks": [
@@ -1658,6 +1756,7 @@
       <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
         <p class="text-xs text-amber-800">
           <strong>💡 Conseils :</strong><br>
+          • <code>name</code> = nom court (navigation, admin) / <code>title</code> = titre complet (SEO)<br>
           • Les <code>id</code> doivent être uniques dans la page<br>
           • Le <code>slug</code> doit commencer par "/" et être en kebab-case<br>
           • Les collections référencées dans <code>CollectionGrid</code> sont créées automatiquement si elles n'existent pas<br>

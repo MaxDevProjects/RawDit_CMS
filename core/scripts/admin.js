@@ -625,6 +625,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const seoIndexedCheckbox = document.querySelector('[data-seo-indexed]');
     const seoFeedback = document.querySelector('[data-seo-feedback]');
     const seoSaveButton = document.querySelector('[data-seo-save]');
+    // Page properties panel elements
+    const pagePropsToggleButton = document.querySelector('[data-page-props-toggle]');
+    const pagePropsPanel = document.querySelector('[data-page-props-panel]');
+    const pagePropsCloseButton = document.querySelector('[data-page-props-close]');
+    const pagePropsForm = document.querySelector('[data-page-props-form]');
+    const pageNameInput = document.querySelector('[data-page-name]');
+    const pageTitleInput = document.querySelector('[data-page-title-input]');
+    const pageSlugInput = document.querySelector('[data-page-slug-input]');
+    const pageDescriptionInput = document.querySelector('[data-page-description]');
+    const pagePropsFeedback = document.querySelector('[data-page-props-feedback]');
+    const pagePropsSaveButton = document.querySelector('[data-page-props-save]');
     const blockList = document.querySelector('[data-blocks-list]');
     const blockListEmpty = document.querySelector('[data-blocks-empty]');
     const blockCountBadge = document.querySelector('[data-block-count]');
@@ -934,7 +945,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const payload = await response.json().catch(() => []);
       return Array.isArray(payload) ? payload : [];
     };
-    const createPageOnServer = async ({ title, slug }) => {
+    const createPageOnServer = async ({ name, title, slug }) => {
       if (!pagesApiBase) {
         throw new Error('Site inconnu.');
       }
@@ -943,7 +954,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title, slug }),
+        body: JSON.stringify({ name, title, slug }),
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
@@ -1355,6 +1366,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawerCloseButtons = document.querySelectorAll('[data-page-drawer-close]');
     const addPageToggle = document.querySelector('[data-add-page-toggle]');
     const addPageForm = document.querySelector('[data-add-page-form]');
+    const addPageName = document.querySelector('[data-add-page-name]');
     const addPageTitle = document.querySelector('[data-add-page-title]');
     const addPageSlug = document.querySelector('[data-add-page-slug]');
     const addPageCancel = document.querySelector('[data-add-page-cancel]');
@@ -1573,7 +1585,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const setActiveLabels = (page) => {
       if (activeTitle) {
-        activeTitle.textContent = page?.title || 'Page';
+        // Use page.name (short name) if available, fallback to title
+        activeTitle.textContent = page?.name || page?.title || 'Page';
       }
       if (activeSlug) {
         activeSlug.textContent = page?.slug || '/';
@@ -2017,6 +2030,8 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             button.removeAttribute('aria-current');
           }
+          // Use page.name (short name) if available, fallback to title
+          const displayName = page.name || page.title;
           button.innerHTML = `
             <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -2025,7 +2040,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </svg>
             </span>
             <div class="flex flex-col">
-              <span class="text-sm font-semibold">${page.title}</span>
+              <span class="text-sm font-semibold">${displayName}</span>
               <span class="text-xs text-slate-500">${page.slug}</span>
             </div>
           `;
@@ -2041,7 +2056,7 @@ document.addEventListener('DOMContentLoaded', () => {
           deleteBtn.type = 'button';
           deleteBtn.className = 'flex-shrink-0 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition';
           deleteBtn.title = 'Supprimer cette page';
-          deleteBtn.setAttribute('aria-label', `Supprimer ${page.title}`);
+          deleteBtn.setAttribute('aria-label', `Supprimer ${displayName}`);
           deleteBtn.innerHTML = `
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14ZM10 11v6M14 11v6"/>
@@ -2373,9 +2388,12 @@ document.addEventListener('DOMContentLoaded', () => {
       addPageToggle.classList.add('hidden');
       addPageError && (addPageError.textContent = '');
       pageSlugManuallyEdited = false;
+      if (addPageName) {
+        addPageName.value = '';
+        addPageName.focus();
+      }
       if (addPageTitle) {
         addPageTitle.value = '';
-        addPageTitle.focus();
       }
       if (addPageSlug) {
         addPageSlug.value = '';
@@ -2391,14 +2409,14 @@ document.addEventListener('DOMContentLoaded', () => {
       pageSlugManuallyEdited = false;
       addPageForm.reset();
     };
-    const syncSlugFromTitle = () => {
-      if (!addPageTitle || !addPageSlug) {
+    const syncSlugFromName = () => {
+      if (!addPageName || !addPageSlug) {
         return;
       }
       if (pageSlugManuallyEdited && addPageSlug.value.trim().length > 0) {
         return;
       }
-      addPageSlug.value = normalizePageSlug(addPageTitle.value);
+      addPageSlug.value = normalizePageSlug(addPageName.value);
     };
 
     let pages = [];
@@ -2541,7 +2559,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addPageToggle?.addEventListener('click', openAddPageForm);
     addPageCancel?.addEventListener('click', closeAddPageForm);
-    addPageTitle?.addEventListener('input', syncSlugFromTitle);
+    addPageName?.addEventListener('input', syncSlugFromName);
     addPageSlug?.addEventListener('input', () => {
       addPageError && (addPageError.textContent = '');
       pageSlugManuallyEdited = true;
@@ -2552,13 +2570,14 @@ document.addEventListener('DOMContentLoaded', () => {
         addPageError && (addPageError.textContent = 'Aucun site sélectionné.');
         return;
       }
-      if (!addPageTitle || !addPageSlug) {
+      if (!addPageName || !addPageSlug) {
         return;
       }
-      const title = addPageTitle.value.trim();
-      const slug = normalizePageSlug(addPageSlug.value.trim() || title);
-      if (!title || !slug) {
-        addPageError && (addPageError.textContent = 'Titre et slug sont requis.');
+      const name = addPageName.value.trim();
+      const title = addPageTitle?.value.trim() || name; // Fallback to name if title is empty
+      const slug = normalizePageSlug(addPageSlug.value.trim() || name);
+      if (!name || !slug) {
+        addPageError && (addPageError.textContent = 'Nom et slug sont requis.');
         return;
       }
       addPageError && (addPageError.textContent = '');
@@ -2567,7 +2586,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addPageSubmitButton.textContent = 'Création...';
       }
       try {
-        const createdPage = await createPageOnServer({ title, slug });
+        const createdPage = await createPageOnServer({ name, title, slug });
         if (!createdPage || !createdPage.id) {
           throw new Error('Réponse invalide.');
         }
@@ -3210,6 +3229,86 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // Page properties panel logic
+    const togglePagePropsPanel = (show) => {
+      if (!pagePropsPanel) return;
+      if (show) {
+        pagePropsPanel.classList.remove('hidden');
+        // Populate fields with current page data
+        if (currentPage) {
+          pageNameInput && (pageNameInput.value = currentPage.name || '');
+          pageTitleInput && (pageTitleInput.value = currentPage.title || '');
+          pageSlugInput && (pageSlugInput.value = currentPage.slug || '');
+          pageDescriptionInput && (pageDescriptionInput.value = currentPage.description || '');
+        }
+      } else {
+        pagePropsPanel.classList.add('hidden');
+      }
+    };
+    const setPagePropsFeedback = (message, tone = 'muted') => {
+      if (!pagePropsFeedback) return;
+      const color = tone === 'success' ? 'text-emerald-600' : tone === 'error' ? 'text-rose-600' : 'text-slate-500';
+      pagePropsFeedback.textContent = message || '';
+      pagePropsFeedback.className = `text-sm ${color}`;
+    };
+    pagePropsToggleButton?.addEventListener('click', () => {
+      const isVisible = pagePropsPanel && !pagePropsPanel.classList.contains('hidden');
+      togglePagePropsPanel(!isVisible);
+    });
+    pagePropsCloseButton?.addEventListener('click', () => togglePagePropsPanel(false));
+    pagePropsForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!currentPage) {
+        setPagePropsFeedback('Aucune page active.', 'error');
+        return;
+      }
+      pagePropsSaveButton && (pagePropsSaveButton.disabled = true);
+      setPagePropsFeedback('');
+      try {
+        const newName = (pageNameInput?.value || '').trim();
+        const newTitle = (pageTitleInput?.value || '').trim();
+        const newSlug = (pageSlugInput?.value || '').trim();
+        const newDescription = (pageDescriptionInput?.value || '').trim();
+        
+        // Validation basique
+        if (!newTitle) {
+          setPagePropsFeedback('Le titre est requis.', 'error');
+          pagePropsSaveButton && (pagePropsSaveButton.disabled = false);
+          return;
+        }
+        if (!newSlug || !newSlug.startsWith('/')) {
+          setPagePropsFeedback('Le slug doit commencer par /.', 'error');
+          pagePropsSaveButton && (pagePropsSaveButton.disabled = false);
+          return;
+        }
+        
+        const updatedPage = {
+          ...currentPage,
+          name: newName || newTitle, // Fallback to title if name is empty
+          title: newTitle,
+          slug: newSlug,
+          description: newDescription,
+        };
+        const saved = await savePageToServer(updatedPage);
+        if (saved) {
+          currentPage = saved;
+          // Update pages array
+          pages = pages.map((p) => (p.id === saved.id ? saved : p));
+          setPagePropsFeedback('Propriétés enregistrées.', 'success');
+          showToast('Page mise à jour');
+          // Update UI
+          setActiveLabels(currentPage);
+          renderPageLists(pages, activePageId);
+          refreshPreview(currentPage);
+        }
+      } catch (err) {
+        console.error('[page-props] save failed', err);
+        setPagePropsFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
+      } finally {
+        pagePropsSaveButton && (pagePropsSaveButton.disabled = false);
+      }
+    });
+
     const handleBlockDragStart = (event) => {
       const item = event.target.closest('[data-block-item]');
       if (!item || !isDesktopReorder()) {
@@ -3499,7 +3598,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       sitePages.forEach(page => {
         const pageSlug = page.slug || page.id;
-        const pageTitle = page.title || pageSlug;
+        // Use page.name (short name) if available, fallback to title
+        const pageDisplayName = page.name || page.title || pageSlug;
         const pageUrl = pageSlug === 'index' ? '/' : `/${pageSlug}`;
         
         // Vérifier si cette page est sélectionnée dans la nav
@@ -3508,10 +3608,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const label = document.createElement('label');
         label.className = 'flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors';
         label.innerHTML = `
-          <input type="checkbox" name="nav-page" value="${pageUrl}" data-page-title="${pageTitle}"
+          <input type="checkbox" name="nav-page" value="${pageUrl}" data-page-title="${pageDisplayName}"
                  class="w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
                  ${isSelected ? 'checked' : ''}>
-          <span class="flex-1 text-sm text-slate-700">${pageTitle}</span>
+          <span class="flex-1 text-sm text-slate-700">${pageDisplayName}</span>
           <span class="text-xs text-slate-400">${pageUrl}</span>
         `;
         
@@ -3521,7 +3621,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (checkbox.checked) {
             // Ajouter à la liste
             if (!selectedNavPages.some(nav => nav.url === pageUrl)) {
-              selectedNavPages.push({ label: pageTitle, url: pageUrl });
+              selectedNavPages.push({ label: pageDisplayName, url: pageUrl });
             }
           } else {
             // Retirer de la liste

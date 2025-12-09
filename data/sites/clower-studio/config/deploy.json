@@ -1,7 +1,0 @@
-{
-  "protocol": "sftp",
-  "host": "srv620796.hstgr.cloud",
-  "port": 22,
-  "user": "root",
-  "remotePath": "/home/srv/cloweredit-deploy-test"
-}

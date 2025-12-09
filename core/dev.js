@@ -116,9 +116,11 @@ async function ensurePagesDir(siteSlug) {
 
 function normalizePageRecord(page = {}) {
   const seo = page.seo || {};
+  const title = (typeof page.title === 'string' && page.title.trim()) || 'Page';
   return {
     id: page.id,
-    title: (typeof page.title === 'string' && page.title.trim()) || 'Page',
+    name: (typeof page.name === 'string' && page.name.trim()) || title,
+    title: title,
     slug: page.slug || '/',
     description: page.description || '',
     badges: Array.isArray(page.badges) ? page.badges : [],
@@ -1228,11 +1230,12 @@ async function start() {
 
   app.post('/api/sites/:slug/pages', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
-    const { title, slug } = req.body || {};
-    const trimmedTitle = typeof title === 'string' ? title.trim() : '';
-    const normalizedSlug = normalizePageSlugValue(slug || trimmedTitle);
-    if (!trimmedTitle || !normalizedSlug) {
-      return res.status(400).json({ message: 'Titre et slug sont requis.' });
+    const { name, title, slug } = req.body || {};
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    const trimmedTitle = typeof title === 'string' && title.trim() ? title.trim() : trimmedName;
+    const normalizedSlug = normalizePageSlugValue(slug || trimmedName);
+    if (!trimmedName || !normalizedSlug) {
+      return res.status(400).json({ message: 'Nom et slug sont requis.' });
     }
     try {
       const existingPages = await readPagesForSite(siteSlug);
@@ -1240,12 +1243,13 @@ async function start() {
         return res.status(400).json({ message: 'Ce slug est déjà utilisé.' });
       }
       const idSet = new Set(existingPages.map((page) => page.id));
-      let newId = generatePageIdFromSlug(normalizedSlug, trimmedTitle);
+      let newId = generatePageIdFromSlug(normalizedSlug, trimmedName);
       while (idSet.has(newId)) {
         newId = `${newId}-${Math.floor(Math.random() * 1000)}`;
       }
       const newPage = {
         id: newId,
+        name: trimmedName,
         title: trimmedTitle,
         slug: normalizedSlug,
         description: '',
@@ -1284,6 +1288,7 @@ async function start() {
       const seoPayload = payload.seo || {};
       const updatedPage = {
         id: safePageId,
+        name: typeof payload.name === 'string' ? payload.name.trim() : '',
         title,
         slug: normalizedSlug,
         description: payload.description || '',

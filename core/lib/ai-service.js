@@ -232,7 +232,8 @@ Typographies:
   if (siteContext.pages && siteContext.pages.length > 0) {
     prompt += `\n\n=== 📄 PAGES DU SITE ===`;
     siteContext.pages.forEach(p => {
-      prompt += `\n- "${p.title || 'Sans titre'}" → pageId: "${p.id || 'inconnu'}", slug: "${p.slug || '/'}"`;
+      const pageName = p.name || p.title || 'Sans titre';
+      prompt += `\n- "${pageName}" → pageId: "${p.id || 'inconnu'}", slug: "${p.slug || '/'}"`;
     });
   }
 
@@ -242,9 +243,11 @@ Typographies:
 Tu as accès au contenu COMPLET des pages. Analyse-les pour répondre précisément aux questions.`;
     
     siteContext.pagesFullContent.forEach(page => {
+      const pageName = page.name || page.title || 'Sans titre';
       prompt += `\n\n──────────────────────────────
 📄 PAGE: ${page.id}.json
-Titre: "${page.title || 'Sans titre'}"
+Nom: "${pageName}"
+Titre complet: "${page.title || '(aucun)'}"
 Slug: ${page.slug || '/'}
 Description: ${page.description || '(aucune)'}`;
       

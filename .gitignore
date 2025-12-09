@@ -1,12 +1,30 @@
 node_modules
-public/*.html
 .DS_Store
+
+# Credentials et secrets
 credentials
+config/ai.json
 
+# Fichiers générés
+public/*.html
 public/generated/
-backend/sites/
+public/sites/
+admin_public/assets/admin.js
+admin_public/assets/admin-login.js
+admin_public/assets/site.js
+
+# Données utilisateur (sessions, users)
+data/sessions.json
+data/users.json
+
+# Sites spécifiques (données privées)
+data/sites/clower-studio/
+data/sites/landing-clower-ux/
+data/sites/atelier/
+
+# Anciens fichiers
 old
+backend/sites/
 
-# Documentation US1.3 (fichiers générés automatiquement)
+# Documentation générée
 docs-agents
-

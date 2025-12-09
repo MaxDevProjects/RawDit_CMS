@@ -1,7 +1,0 @@
-<svg width="320" height="200" viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="320" height="200" rx="30" fill="#FFF4E6"/>
-  <path d="M60 150L120 70L180 130L240 50L280 120" stroke="#FB923C" stroke-width="8" stroke-linecap="round" fill="none"/>
-  <circle cx="110" cy="120" r="20" fill="#FDBA74"/>
-  <circle cx="210" cy="80" r="28" fill="#FDBA74" opacity="0.6"/>
-  <text x="60" y="180" fill="#7C2D12" font-family="Inter, sans-serif" font-size="20" font-weight="600">Poster Lancement</text>
-</svg>
