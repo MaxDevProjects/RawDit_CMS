@@ -235,6 +235,38 @@
   </div>
 {% endmacro %}
 
+{% macro animationFields() %}
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Animation (sobre)</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Type d'animation</span>
+        <select name="anim-type" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="">Aucune</option>
+          <option value="fade-in">Fondu</option>
+          <option value="fade-up">Fondu + montée</option>
+          <option value="fade-down">Fondu + descente</option>
+          <option value="slide-left">Glissement gauche</option>
+          <option value="slide-right">Glissement droite</option>
+          <option value="zoom-in">Zoom doux</option>
+          <option value="blur-in">Désfloutage</option>
+        </select>
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="space-y-1 block">
+          <span class="text-xs font-medium text-slate-600">Délai (ms)</span>
+          <input type="number" name="anim-delay" min="0" step="50" data-default="0" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" placeholder="0" />
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-medium text-slate-600">Durée (ms)</span>
+          <input type="number" name="anim-duration" min="100" step="50" data-default="450" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" placeholder="450" />
+        </label>
+      </div>
+      <p class="text-[11px] text-slate-500">Les animations sont discrètes, déclenchées uniquement lorsque le bloc entre dans le viewport.</p>
+    </div>
+  </div>
+{% endmacro %}
+
 {% block sidebar_start %}
   <div class="lg:hidden flex items-center justify-between gap-3 rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
     <div>
@@ -830,6 +862,7 @@
                 </select>
               </label>
               {{ cardStyleFields('paragraph') }}
+              {{ animationFields() }}
             </div>
           </div>
 
@@ -923,6 +956,7 @@
                 </select>
               </label>
               {{ cardStyleFields('hero') }}
+              {{ animationFields() }}
             </div>
           </div>
 
@@ -1008,6 +1042,7 @@
                 </select>
               </label>
               {{ cardStyleFields('image') }}
+              {{ animationFields() }}
             </div>
           </div>
 
@@ -1070,8 +1105,9 @@
                 </div>
               </div>
             </div>
+            {{ cardStyleFields('group') }}
+            {{ animationFields() }}
           </div>
-          {{ cardStyleFields('group') }}
         </div>
 
         <div data-editor-section="collection" class="hidden space-y-4">
@@ -1169,6 +1205,7 @@
               </div>
             </div>
             {{ cardStyleFields('collection') }}
+            {{ animationFields() }}
           </div>
         </div>
 
@@ -1270,6 +1307,7 @@
               </select>
             </label>
             {{ cardStyleFields('form') }}
+            {{ animationFields() }}
           </div>
         </div>
 
@@ -1341,6 +1379,7 @@
               </select>
             </label>
             {{ cardStyleFields('newsletter') }}
+            {{ animationFields() }}
           </div>
         </div>
 

@@ -15,23 +15,26 @@
     {% if not pageIndexed %}
     <meta name="robots" content="noindex, nofollow" />
     {% endif %}
-    {% set slugPath = '' %}
-    {% if site and site.slug %}
-      {% set slugPath = site.slug %}
-    {% elseif site and site.slugValue %}
-      {% set slugPath = site.slugValue %}
+    {% set finalAssetBase = assetBase %}
+    {% if not finalAssetBase %}
+      {% set slugPath = '' %}
+      {% if site and site.slug %}
+        {% set slugPath = site.slug %}
+      {% elseif site and site.slugValue %}
+        {% set slugPath = site.slugValue %}
+      {% endif %}
+      {% set slugPart = slugPath %}
+      {% if slugPart and (slugPart | first) == '/' %}
+        {% set slugPart = slugPart | slice(1) %}
+      {% endif %}
+      {% if isPreview and slugPart %}
+        {% set finalAssetBase = '/sites/' ~ slugPart ~ '/assets' %}
+      {% else %}
+        {% set finalAssetBase = '/assets' %}
+      {% endif %}
     {% endif %}
-    {% set slugPart = slugPath %}
-    {% if slugPart and (slugPart | first) == '/' %}
-      {% set slugPart = slugPart | slice(1) %}
-    {% endif %}
-    {% if slugPart %}
-      {% set assetBase = '/sites/' ~ slugPart ~ '/assets' %}
-    {% else %}
-      {% set assetBase = '/assets' %}
-    {% endif %}
-    <link rel="stylesheet" href="{{ assetBase }}/theme.css" />
-    <link rel="stylesheet" href="{{ assetBase }}/site.css" />
+    <link rel="stylesheet" href="{{ finalAssetBase }}/theme.css" />
+    <link rel="stylesheet" href="{{ finalAssetBase }}/site.css" />
     {# US9.B2 - Analytics head code injection #}
     {% if site.analytics and site.analytics.headCode %}
     {{ site.analytics.headCode | safe }}
@@ -140,6 +143,18 @@
     {% endif %}
 
     <main class="max-w-5xl mx-auto px-6 py-10 space-y-6">
+      {% macro animationAttrs(settings) %}
+        {% if settings and settings.animation %}
+          data-anim="{{ settings.animation }}"
+          {% if settings.animationDelay is defined and settings.animationDelay is not none and settings.animationDelay != '' %}
+            data-anim-delay="{{ settings.animationDelay }}"
+          {% endif %}
+          {% if settings.animationDuration is defined and settings.animationDuration is not none and settings.animationDuration != '' %}
+            data-anim-duration="{{ settings.animationDuration }}"
+          {% endif %}
+        {% endif %}
+      {% endmacro %}
+
       {# Helper pour normaliser les classes - ajoute le préfixe si manquant #}
       {% macro normalizeClass(value, prefix, defaultValue) %}
         {%- if not value -%}
@@ -158,6 +173,7 @@
         {% set raw_type = (block.type or '') %}
         {% set type = raw_type | lower %}
         {% set settings = block.settings or {} %}
+        {% set animAttrs = animationAttrs(settings) %}
         
         {% if type == 'hero' %}
           {% set content_align = settings.contentAlign or 'items-center' %}
@@ -179,6 +195,7 @@
             {# Mode fullwidth avec image en background #}
             <section
               data-preview-block="{{ block.id }}"
+              {{ animAttrs | safe }}
               class="relative overflow-hidden {{ hero_radius }} {{ hero_shadow }} {{ height }} flex {{ content_align }} justify-center"
               {% if has_image %}style="background-image: url('{{ settings.image }}'); background-size: cover; background-position: center;"{% else %}class="{{ hero_bg }}"{% endif %}
             >
@@ -218,6 +235,7 @@
             {% endif %}
             <section
               data-preview-block="{{ block.id }}"
+              {{ animAttrs | safe }}
               class="relative overflow-hidden {{ hero_bg }} {{ hero_radius }} {{ hero_shadow }} {{ height }} px-10 py-16"
             >
               {% if overlay != 'bg-black/0' %}
@@ -271,6 +289,7 @@
           {% set spacing = settings.spacing or 'space-y-4' %}
           <section
             data-preview-block="{{ block.id }}"
+            {{ animAttrs | safe }}
             class="{{ para_bg }} {{ para_radius }} {{ para_shadow }} p-8 border border-slate-100 {{ text_class }} {{ spacing }}"
           >
             <h3 class="{{ title_size }} font-semibold mb-2">
@@ -293,6 +312,7 @@
           {% set img_rounded = settings.rounded if settings.rounded else 'rounded-2xl' %}
           <figure
             data-preview-block="{{ block.id }}"
+            {{ animAttrs | safe }}
             class="{{ img_bg }} {{ img_radius }} {{ img_shadow }} {{ img_max_width }} {{ img_align }} border border-slate-100 p-4 space-y-3"
           >
             {% if src %}
@@ -326,6 +346,7 @@
           {% set children = block.children or [] %}
           <section
             data-preview-block="{{ block.id }}"
+            {{ animAttrs | safe }}
             class="{{ group_bg }} {{ group_radius }} {{ group_shadow }} border border-slate-100 p-6 space-y-3"
           >
             {% if children | length == 0 %}
@@ -350,7 +371,7 @@
                 {% for child in children %}
                   {% set c_type = (child.type or '') | lower %}
                   {% set c_settings = child.settings or {} %}
-                  <div class="group-child-wrapper" data-preview-block="{{ child.id }}">
+                  <div class="group-child-wrapper" data-preview-block="{{ child.id }}" {{ animationAttrs(c_settings) | safe }}>
                     {# ─── Rendu complet des enfants (inline, pas de récursion) ─── #}
                     {% if c_type == 'hero' %}
                       {% set c_content_align = c_settings.contentAlign or 'items-center' %}
@@ -514,6 +535,7 @@
           {% set coll_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
           <section
             data-preview-block="{{ block.id }}"
+            {{ animAttrs | safe }}
             class="{{ coll_bg }} {{ coll_radius }} {{ coll_shadow }} border border-slate-100 p-6 space-y-3"
           >
             {% if isPreview %}
@@ -574,6 +596,7 @@
           {% set form_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-none' %}
           <section
             data-preview-block="{{ block.id }}"
+            {{ animAttrs | safe }}
             class="{{ form_bg }} {{ form_radius }} {{ form_shadow }} {{ form_max_width }} {{ form_align }} border border-violet-100 p-8 space-y-6"
           >
             <div>
@@ -624,6 +647,7 @@
           {% set nl_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-none' %}
           <section
             data-preview-block="{{ block.id }}"
+            {{ animAttrs | safe }}
             class="{{ nl_bg }} {{ nl_radius }} {{ nl_shadow }} {{ nl_max_width }} {{ nl_align }} {{ nl_padding }} border border-sky-100 space-y-4"
           >
             <div>
@@ -650,7 +674,7 @@
           {% set btn_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-xl' %}
           {% set btn_size = settings.size or 'px-6 py-3' %}
           {% set btn_align = settings.align or 'text-left' %}
-          <div data-preview-block="{{ block.id }}" class="{{ btn_align }}">
+          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ btn_align }}">
             <a 
               href="{{ settings.url or '#' }}" 
               class="inline-flex items-center gap-2 {{ btn_radius }} {{ btn_bg }} {{ btn_size }} text-sm font-semibold {{ btn_text_color }} hover:opacity-90 transition-opacity"
@@ -669,7 +693,7 @@
           {% set heading_size = settings.size or 'text-3xl' %}
           {% set heading_align = settings.align or 'text-left' %}
           {% set heading_color = settings.color if settings.color else 'text-slate-900' %}
-          <div data-preview-block="{{ block.id }}" class="{{ heading_align }}">
+          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ heading_align }}">
             <{{ level }} class="{{ heading_size }} font-bold {{ heading_color }}">
               {{ settings.text or block.label or 'Titre' }}
             </{{ level }}>
@@ -677,13 +701,13 @@
         
         {% elif type == 'espaceur' or type == 'spacer' %}
           {% set spacer_height = settings.height or 'h-12' %}
-          <div data-preview-block="{{ block.id }}" class="{{ spacer_height }}"></div>
+          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ spacer_height }}"></div>
         
         {% elif type == 'card' or type == 'carte' %}
           {% set card_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
           {% set card_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set card_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
-          <div data-preview-block="{{ block.id }}" class="{{ card_bg }} {{ card_radius }} {{ card_shadow }} border border-slate-100 p-6 space-y-3">
+          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ card_bg }} {{ card_radius }} {{ card_shadow }} border border-slate-100 p-6 space-y-3">
             {% if settings.image %}
               <img src="{{ settings.image }}" alt="{{ settings.title or '' }}" class="w-full h-40 object-cover rounded-xl" />
             {% endif %}
@@ -703,7 +727,7 @@
           {% set divider_color = settings.color or 'border-slate-200' %}
           {% set divider_width = settings.width or 'w-full' %}
           {% set divider_style = settings.style or 'border-solid' %}
-          <div data-preview-block="{{ block.id }}" class="py-4">
+          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="py-4">
             <hr class="{{ divider_width }} {{ divider_color }} {{ divider_style }} border-t mx-auto" />
           </div>
         
@@ -712,7 +736,7 @@
           {% set video_embed = settings.embedCode or '' %}
           {% set video_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-slate-900' %}
           {% set video_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
-          <div data-preview-block="{{ block.id }}" class="{{ video_bg }} {{ video_radius }} overflow-hidden aspect-video">
+          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ video_bg }} {{ video_radius }} overflow-hidden aspect-video">
             {% if video_embed %}
               {{ video_embed | safe }}
             {% elif video_src %}
@@ -730,6 +754,7 @@
         {% else %}
           <section
             data-preview-block="{{ block.id }}"
+            {{ animAttrs | safe }}
             class="bg-white rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500"
           >
             Ce type de bloc ("{{ block.type or 'Bloc' }}") n'a pas encore de preview dédiée.
@@ -836,6 +861,8 @@
       </footer>
     {% endif %}
 
+    <script src="{{ finalAssetBase }}/site.js" defer></script>
+
     {# US9.B2 - Analytics body end code injection #}
     {% if site.analytics and site.analytics.bodyEndCode %}
     {{ site.analytics.bodyEndCode | safe }}
@@ -903,6 +930,35 @@
           } else if (overlay) {
             overlay.remove();
           }
+        }
+
+        // Animations (data attributes + relance du helper)
+        if (settings.animation !== undefined) {
+          if (settings.animation) {
+            block.dataset.anim = settings.animation;
+          } else {
+            delete block.dataset.anim;
+          }
+        }
+        if (settings.animationDelay !== undefined) {
+          if (settings.animationDelay === '' || settings.animationDelay === null) {
+            delete block.dataset.animDelay;
+          } else {
+            block.dataset.animDelay = settings.animationDelay;
+          }
+        }
+        if (settings.animationDuration !== undefined) {
+          if (settings.animationDuration === '' || settings.animationDuration === null) {
+            delete block.dataset.animDuration;
+          } else {
+            block.dataset.animDuration = settings.animationDuration;
+          }
+        }
+        if (block.dataset.anim) {
+          block.classList.remove('is-visible');
+        }
+        if (window.ClowerAnimations && typeof window.ClowerAnimations.refresh === 'function') {
+          window.ClowerAnimations.refresh();
         }
         
         // Flash visuel pour confirmer la mise à jour

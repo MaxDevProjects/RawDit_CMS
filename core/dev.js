@@ -8,6 +8,7 @@ import os from 'node:os';
 import chokidar from 'chokidar';
 import express from 'express';
 import nunjucks from 'nunjucks';
+import archiver from 'archiver';
 import { paths } from './lib/paths.js';
 import { buildAll } from './build.js';
 import { buildCss } from './lib/css-builder.js';
@@ -105,6 +106,15 @@ const DEFAULT_COLLECTIONS = [
 const stripLeadingSlash = (value) => value?.replace(/^\//, '') || '';
 
 const sanitizeSiteSlug = (slug) => stripLeadingSlash(normalizeSlug(slug));
+
+const resolveAssetBase = (site, { isPreview = false } = {}) => {
+  const slugCandidate = site?.slug ?? site?.slugValue ?? '';
+  const safeSlug = slugCandidate ? sanitizeSiteSlug(slugCandidate) : '';
+  if (isPreview && safeSlug) {
+    return `/sites/${safeSlug}/assets`;
+  }
+  return '/assets';
+};
 
 const getPagesDir = (siteSlug) => path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'pages');
 
@@ -546,6 +556,7 @@ async function buildSitePages(siteSlug) {
     language: siteConfig.language || 'fr',
     tagline: siteConfig.tagline || '',
   };
+  const assetBase = resolveAssetBase(siteMeta, { isPreview: false });
 
   const loader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCache: true });
   const env = new nunjucks.Environment(loader, { autoescape: true });
@@ -585,6 +596,7 @@ async function buildSitePages(siteSlug) {
         collections: collectionMap,
         theme: themeConfig,
         isPreview: false,
+        assetBase,
       });
       const slugPath = (page.slug || '').replace(/^\//, '') || 'index';
       const prettyPath = path.join(siteRoot, `${slugPath}.html`);
@@ -2043,6 +2055,45 @@ async function start() {
     }
   });
 
+  // Build et télécharger le site en ZIP
+  app.get('/api/sites/:slug/download', requireAuthJson, async (req, res) => {
+    const siteSlug = normalizeSlug(req.params.slug);
+    if (!siteSlug) {
+      return res.status(400).json({ message: 'Site invalide.' });
+    }
+    try {
+      // Build le site d'abord
+      console.log(`[download] Building site ${siteSlug}...`);
+      await buildSitePages(siteSlug);
+      
+      const siteRoot = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
+      const siteExists = await fs.stat(siteRoot).catch(() => null);
+      if (!siteExists?.isDirectory()) {
+        return res.status(404).json({ message: 'Le build du site n\'existe pas.' });
+      }
+
+      // Créer le ZIP
+      const zipFilename = `${siteSlug}-build.zip`;
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
+
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.on('error', (err) => {
+        console.error('[download] Archive error:', err);
+        res.status(500).end();
+      });
+      archive.pipe(res);
+      archive.directory(siteRoot, false);
+      await archive.finalize();
+      console.log(`[download] ZIP sent for ${siteSlug}`);
+    } catch (err) {
+      console.error('[download] failed', err);
+      if (!res.headersSent) {
+        res.status(500).json({ message: err.message || 'Impossible de générer le ZIP.' });
+      }
+    }
+  });
+
   app.get('/api/sites/:slug/config/site', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
     if (!siteSlug) {
@@ -2253,6 +2304,7 @@ async function start() {
       } catch (layoutErr) {
         console.warn('[preview] Layout load warning:', layoutErr.message);
       }
+      const assetBase = resolveAssetBase(site || {}, { isPreview: true });
       const html = previewEnv.render('preview.njk', {
         page,
         site: site || {},
@@ -2260,6 +2312,7 @@ async function start() {
         header,
         footer,
         isPreview: true,
+        assetBase,
       });
       const css = await buildPreviewCss(html);
       const finalHtml = injectPreviewCss(html, css);

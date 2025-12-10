@@ -913,6 +913,14 @@ document.addEventListener('DOMContentLoaded', () => {
       newsletter: 'newsletterembed',
       embed: 'newsletterembed',
     };
+    const animationFieldMap = {
+      animation: 'anim-type',
+      animationDelay: 'anim-delay',
+      animationDuration: 'anim-duration',
+    };
+    Object.values(blockTypeForms).forEach((config) => {
+      config.fields = { ...config.fields, ...animationFieldMap };
+    });
     const updateGroupMiniPreview = (mobileValue, desktopValue) => {
       if (!groupPreviewMobile || !groupPreviewDesktop) {
         return;
@@ -1084,7 +1092,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input.type === 'checkbox') {
           input.checked = Boolean(value);
         } else if (input.type === 'number') {
-          input.value = value ?? 1;
+          const fallback = input.dataset.default ?? input.defaultValue ?? '';
+          input.value = value ?? fallback;
         } else if (input.tagName === 'TEXTAREA') {
           input.value = value ?? '';
         } else {
@@ -1195,9 +1204,8 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     };
 
-    // Auto-save pour l'apparence (debounced)
-    let autoSaveTimeout = null;
-    const autoSaveAppearance = () => {
+    // Auto-save pour l'apparence (immédiat pour éviter les pertes)
+    const autoSaveAppearance = async () => {
       if (!currentPage || !activeBlockId) {
         return;
       }
@@ -1217,7 +1225,16 @@ document.addEventListener('DOMContentLoaded', () => {
       // Mise à jour silencieuse (sans toast ni refresh complet)
       const nextPage = { ...currentPage, blocks: updatedBlocks };
       currentPage = nextPage;
-      savePageToServer(nextPage);
+      try {
+        const saved = await savePageToServer(nextPage);
+        if (saved?.id) {
+          const normalized = normalizePageData(saved);
+          currentPage = normalized;
+          pages = pages.map((p) => (p.id === normalized.id ? normalized : p));
+        }
+      } catch (err) {
+        console.warn('[design] auto-save appearance failed', err);
+      }
     };
 
     // Mise à jour live de la preview via postMessage (sans recharger l'iframe)
@@ -1233,13 +1250,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }, '*');
     };
 
-    // Mise à jour live + auto-save (debounced)
-    const debouncedAutoSave = debounce(() => {
-      autoSaveAppearance();
-      updatePreviewStatus('Sauvegardé');
-      setTimeout(() => updatePreviewStatus('À jour'), 1500);
-    }, 800);
-
     // Refresh preview complet debounced (pour les changements complexes)
     const debouncedRefreshPreview = debounce(() => {
       if (currentPage) {
@@ -1251,7 +1261,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleAppearanceChange = (blockId, settings) => {
       updatePreviewBlockLive(blockId, settings);
       updatePreviewStatus('Modification…');
-      debouncedAutoSave();
+      autoSaveAppearance()
+        .then(() => {
+          updatePreviewStatus('Sauvegardé');
+          setTimeout(() => updatePreviewStatus('À jour'), 1500);
+        })
+        .catch(() => updatePreviewStatus('Erreur de sauvegarde'));
       // Refresh complet après un délai plus long (pour les changements de layout, etc.)
       debouncedRefreshPreview();
     };
@@ -4834,6 +4849,68 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       passwordInput.type = showPasswordToggle.checked ? 'text' : 'password';
+    });
+
+    // Download build as ZIP
+    const downloadButton = document.querySelector('[data-download-build]');
+    const downloadFeedback = document.querySelector('[data-download-feedback]');
+    const downloadApi = safeSiteSlug
+      ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/download`
+      : null;
+
+    const setDownloadFeedback = (message, tone = 'muted') => {
+      if (!downloadFeedback) return;
+      const color =
+        tone === 'success'
+          ? 'text-emerald-600'
+          : tone === 'error'
+            ? 'text-rose-600'
+            : 'text-slate-500';
+      downloadFeedback.textContent = message || '';
+      downloadFeedback.className = `text-sm ${color}`;
+    };
+
+    downloadButton?.addEventListener('click', async () => {
+      if (!downloadApi) {
+        setDownloadFeedback('Aucun site actif sélectionné.', 'error');
+        return;
+      }
+      downloadButton.disabled = true;
+      const originalContent = downloadButton.innerHTML;
+      downloadButton.innerHTML = `
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span>Build en cours...</span>
+      `;
+      setDownloadFeedback('Génération du build en cours...', 'muted');
+
+      try {
+        const response = await fetch(downloadApi);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Impossible de générer le ZIP.');
+        }
+        // Télécharger le fichier
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeSiteSlug}-build.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        setDownloadFeedback('Téléchargement terminé !', 'success');
+        showToast('Build téléchargé avec succès');
+      } catch (err) {
+        console.error('[download] failed', err);
+        setDownloadFeedback(err.message || 'Erreur lors du téléchargement.', 'error');
+      } finally {
+        downloadButton.disabled = false;
+        downloadButton.innerHTML = originalContent;
+      }
     });
 
     fetchConfig();
