@@ -18,9 +18,8 @@ data/sessions.json
 data/users.json
 
 # Sites spécifiques (données privées)
-data/sites/clower-studio/
-data/sites/landing-clower-ux/
-data/sites/atelier/
+data/sites
+data/sites.json
 
 # Anciens fichiers
 old
