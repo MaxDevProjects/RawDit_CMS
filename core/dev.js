@@ -584,6 +584,7 @@ async function buildSitePages(siteSlug) {
         site: { ...siteMeta, seo: siteConfig.seo, analytics: siteConfig.analytics },
         collections: collectionMap,
         theme: themeConfig,
+        isPreview: false,
       });
       const slugPath = (page.slug || '').replace(/^\//, '') || 'index';
       const prettyPath = path.join(siteRoot, `${slugPath}.html`);
@@ -2258,6 +2259,7 @@ async function start() {
         collections: collectionsData,
         header,
         footer,
+        isPreview: true,
       });
       const css = await buildPreviewCss(html);
       const finalHtml = injectPreviewCss(html, css);

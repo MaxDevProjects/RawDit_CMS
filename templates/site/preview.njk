@@ -154,9 +154,11 @@
               {% endif %}
               {# Contenu centré #}
               <div class="relative z-10 w-full max-w-4xl mx-auto px-8 py-16 flex flex-col gap-6 {{ horizontal_align }} {{ text_align }}">
+                {% if isPreview %}
                 <p class="text-xs uppercase tracking-[0.3em] {% if has_image %}text-white/80{% else %}text-violet-400{% endif %}">
                   {{ block.status or 'Brouillon' }}
                 </p>
+                {% endif %}
                 <h2 class="{{ title_size }} font-bold leading-tight {% if has_image %}text-white drop-shadow-lg{% else %}text-slate-900{% endif %}">
                   {{ settings.title or block.label or 'Titre du hero' }}
                 </h2>
@@ -189,9 +191,11 @@
               {% endif %}
               <div class="relative z-10 {{ grid_class }} {% if is_reverse %}lg:flex-row-reverse{% endif %}">
                 <div class="flex flex-col gap-4 {% if is_row %}{% else %}items-center text-center{% endif %}" {% if is_reverse %}style="order: 2"{% endif %}>
+                  {% if isPreview %}
                   <p class="text-xs uppercase tracking-[0.3em] text-violet-400">
                     {{ block.status or 'Brouillon' }}
                   </p>
+                  {% endif %}
                   <h2 class="{{ title_size }} font-bold leading-tight">
                     {{ settings.title or block.label or 'Titre du hero' }}
                   </h2>
@@ -478,6 +482,7 @@
             data-preview-block="{{ block.id }}"
             class="{{ coll_bg }} {{ coll_radius }} {{ coll_shadow }} border border-slate-100 p-6 space-y-3"
           >
+            {% if isPreview %}
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="text-lg font-semibold">{{ block.label or 'Grille de contenus' }}</h3>
@@ -487,6 +492,7 @@
               </div>
               <span class="text-xs text-slate-400">{{ itemCount }} item(s)</span>
             </div>
+            {% endif %}
             {% if itemCount == 0 %}
               <p class="text-sm text-slate-500">Aucun item disponible dans cette collection.</p>
             {% else %}
@@ -497,7 +503,9 @@
                     {% if item.image %}
                     <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-32 object-cover rounded-lg mb-2" />
                     {% endif %}
-                    <p class="text-xs uppercase tracking-[0.2em] text-slate-400">{{ item.status or '' }}</p>
+                    {% if isPreview and item.status %}
+                    <p class="text-xs uppercase tracking-[0.2em] text-slate-400">{{ item.status }}</p>
+                    {% endif %}
                     <h4 class="text-lg font-semibold text-slate-900">{{ item.title or 'Item' }}</h4>
                     <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">{{ (item.summary or item.excerpt or '') | safe }}</div>
                     {% if item.cta and item.cta.text %}
