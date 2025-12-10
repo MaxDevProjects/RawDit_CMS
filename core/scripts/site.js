@@ -7,6 +7,9 @@ function initLazyAnimations() {
   const prefersReduced =
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const animationsPreference =
+    document.body?.dataset?.animations || document.documentElement?.dataset?.animations;
+  const animationsDisabled = animationsPreference === 'off';
 
   const applyVisibility = (el) => {
     const { animDelay, animDuration } = el.dataset;
@@ -25,7 +28,7 @@ function initLazyAnimations() {
     el.classList.add('is-visible');
   };
 
-  if (prefersReduced || typeof IntersectionObserver !== 'function') {
+  if (prefersReduced || animationsDisabled || typeof IntersectionObserver !== 'function') {
     animatedNodes.forEach((el) => applyVisibility(el));
     return;
   }

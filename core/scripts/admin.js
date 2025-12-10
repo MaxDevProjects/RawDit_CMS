@@ -113,19 +113,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const siteModalSubmitButton = document.querySelector('[data-site-modal-submit]');
   const workspaceContext = getWorkspaceContext();
   let slugManuallyEdited = false;
-  let lastFocusedElement = null;
   let toastTimeoutId = null;
 
   const focusableSelector =
     'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
-  const trapFocus = (event) => {
-    if (!siteModal || siteModal.classList.contains('hidden') || event.key !== 'Tab') {
-      return;
-    }
-    const focusableElements = Array.from(siteModal.querySelectorAll(focusableSelector)).filter(
+  const modalStack = [];
+  const getFocusableElements = (modal) =>
+    Array.from(modal.querySelectorAll(focusableSelector)).filter(
       (el) => !el.hasAttribute('disabled') && !el.getAttribute('aria-hidden'),
     );
-    if (focusableElements.length === 0) {
+  const handleModalKeydown = (event) => {
+    if (!modalStack.length) {
+      return;
+    }
+    const currentEntry = modalStack[modalStack.length - 1];
+    const { modal, onClose } = currentEntry;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onClose?.();
+      return;
+    }
+    if (event.key !== 'Tab') {
+      return;
+    }
+    const focusableElements = getFocusableElements(modal);
+    if (!focusableElements.length) {
       return;
     }
     const first = focusableElements[0];
@@ -139,6 +151,27 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       first.focus();
     }
+  };
+  document.addEventListener('keydown', handleModalKeydown);
+  const activateModal = (modal, onClose) => {
+    if (!modal) return;
+    modalStack.push({
+      modal,
+      onClose,
+      trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null,
+    });
+    const focusable = getFocusableElements(modal);
+    window.setTimeout(() => {
+      (focusable[0] || modal).focus?.();
+    }, 0);
+  };
+  const deactivateModal = (modal) => {
+    const index = modalStack.findIndex((entry) => entry.modal === modal);
+    if (index === -1) {
+      return;
+    }
+    const [entry] = modalStack.splice(index, 1);
+    entry.trigger?.focus?.();
   };
 
   const showToast = (message) => {
@@ -349,7 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!siteModal) {
       return;
     }
-    lastFocusedElement = document.activeElement;
     siteModal.classList.remove('hidden');
     siteModal.classList.add('flex');
     slugManuallyEdited = false;
@@ -359,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (siteSlugInput && siteNameInput) {
       siteSlugInput.value = workspaceSlugify(siteNameInput.value);
     }
-    document.addEventListener('keydown', trapFocus);
+    activateModal(siteModal, closeSiteModal);
     window.setTimeout(() => {
       siteNameInput?.focus();
     }, 0);
@@ -371,12 +403,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     siteModal.classList.add('hidden');
     siteModal.classList.remove('flex');
-    document.removeEventListener('keydown', trapFocus);
     slugManuallyEdited = false;
     siteForm?.reset();
     siteSlugError && (siteSlugError.textContent = '');
     siteModalError && (siteModalError.textContent = '');
-    lastFocusedElement?.focus();
+    deactivateModal(siteModal);
   };
 
   siteCreateButtons.forEach((button) => {
@@ -561,6 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     workspaceBackModal.classList.remove('hidden');
     workspaceBackModal.classList.add('flex');
+    activateModal(workspaceBackModal, closeWorkspaceBackModal);
   }
 
   function closeWorkspaceBackModal() {
@@ -569,6 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     workspaceBackModal.classList.add('hidden');
     workspaceBackModal.classList.remove('flex');
+    deactivateModal(workspaceBackModal);
   }
 
   workspaceBackButtons.forEach((button) => {
@@ -578,6 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', closeWorkspaceBackModal);
   });
   workspaceBackConfirm?.addEventListener('click', () => {
+    closeWorkspaceBackModal();
     window.location.href = '/admin/sites';
   });
 
@@ -625,6 +659,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const seoIndexedCheckbox = document.querySelector('[data-seo-indexed]');
     const seoFeedback = document.querySelector('[data-seo-feedback]');
     const seoSaveButton = document.querySelector('[data-seo-save]');
+    const pageAccessibilityToggleButton = document.querySelector(
+      '[data-page-accessibility-toggle]',
+    );
+    const pageAccessibilityPanel = document.querySelector('[data-page-accessibility-panel]');
+    const pageAccessibilityCloseButton = document.querySelector(
+      '[data-page-accessibility-close]',
+    );
+    const pageAccessibilityForm = document.querySelector('[data-page-accessibility-form]');
+    const pageAccessibilityNavCheckbox = document.querySelector(
+      '[data-page-accessibility-nav]',
+    );
+    const pageAccessibilityMainInput = document.querySelector(
+      '[data-page-accessibility-main]',
+    );
+    const pageAccessibilityFeedback = document.querySelector(
+      '[data-page-accessibility-feedback]',
+    );
+    const pageAccessibilitySaveButton = document.querySelector(
+      '[data-page-accessibility-save]',
+    );
     // Page properties panel elements
     const pagePropsToggleButton = document.querySelector('[data-page-props-toggle]');
     const pagePropsPanel = document.querySelector('[data-page-props-panel]');
@@ -1185,10 +1239,13 @@ document.addEventListener('DOMContentLoaded', () => {
       
       return {
         id: page.id,
+        name: page.name,
         title: page.title,
         slug: page.slug,
+        description: page.description || '',
         badges: [...(page.badges || [])],
         seo: page.seo || {},
+        accessibility: page.accessibility || {},
         blocks: (page.blocks || []).map(serializeBlock),
       };
     };
@@ -1276,11 +1333,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const previewSiteSlug = workspaceContext?.slugValue || storedSite.slug || '';
+      const serializedPages = pages.map((entry) => ({
+        id: entry.id,
+        slug: entry.slug,
+        title: entry.title,
+        name: entry.name,
+        accessibility: entry.accessibility,
+      }));
       const payload = {
         page: serializePageForPreview(page),
         site: {
           title: storedSite.name || 'Site',
           slug: previewSiteSlug,
+          pages: serializedPages,
         },
       };
       previewReady = false;
@@ -1343,6 +1408,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const values = collectFormValues(config);
+      if (config.section === 'image') {
+        const altValue = (values.alt || '').trim();
+        values.alt = altValue;
+        if (!altValue) {
+          showToast('Ajoute un texte alternatif pour cette image.', 'error');
+          blockForm?.querySelector('[name="image-alt"]')?.focus();
+          return;
+        }
+      }
       if (config.section === 'collection') {
         if (!values.collectionId) {
           showToast('Sélectionnez une collection.');
@@ -1971,12 +2045,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (deletePageName) deletePageName.textContent = page.title || page.id;
       deletePageModal.classList.remove('hidden');
       deletePageModal.classList.add('flex');
+      activateModal(deletePageModal, closeDeletePageModal);
     };
     const closeDeletePageModal = () => {
       if (!deletePageModal) return;
       deletePageModal.classList.add('hidden');
       deletePageModal.classList.remove('flex');
       pageToDelete = null;
+      deactivateModal(deletePageModal);
     };
     const executeDeletePage = async () => {
       if (!pagesApiBase || !pageToDelete) return;
@@ -2048,6 +2124,10 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           // Use page.name (short name) if available, fallback to title
           const displayName = page.name || page.title;
+          const isHiddenFromNav = page.accessibility?.showInMainNav === false;
+          const navBadge = isHiddenFromNav
+            ? '<span class="text-[10px] font-semibold text-amber-600">Masqué du menu</span>'
+            : '';
           button.innerHTML = `
             <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -2058,6 +2138,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex flex-col">
               <span class="text-sm font-semibold">${displayName}</span>
               <span class="text-xs text-slate-500">${page.slug}</span>
+              ${navBadge}
             </div>
           `;
           button.addEventListener('click', () => {
@@ -2325,6 +2406,7 @@ document.addEventListener('DOMContentLoaded', () => {
       blockDeleteModal.classList.add('hidden');
       blockDeleteModal.classList.remove('flex');
       pendingDeleteBlockId = null;
+      deactivateModal(blockDeleteModal);
     }
     function openBlockDeleteModal(blockId) {
       if (!blockDeleteModal) {
@@ -2334,6 +2416,7 @@ document.addEventListener('DOMContentLoaded', () => {
       pendingDeleteBlockId = blockId;
       blockDeleteModal.classList.remove('hidden');
       blockDeleteModal.classList.add('flex');
+      activateModal(blockDeleteModal, closeBlockDeleteModal);
     }
     const updateCurrentPageState = (nextPage) => {
       if (!nextPage) {
@@ -2357,6 +2440,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       renderPageLists(pages, activePageId);
       setActiveLabels(currentPage);
+      syncPageAccessibilityFields();
       renderPreviewMeta(currentPage);
       refreshPreview(currentPage);
       renderBlockList(currentPage);
@@ -2469,6 +2553,12 @@ document.addEventListener('DOMContentLoaded', () => {
       seo: {
         title: (page.seo?.title || '').trim(),
         description: (page.seo?.description || '').trim(),
+        indexed:
+          typeof page.seo?.indexed === 'boolean' ? page.seo.indexed : null,
+      },
+      accessibility: {
+        showInMainNav: page.accessibility?.showInMainNav !== false,
+        mainLabel: (page.accessibility?.mainLabel || '').trim(),
       },
     });
 
@@ -2703,6 +2793,7 @@ document.addEventListener('DOMContentLoaded', () => {
           p.classList.add('hidden');
         }
       });
+      activateModal(importModal, closeImportModal);
     };
     const closeImportModal = () => {
       if (!importModal) return;
@@ -2710,6 +2801,7 @@ document.addEventListener('DOMContentLoaded', () => {
       importModal.classList.remove('flex');
       importSelectedFiles = [];
       resetPasteState();
+      deactivateModal(importModal);
     };
     const updateImportFileList = () => {
       if (!importFileList || !importFileNames) return;
@@ -3242,6 +3334,89 @@ document.addEventListener('DOMContentLoaded', () => {
         setSeoFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
       } finally {
         seoSaveButton && (seoSaveButton.disabled = false);
+      }
+    });
+
+    const syncPageAccessibilityFields = () => {
+      if (!pageAccessibilityNavCheckbox && !pageAccessibilityMainInput) {
+        return;
+      }
+      if (!currentPage) {
+        pageAccessibilityNavCheckbox && (pageAccessibilityNavCheckbox.checked = true);
+        pageAccessibilityMainInput && (pageAccessibilityMainInput.value = '');
+        return;
+      }
+      if (pageAccessibilityNavCheckbox) {
+        pageAccessibilityNavCheckbox.checked =
+          currentPage.accessibility?.showInMainNav !== false;
+      }
+      if (pageAccessibilityMainInput) {
+        pageAccessibilityMainInput.value = currentPage.accessibility?.mainLabel || '';
+      }
+    };
+
+    const togglePageAccessibilityPanel = (show) => {
+      if (!pageAccessibilityPanel) return;
+      if (show) {
+        syncPageAccessibilityFields();
+        pageAccessibilityPanel.classList.remove('hidden');
+      } else {
+        pageAccessibilityPanel.classList.add('hidden');
+      }
+    };
+
+    const setPageAccessibilityFeedback = (message, tone = 'muted') => {
+      if (!pageAccessibilityFeedback) return;
+      const color =
+        tone === 'success'
+          ? 'text-emerald-600'
+          : tone === 'error'
+            ? 'text-rose-600'
+            : 'text-slate-500';
+      pageAccessibilityFeedback.textContent = message || '';
+      pageAccessibilityFeedback.className = `text-sm ${color}`;
+    };
+
+    pageAccessibilityToggleButton?.addEventListener('click', () => {
+      const isVisible =
+        pageAccessibilityPanel && !pageAccessibilityPanel.classList.contains('hidden');
+      togglePageAccessibilityPanel(!isVisible);
+    });
+    pageAccessibilityCloseButton?.addEventListener('click', () =>
+      togglePageAccessibilityPanel(false),
+    );
+
+    pageAccessibilityForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!currentPage) {
+        setPageAccessibilityFeedback('Aucune page active.', 'error');
+        return;
+      }
+      pageAccessibilitySaveButton && (pageAccessibilitySaveButton.disabled = true);
+      setPageAccessibilityFeedback('');
+      try {
+        const accessibilityData = {
+          showInMainNav: pageAccessibilityNavCheckbox?.checked ?? true,
+          mainLabel: (pageAccessibilityMainInput?.value || '').trim(),
+        };
+        const updatedPage = {
+          ...currentPage,
+          accessibility: accessibilityData,
+        };
+        const saved = await savePageToServer(updatedPage);
+        if (saved) {
+          currentPage = saved;
+          syncPageAccessibilityFields();
+          setPageAccessibilityFeedback('Accessibilité enregistrée.', 'success');
+          showToast('Accessibilité mise à jour');
+          renderPageLists(pages, activePageId);
+          refreshPreview(currentPage);
+        }
+      } catch (err) {
+        console.error('[accessibility] save failed', err);
+        setPageAccessibilityFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
+      } finally {
+        pageAccessibilitySaveButton && (pageAccessibilitySaveButton.disabled = false);
       }
     });
 
@@ -5436,6 +5611,88 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       loadAnalyticsConfig();
+    }
+
+    const accessibilityForm = document.querySelector('[data-accessibility-form]');
+    if (accessibilityForm) {
+      const animationsToggle = accessibilityForm.querySelector('[data-accessibility-animations]');
+      const contrastToggle = accessibilityForm.querySelector('[data-accessibility-contrast]');
+      const accessibilityFeedback = accessibilityForm.querySelector('[data-accessibility-feedback]');
+      const accessibilitySaveButton = accessibilityForm.querySelector('[data-accessibility-save]');
+
+      const safeSiteSlug = stripLeadingSlash(
+        workspaceContext?.slugValue || storedSite.slug || '',
+      );
+      const siteConfigApi = safeSiteSlug
+        ? `/api/sites/${encodeURIComponent(safeSiteSlug)}/config/site`
+        : null;
+
+      const setAccessibilityFeedback = (message, tone = 'muted') => {
+        if (!accessibilityFeedback) return;
+        const color =
+          tone === 'success'
+            ? 'text-emerald-600'
+            : tone === 'error'
+              ? 'text-rose-600'
+              : 'text-slate-500';
+        accessibilityFeedback.textContent = message || '';
+        accessibilityFeedback.className = `text-sm ${color}`;
+      };
+
+      const loadAccessibilityConfig = async () => {
+        if (!siteConfigApi) return;
+        try {
+          const response = await fetch(siteConfigApi, { headers: { Accept: 'application/json' } });
+          if (!response.ok) return;
+          const payload = await response.json().catch(() => ({}));
+          if (animationsToggle) {
+            animationsToggle.checked = payload.accessibility?.animationsEnabled !== false;
+          }
+          if (contrastToggle) {
+            contrastToggle.checked = payload.accessibility?.highContrast === true;
+          }
+        } catch (err) {
+          console.error('[settings] load accessibility config failed', err);
+        }
+      };
+
+      accessibilityForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!siteConfigApi) {
+          setAccessibilityFeedback('Aucun site actif.', 'error');
+          return;
+        }
+        accessibilitySaveButton && (accessibilitySaveButton.disabled = true);
+        setAccessibilityFeedback('');
+        try {
+          const currentRes = await fetch(siteConfigApi, { headers: { Accept: 'application/json' } });
+          const currentConfig = currentRes.ok ? await currentRes.json().catch(() => ({})) : {};
+          const payload = {
+            ...currentConfig,
+            accessibility: {
+              animationsEnabled: animationsToggle?.checked ?? true,
+              highContrast: contrastToggle?.checked ?? false,
+            },
+          };
+          const response = await fetch(siteConfigApi, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.success === false) {
+            throw new Error(result.message || 'Sauvegarde impossible.');
+          }
+          setAccessibilityFeedback(result.message || 'Préférences mises à jour.', 'success');
+        } catch (err) {
+          console.error('[settings] save accessibility config failed', err);
+          setAccessibilityFeedback(err.message || 'Erreur lors de la sauvegarde.', 'error');
+        } finally {
+          accessibilitySaveButton && (accessibilitySaveButton.disabled = false);
+        }
+      });
+
+      loadAccessibilityConfig();
     }
 
     // AI Config form (US - AI Assistant)

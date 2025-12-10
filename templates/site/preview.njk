@@ -39,9 +39,48 @@
     {% if site.analytics and site.analytics.headCode %}
     {{ site.analytics.headCode | safe }}
     {% endif %}
+    {% set animationsAllowed = site.accessibility.animationsEnabled if site.accessibility and site.accessibility.animationsEnabled is defined else true %}
+    {% set allPagesList = allPages if allPages else (site.pages if site.pages else []) %}
+    {% set fallbackCount = 0 %}
+    {% for entry in allPagesList %}
+      {% set includeInNav = true %}
+      {% if entry.accessibility and entry.accessibility.showInMainNav is defined %}
+        {% set includeInNav = entry.accessibility.showInMainNav %}
+      {% endif %}
+      {% if includeInNav %}
+        {% set fallbackCount = fallbackCount + 1 %}
+      {% endif %}
+    {% endfor %}
+    {% set currentSlug = page.slug or '/' %}
+    {% if not currentSlug %}
+      {% set currentSlug = '/' %}
+    {% endif %}
+    {% if currentSlug and currentSlug[0] != '/' and '://' not in currentSlug and currentSlug[0] != '#' %}
+      {% set currentSlug = '/' ~ currentSlug %}
+    {% endif %}
   </head>
-  <body class="font-['Inter'] text-slate-900">
+  <body class="font-['Inter'] text-slate-900" data-animations="{{ 'on' if animationsAllowed else 'off' }}">
+    <a href="#main-content" class="skip-link focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9C6BFF] focus-visible:ring-offset-2">Aller au contenu principal</a>
     {% set collectionMap = collections or {} %}
+    {% macro each_fallback_nav(pages, currentSlug) %}
+      {% for entry in pages %}
+        {% set includeInNav = true %}
+        {% if entry.accessibility and entry.accessibility.showInMainNav is defined %}
+          {% set includeInNav = entry.accessibility.showInMainNav %}
+        {% endif %}
+        {% if includeInNav %}
+          {% set navUrl = entry.slug or '/' %}
+          {% if not navUrl %}
+            {% set navUrl = '/' %}
+          {% endif %}
+          {% if navUrl and navUrl[0] != '/' and '://' not in navUrl and navUrl[0] != '#' %}
+            {% set navUrl = '/' ~ navUrl %}
+          {% endif %}
+          {% set isCurrent = navUrl == currentSlug %}
+          {{ caller(entry, navUrl, isCurrent) }}
+        {% endif %}
+      {% endfor %}
+    {% endmacro %}
     
     {# ═══════════════════════════════════════════════════════════════════ #}
     {# HEADER DYNAMIQUE                                                     #}
@@ -50,10 +89,11 @@
       {% set headerBg = header.style.bg if header.style and header.style.bg else 'bg-white' %}
       {% set headerPosition = header.style.position if header.style and header.style.position else 'static' %}
       {% set positionClass = 'sticky top-0 z-50' if headerPosition == 'sticky' else ('fixed top-0 left-0 right-0 z-50' if headerPosition == 'fixed' else '') %}
+      {% set hasCustomNav = header.nav and header.nav | length > 0 %}
+      {% set hasFallbackNav = fallbackCount > 0 %}
       <header class="{{ headerBg }} {{ positionClass }} shadow-sm border-b border-slate-100">
         <div class="max-w-6xl mx-auto px-6 py-4">
-          <nav class="flex items-center justify-between gap-6">
-            {# Logo #}
+          <nav class="flex items-center justify-between gap-6" aria-label="Navigation principale">
             <a href="{{ header.logo.url or '/' }}" class="flex items-center gap-3 font-bold text-xl">
               {% if header.logo.src %}
                 <img src="{{ header.logo.src }}" alt="{{ header.logo.alt or site.title or 'Logo' }}" class="h-8 w-auto" />
@@ -64,19 +104,38 @@
                 <span>{{ site.title or 'Site' }}</span>
               {% endif %}
             </a>
-            {# Navigation Desktop #}
-            {% if header.nav and header.nav | length > 0 %}
+            {% if hasCustomNav %}
               <ul class="hidden md:flex items-center gap-6">
                 {% for item in header.nav %}
+                  {% set navUrl = (item.url or '#') | trim %}
+                  {% if not navUrl %}
+                    {% set navUrl = '#' %}
+                  {% endif %}
+                  {% if navUrl == '//' %}
+                    {% set navUrl = '/' %}
+                  {% endif %}
+                  {% if navUrl and navUrl[0] != '/' and '://' not in navUrl and navUrl[0] != '#' %}
+                    {% set navUrl = '/' ~ navUrl %}
+                  {% endif %}
+                  {% set isCurrent = navUrl == currentSlug %}
                   <li>
-                    <a href="{{ item.url or '#' }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                    <a href="{{ navUrl }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
                       {{ item.label or item.url }}
                     </a>
                   </li>
                 {% endfor %}
               </ul>
+            {% elseif hasFallbackNav %}
+              <ul class="hidden md:flex items-center gap-6">
+                {% call(item, navUrl, isCurrent) each_fallback_nav(allPagesList, currentSlug) %}
+                  <li>
+                    <a href="{{ navUrl }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
+                      {{ item.name or item.title or navUrl }}
+                    </a>
+                  </li>
+                {% endcall %}
+              </ul>
             {% endif %}
-            {# CTA Desktop #}
             {% if header.cta and header.cta.text %}
               {% set ctaStyle = header.cta.style or 'primary' %}
               {% if ctaStyle == 'primary' %}
@@ -90,8 +149,7 @@
                 {{ header.cta.text }}
               </a>
             {% endif %}
-            {# Menu Burger Mobile (natif avec details/summary) #}
-            {% if (header.nav and header.nav | length > 0) or (header.cta and header.cta.text) %}
+            {% if hasCustomNav or hasFallbackNav or (header.cta and header.cta.text) %}
               <details class="md:hidden relative">
                 <summary class="list-none cursor-pointer p-2 -m-2 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Menu">
                   <svg class="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,12 +157,29 @@
                   </svg>
                 </summary>
                 <div class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
-                  {% if header.nav and header.nav | length > 0 %}
+                  {% if hasCustomNav %}
                     {% for item in header.nav %}
-                      <a href="{{ item.url or '#' }}" class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+                      {% set navUrl = (item.url or '#') | trim %}
+                      {% if not navUrl %}
+                        {% set navUrl = '#' %}
+                      {% endif %}
+                      {% if navUrl == '//' %}
+                        {% set navUrl = '/' %}
+                      {% endif %}
+                      {% if navUrl and navUrl[0] != '/' and '://' not in navUrl and navUrl[0] != '#' %}
+                        {% set navUrl = '/' ~ navUrl %}
+                      {% endif %}
+                      {% set isCurrent = navUrl == currentSlug %}
+                      <a href="{{ navUrl }}" class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
                         {{ item.label or item.url }}
                       </a>
                     {% endfor %}
+                  {% elseif hasFallbackNav %}
+                    {% call(item, navUrl, isCurrent) each_fallback_nav(allPagesList, currentSlug) %}
+                      <a href="{{ navUrl }}" class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
+                        {{ item.name or item.title or navUrl }}
+                      </a>
+                    {% endcall %}
                   {% endif %}
                   {% if header.cta and header.cta.text %}
                     <div class="border-t border-slate-100 mt-2 pt-2 px-4">
@@ -127,7 +202,6 @@
           </nav>
         </div>
       </header>
-      {# Spacer for fixed header #}
       {% if headerPosition == 'fixed' %}
         <div class="h-16"></div>
       {% endif %}
@@ -139,10 +213,24 @@
           <h1 class="text-3xl font-bold">{{ site.title or 'Site' }}</h1>
           <p class="text-sm text-slate-500">{{ page.slug or '/' }}</p>
         </div>
+          {% if fallbackCount > 0 %}
+            <nav class="mt-4" aria-label="Navigation principale">
+              <ul class="flex flex-wrap gap-4 text-sm font-semibold text-slate-600">
+                {% call(item, navUrl, isCurrent) each_fallback_nav(allPagesList, currentSlug) %}
+                  <li>
+                    <a href="{{ navUrl }}" class="hover:text-slate-900 {% if isCurrent %}text-slate-900{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
+                      {{ item.name or item.title or navUrl }}
+                    </a>
+                  </li>
+                {% endcall %}
+              </ul>
+            </nav>
+          {% endif %}
       </header>
     {% endif %}
 
-    <main class="max-w-5xl mx-auto px-6 py-10 space-y-6">
+    {% set mainLabel = page.accessibility.mainLabel if page.accessibility and page.accessibility.mainLabel %}
+    <main id="main-content" role="main" {% if mainLabel %}aria-label="{{ mainLabel }}"{% endif %} class="max-w-5xl mx-auto px-6 py-10 space-y-6">
       {% macro animationAttrs(settings) %}
         {% if settings and settings.animation %}
           data-anim="{{ settings.animation }}"
@@ -310,6 +398,11 @@
           {% set img_max_width = settings.maxWidth if settings.maxWidth else 'max-w-full' %}
           {% set img_align = settings.align if settings.align else 'mx-auto' %}
           {% set img_rounded = settings.rounded if settings.rounded else 'rounded-2xl' %}
+          {% if settings.alt is defined %}
+            {% set altText = settings.alt %}
+          {% else %}
+            {% set altText = block.label or 'Image' %}
+          {% endif %}
           <figure
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
@@ -318,7 +411,7 @@
             {% if src %}
               <img
                 src="{{ src }}"
-                alt="{{ settings.alt or block.label or 'Image' }}"
+                alt="{{ altText }}"
                 class="w-full {{ img_height }} {{ img_object_fit }} {{ img_rounded }}"
               />
             {% else %}

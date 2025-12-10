@@ -126,11 +126,18 @@ async function ensurePagesDir(siteSlug) {
 
 function normalizePageRecord(page = {}) {
   const seo = page.seo || {};
+  const accessibility = page.accessibility || {};
   const title = (typeof page.title === 'string' && page.title.trim()) || 'Page';
+  let indexedFlag = null;
+  if (seo.indexed === true) {
+    indexedFlag = true;
+  } else if (seo.indexed === false) {
+    indexedFlag = false;
+  }
   return {
     id: page.id,
     name: (typeof page.name === 'string' && page.name.trim()) || title,
-    title: title,
+    title,
     slug: page.slug || '/',
     description: page.description || '',
     badges: Array.isArray(page.badges) ? page.badges : [],
@@ -138,6 +145,12 @@ function normalizePageRecord(page = {}) {
     seo: {
       title: typeof seo.title === 'string' ? seo.title.trim() : '',
       description: typeof seo.description === 'string' ? seo.description.trim() : '',
+      indexed: indexedFlag,
+    },
+    accessibility: {
+      showInMainNav: accessibility.showInMainNav !== false,
+      mainLabel:
+        typeof accessibility.mainLabel === 'string' ? accessibility.mainLabel.trim() : '',
     },
   };
 }
@@ -466,6 +479,83 @@ const getSiteConfigPath = (siteSlug) =>
 const getThemeConfigPath = (siteSlug) =>
   path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', THEME_CONFIG_FILENAME);
 
+function normalizeMediaReferences(value, safeSlug) {
+  if (!safeSlug) {
+    return value;
+  }
+  const mediaPrefix = `/sites/${safeSlug}/media`;
+  const rewriteString = (str) => {
+    if (typeof str !== 'string') {
+      return str;
+    }
+    if (str.includes(mediaPrefix)) {
+      return str.replace(mediaPrefix, '/media');
+    }
+    return str;
+  };
+  if (typeof value === 'string') {
+    return rewriteString(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeMediaReferences(entry, safeSlug));
+  }
+  if (value && typeof value === 'object') {
+    const result = {};
+    for (const [key, entry] of Object.entries(value)) {
+      result[key] = normalizeMediaReferences(entry, safeSlug);
+    }
+    return result;
+  }
+  return value;
+}
+
+async function readLayoutFile(siteSlug, type) {
+  const layoutPath = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), `${type}.json`);
+  try {
+    const content = await fs.readFile(layoutPath, 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
+async function writeLayoutFile(siteSlug, type, data) {
+  const layoutPath = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), `${type}.json`);
+  await fs.writeFile(layoutPath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+async function readSiteConfig(siteSlug) {
+  const filePath = getSiteConfigPath(siteSlug);
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(raw || '{}');
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return {};
+    }
+    throw err;
+  }
+}
+
+function normalizeSiteConfig(config = {}) {
+  return {
+    name: config.name || '',
+    language: config.language || 'fr',
+    tagline: config.tagline || '',
+    seo: {
+      indexAllPagesByDefault: config.seo?.indexAllPagesByDefault !== false,
+    },
+    analytics: {
+      headCode: config.analytics?.headCode || '',
+      bodyEndCode: config.analytics?.bodyEndCode || '',
+    },
+    accessibility: {
+      animationsEnabled: config.accessibility?.animationsEnabled !== false,
+      highContrast: config.accessibility?.highContrast === true,
+    },
+  };
+}
+
 async function getSiteOutputDir(siteSlug) {
   const sites = await readSites();
   const record = sites.find((s) => s.slug === normalizeSlug(siteSlug));
@@ -523,7 +613,8 @@ async function collectFiles(localRoot) {
 }
 
 async function buildSitePages(siteSlug) {
-  const siteRoot = path.join(paths.public, 'sites', sanitizeSiteSlug(siteSlug));
+  const safeSlug = sanitizeSiteSlug(siteSlug);
+  const siteRoot = path.join(paths.public, 'sites', safeSlug);
   await ensureDir(siteRoot);
   const pages = await readPagesForSite(siteSlug);
   const collectionsIndex = await readCollectionsIndex(siteSlug);
@@ -534,11 +625,8 @@ async function buildSitePages(siteSlug) {
   }
   const sites = await readSites();
   const siteRecord = sites.find((s) => s.slug === normalizeSlug(siteSlug)) || {};
-  const siteConfigPath = getSiteConfigPath(siteSlug);
-  const siteConfig = await fs
-    .readFile(siteConfigPath, 'utf8')
-    .then((raw) => JSON.parse(raw || '{}'))
-    .catch(() => ({}));
+  const siteConfig = await readSiteConfig(siteSlug);
+  const normalizedSiteConfig = normalizeSiteConfig(siteConfig);
   const themeConfigPath = getThemeConfigPath(siteSlug);
   const themeConfig = await fs
     .readFile(themeConfigPath, 'utf8')
@@ -551,10 +639,13 @@ async function buildSitePages(siteSlug) {
     return color || fallback;
   };
   const siteMeta = {
-    title: siteConfig.name || siteRecord.name || 'Site',
+    title: normalizedSiteConfig.name || siteRecord.name || 'Site',
     slug: siteRecord.slug || siteSlug,
-    language: siteConfig.language || 'fr',
-    tagline: siteConfig.tagline || '',
+    language: normalizedSiteConfig.language || 'fr',
+    tagline: normalizedSiteConfig.tagline || '',
+    seo: normalizedSiteConfig.seo,
+    analytics: normalizedSiteConfig.analytics,
+    accessibility: normalizedSiteConfig.accessibility,
   };
   const assetBase = resolveAssetBase(siteMeta, { isPreview: false });
 
@@ -588,25 +679,41 @@ async function buildSitePages(siteSlug) {
   await ensureDir(siteAssets);
   await fs.writeFile(path.join(siteAssets, 'theme.css'), themeCss, 'utf8');
 
+  const header = await readLayoutFile(siteSlug, 'header');
+  const footer = await readLayoutFile(siteSlug, 'footer');
+  const headerForRender = normalizeMediaReferences(header, safeSlug);
+  const footerForRender = normalizeMediaReferences(footer, safeSlug);
+  const collectionsForRender = {};
+  for (const [key, value] of Object.entries(collectionMap)) {
+    collectionsForRender[key] = normalizeMediaReferences(value, safeSlug);
+  }
+  const pagesForRender = pages.map((page) => normalizeMediaReferences(page, safeSlug));
+
+  const pageOutputs = [];
+
   await Promise.all(
-    pages.map(async (page) => {
+    pagesForRender.map(async (page) => {
       const html = env.render('preview.njk', {
         page,
-        site: { ...siteMeta, seo: siteConfig.seo, analytics: siteConfig.analytics },
-        collections: collectionMap,
+        site: siteMeta,
+        collections: collectionsForRender,
         theme: themeConfig,
         isPreview: false,
+        header: headerForRender,
+        footer: footerForRender,
+        allPages: pagesForRender,
         assetBase,
       });
       const slugPath = (page.slug || '').replace(/^\//, '') || 'index';
       const prettyPath = path.join(siteRoot, `${slugPath}.html`);
       await ensureDir(path.dirname(prettyPath));
       await fs.writeFile(prettyPath, html, 'utf8');
+      pageOutputs.push({ filePath: prettyPath, html, page });
     }),
   );
 
   // US9.B1 - Generate robots.txt with Disallow for non-indexed pages
-  const globalIndexDefault = siteConfig.seo?.indexAllPagesByDefault !== false;
+  const globalIndexDefault = normalizedSiteConfig.seo.indexAllPagesByDefault !== false;
   const nonIndexedPages = pages.filter((page) => {
     const pageIndexed = page.seo?.indexed;
     // Use page setting if defined, otherwise use global default
@@ -630,6 +737,10 @@ async function buildSitePages(siteSlug) {
   await fs.writeFile(path.join(siteRoot, 'robots.txt'), robotsLines.join('\n'), 'utf8');
   console.log(`[build] robots.txt generated for ${siteSlug}`);
 
+  await runAccessibilityAudit(siteSlug, siteRoot, pageOutputs).catch((err) => {
+    console.warn(`[a11y] Audit échoué pour ${siteSlug}: ${err.message}`);
+  });
+
   // Rebuild CSS Tailwind pour le site (pour prendre en compte les nouvelles classes)
   try {
     await buildCss('site');
@@ -637,6 +748,116 @@ async function buildSitePages(siteSlug) {
   } catch (cssErr) {
     console.warn(`[build] CSS rebuild failed for ${siteSlug}:`, cssErr.message);
   }
+}
+
+function extractAttribute(htmlSnippet, attribute) {
+  const regex = new RegExp(`${attribute}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i');
+  const match = htmlSnippet.match(regex);
+  if (!match) {
+    return null;
+  }
+  return (match[1] ?? match[2] ?? match[3] ?? '').trim();
+}
+
+function stripHtml(text = '') {
+  return text.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '');
+}
+
+async function runAccessibilityAudit(siteSlug, siteRoot, pageOutputs) {
+  if (!Array.isArray(pageOutputs) || pageOutputs.length === 0) {
+    return;
+  }
+  const warnings = [];
+  pageOutputs.forEach(({ filePath, html }) => {
+    if (!html) {
+      return;
+    }
+    const relativePath = path.relative(siteRoot, filePath);
+    const h1Count = (html.match(/<h1\b[^>]*>/gi) || []).length;
+    if (h1Count > 1) {
+      warnings.push({
+        type: 'multiple-h1',
+        file: relativePath,
+        message: `Plus de 1 balise <h1> (${h1Count})`,
+      });
+    }
+
+    const imgTags = html.match(/<img\b[^>]*>/gi) || [];
+    imgTags.forEach((tag) => {
+      const role = (extractAttribute(tag, 'role') || '').toLowerCase();
+      const ariaHidden = (extractAttribute(tag, 'aria-hidden') || '').toLowerCase() === 'true';
+      if (ariaHidden || role === 'presentation') {
+        return;
+      }
+      const alt = extractAttribute(tag, 'alt');
+      if (alt === null) {
+        warnings.push({
+          type: 'image-alt-missing',
+          file: relativePath,
+          message: 'Image sans attribut alt',
+        });
+        return;
+      }
+      if (alt.trim() === '') {
+        warnings.push({
+          type: 'image-alt-empty',
+          file: relativePath,
+          message: 'Image avec alt vide (non décorative)',
+        });
+      }
+    });
+
+    const linkTags = html.match(/<a\b[\s\S]*?<\/a>/gi) || [];
+    linkTags.forEach((tag) => {
+      const ariaHidden = (extractAttribute(tag, 'aria-hidden') || '').toLowerCase() === 'true';
+      if (ariaHidden) {
+        return;
+      }
+      const ariaLabel = extractAttribute(tag, 'aria-label') || '';
+      const linkText = stripHtml(tag.replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+      if (!ariaLabel && !linkText) {
+        warnings.push({
+          type: 'link-label-missing',
+          file: relativePath,
+          message: 'Lien sans texte ni aria-label',
+        });
+      }
+    });
+
+    const buttonTags = html.match(/<button\b[\s\S]*?<\/button>/gi) || [];
+    buttonTags.forEach((tag) => {
+      const ariaHidden = (extractAttribute(tag, 'aria-hidden') || '').toLowerCase() === 'true';
+      if (ariaHidden) {
+        return;
+      }
+      const ariaLabel = extractAttribute(tag, 'aria-label') || '';
+      const buttonText = stripHtml(tag.replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+      if (!ariaLabel && !buttonText) {
+        warnings.push({
+          type: 'button-label-missing',
+          file: relativePath,
+          message: 'Bouton sans texte ni aria-label',
+        });
+      }
+    });
+  });
+
+  const reportLines =
+    warnings.length > 0
+      ? warnings.map(
+          (entry) => `[${siteSlug}] ${entry.file} · ${entry.type} · ${entry.message}`,
+        )
+      : [`[${siteSlug}] Aucun avertissement d'accessibilité détecté`];
+
+  const reportPath = path.join(siteRoot, 'a11y-report.txt');
+  await fs.writeFile(reportPath, `${reportLines.join('\n')}\n`, 'utf8');
+  reportLines.forEach((line) => {
+    if (warnings.length === 0) {
+      console.log(`[a11y] ${line}`);
+    } else {
+      console.warn(`[a11y] ${line}`);
+    }
+  });
 }
 
 function validateDeployInput(payload) {
@@ -1268,6 +1489,15 @@ async function start() {
         description: '',
         badges: [],
         blocks: [],
+        seo: {
+          title: '',
+          description: '',
+          indexed: null,
+        },
+        accessibility: {
+          showInMainNav: true,
+          mainLabel: '',
+        },
       };
       const saved = await writePageForSite(siteSlug, newPage);
       await buildSitePages(siteSlug).catch((err) =>
@@ -1299,6 +1529,7 @@ async function start() {
         return res.status(400).json({ message: 'Ce slug est déjà utilisé.' });
       }
       const seoPayload = payload.seo || {};
+      const accessibilityPayload = payload.accessibility || {};
       const updatedPage = {
         id: safePageId,
         name: typeof payload.name === 'string' ? payload.name.trim() : '',
@@ -1310,6 +1541,15 @@ async function start() {
         seo: {
           title: typeof seoPayload.title === 'string' ? seoPayload.title.trim() : '',
           description: typeof seoPayload.description === 'string' ? seoPayload.description.trim() : '',
+          indexed:
+            typeof seoPayload.indexed === 'boolean' ? seoPayload.indexed : null,
+        },
+        accessibility: {
+          showInMainNav: accessibilityPayload.showInMainNav !== false,
+          mainLabel:
+            typeof accessibilityPayload.mainLabel === 'string'
+              ? accessibilityPayload.mainLabel.trim()
+              : '',
         },
       };
       const saved = await writePageForSite(siteSlug, updatedPage);
@@ -1722,24 +1962,6 @@ async function start() {
     }
   });
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // LAYOUT (HEADER & FOOTER)
-  // ═══════════════════════════════════════════════════════════════════════
-  const readLayoutFile = async (siteSlug, type) => {
-    const layoutPath = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), `${type}.json`);
-    try {
-      const content = await fs.readFile(layoutPath, 'utf-8');
-      return JSON.parse(content);
-    } catch {
-      return null;
-    }
-  };
-
-  const writeLayoutFile = async (siteSlug, type, data) => {
-    const layoutPath = path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), `${type}.json`);
-    await fs.writeFile(layoutPath, JSON.stringify(data, null, 2), 'utf-8');
-  };
-
   // GET /api/sites/:slug/layout - Récupérer header et footer
   app.get('/api/sites/:slug/layout', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
@@ -2099,15 +2321,9 @@ async function start() {
     if (!siteSlug) {
       return res.status(400).json({ message: 'Site invalide.' });
     }
-    const filePath = getSiteConfigPath(siteSlug);
     try {
-      const raw = await fs.readFile(filePath, 'utf8').catch(() => '{}');
-      const config = JSON.parse(raw || '{}');
-      res.json({
-        name: config.name || '',
-        language: config.language || 'fr',
-        tagline: config.tagline || '',
-      });
+      const config = await readSiteConfig(siteSlug);
+      res.json(normalizeSiteConfig(config));
     } catch (err) {
       console.error('[site config] load failed', err);
       res.status(500).json({ message: 'Impossible de charger la configuration du site.' });
@@ -2128,17 +2344,43 @@ async function start() {
     }
     const filePath = getSiteConfigPath(siteSlug);
     try {
-      await ensureDir(path.dirname(filePath));
-      const config = {
+      const currentConfig = await readSiteConfig(siteSlug);
+      const nextConfig = {
+        ...currentConfig,
         name,
-        language: language || 'fr',
+        language: language || currentConfig.language || 'fr',
         tagline,
+        seo: {
+          ...currentConfig.seo,
+          indexAllPagesByDefault:
+            payload.seo?.indexAllPagesByDefault !== undefined
+              ? payload.seo.indexAllPagesByDefault !== false
+              : currentConfig.seo?.indexAllPagesByDefault !== false,
+        },
+        analytics: {
+          ...currentConfig.analytics,
+          headCode: payload.analytics?.headCode ?? currentConfig.analytics?.headCode ?? '',
+          bodyEndCode:
+            payload.analytics?.bodyEndCode ?? currentConfig.analytics?.bodyEndCode ?? '',
+        },
+        accessibility: {
+          ...currentConfig.accessibility,
+          animationsEnabled:
+            payload.accessibility?.animationsEnabled !== undefined
+              ? payload.accessibility.animationsEnabled !== false
+              : currentConfig.accessibility?.animationsEnabled !== false,
+          highContrast:
+            payload.accessibility?.highContrast !== undefined
+              ? payload.accessibility.highContrast === true
+              : currentConfig.accessibility?.highContrast === true,
+        },
       };
-      await fs.writeFile(filePath, JSON.stringify(config, null, 2), 'utf8');
+      await ensureDir(path.dirname(filePath));
+      await fs.writeFile(filePath, JSON.stringify(nextConfig, null, 2), 'utf8');
       await buildSitePages(siteSlug).catch((err) =>
         console.warn('[build] site config rebuild failed', err.message),
       );
-      res.json({ success: true, ...config });
+      res.json({ success: true, ...normalizeSiteConfig(nextConfig) });
     } catch (err) {
       console.error('[site config] save failed', err);
       res.status(500).json({ message: 'Impossible de sauvegarder la configuration du site.' });
@@ -2304,13 +2546,28 @@ async function start() {
       } catch (layoutErr) {
         console.warn('[preview] Layout load warning:', layoutErr.message);
       }
-      const assetBase = resolveAssetBase(site || {}, { isPreview: true });
+      const rawSiteConfig = siteSlug ? await readSiteConfig(siteSlug) : {};
+      const normalizedSiteConfig = normalizeSiteConfig(rawSiteConfig);
+      const storedPages = siteSlug ? await readPagesForSite(siteSlug) : [];
+      const customPages = Array.isArray(site?.pages) ? site.pages : [];
+      const allPages = customPages.length > 0 ? customPages : storedPages;
+      const previewSite = {
+        title: site?.title || normalizedSiteConfig.name || 'Site',
+        slug: siteSlug,
+        language: normalizedSiteConfig.language,
+        tagline: normalizedSiteConfig.tagline,
+        seo: normalizedSiteConfig.seo,
+        analytics: normalizedSiteConfig.analytics,
+        accessibility: normalizedSiteConfig.accessibility,
+      };
+      const assetBase = resolveAssetBase(previewSite, { isPreview: true });
       const html = previewEnv.render('preview.njk', {
         page,
-        site: site || {},
+        site: previewSite,
         collections: collectionsData,
         header,
         footer,
+        allPages,
         isPreview: true,
         assetBase,
       });

@@ -567,6 +567,13 @@
         >
           SEO
         </button>
+        <button
+          type="button"
+          data-page-accessibility-toggle
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 font-semibold text-slate-700 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+        >
+          Accessibilité
+        </button>
         <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-600">
           <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
           Preview en direct
@@ -726,6 +733,64 @@
             class="rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8B5CF6] disabled:opacity-50"
           >
             Enregistrer SEO
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Section Accessibilité dépliable -->
+    <div data-page-accessibility-panel class="hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-[11px] uppercase tracking-tight text-slate-500">Accessibilité</p>
+          <p class="text-sm font-semibold text-slate-900">Navigation & région principale</p>
+        </div>
+        <button
+          type="button"
+          data-page-accessibility-close
+          class="text-slate-400 hover:text-slate-600"
+          aria-label="Fermer le panneau accessibilité"
+        >
+          ✕
+        </button>
+      </div>
+      <form data-page-accessibility-form class="space-y-4">
+        <div class="rounded-2xl border border-slate-200 p-3">
+          <label class="flex items-start gap-3">
+            <input
+              type="checkbox"
+              data-page-accessibility-nav
+              class="mt-1 h-4 w-4 rounded border-slate-300 text-[#9C6BFF] focus:ring-[#9C6BFF]"
+              checked
+            />
+            <div class="space-y-1">
+              <span class="text-sm font-medium text-slate-700">Afficher cette page dans le menu principal</span>
+              <p class="text-xs text-slate-500">
+                Lorsque désactivé, la page est exclue du menu généré automatiquement (et signalée dans la liste des pages).
+              </p>
+            </div>
+          </label>
+        </div>
+        <label class="space-y-1 block">
+          <span class="text-xs font-medium text-slate-600">Label pour la zone principale (aria-label)</span>
+          <input
+            type="text"
+            data-page-accessibility-main
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:outline-none focus:ring-2 focus:ring-[#9C6BFF]/20"
+            placeholder="Ex: Contenu principal – Page Services"
+          />
+          <p class="text-xs text-slate-500">
+            Optionnel. Utile si plusieurs <code>&lt;main&gt;</code> apparaissent dans la même page ou pour donner un titre plus parlant aux lecteurs d’écran.
+          </p>
+        </label>
+        <div class="flex items-center justify-between gap-2">
+          <span data-page-accessibility-feedback class="text-sm text-slate-500"></span>
+          <button
+            type="submit"
+            data-page-accessibility-save
+            class="rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8B5CF6] disabled:opacity-50"
+          >
+            Enregistrer accessibilité
           </button>
         </div>
       </form>

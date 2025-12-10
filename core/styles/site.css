@@ -11,6 +11,29 @@ body {
   min-height: 100vh;
 }
 
+:focus-visible {
+  outline: 2px solid #9C6BFF;
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 1.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  box-shadow: 0 5px 15px rgba(15, 23, 42, 0.15);
+  transition: top 0.2s ease, opacity 0.2s ease;
+  z-index: 999;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
 :root {
   --clw-anim-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -59,6 +82,13 @@ body {
 
 [data-anim="blur-in"].is-visible {
   animation-name: clw-blur-in;
+}
+
+[data-animations="off"] [data-anim] {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
 }
 
 @keyframes clw-fade-in {

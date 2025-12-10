@@ -1,4 +1,4 @@
-# ClowerEdit – Manifeste du projet
+ # ClowerEdit – Manifeste du projet
 
 Ce document regroupe les User Stories (US) qui définissent le comportement attendu de ClowerEdit V1.
 
@@ -354,6 +354,45 @@ ClowerEdit = CMS statique éco-conçu pour créer des sites :
 - usage approprié de `<header>`, `<nav>`, `<main>`, `<aside>`, `<footer>`,
 - `aria-label` sur les asides (“Navigation des pages”, “Panneau de propriétés”…),
 - messages système dans des éléments `role="status"` ou `role="alert"`.
+
+### US10.3 – Accessibilité globale du site (landmarks + skip links)
+
+- Les pages publiques générées utilisent systématiquement les landmarks HTML5 (`<header>`, `<nav>`, `<main>`, `<footer>`, `<aside>`).
+- La navigation principale est labellisée (`aria-label` ou titre explicite) et expose `aria-current="page"` sur l’entrée active.
+- Un lien “Aller au contenu principal” est injecté en tout début de `<body>` et cible le `<main>`.
+- Les images décoratives sont marquées avec `alt=""` ou `role="presentation"`, les images informatives ont un `alt` obligatoire.
+- Les menus et liens critiques sont pensés clavier-first : tabulation logique et focus visible.
+
+### US10.4 – Accessibilité par page (SEO + navigation + blocs)
+
+- Dans Design > SEO d’une page, une section “Accessibilité” permet de régler :
+  - l’inclusion / exclusion de la page dans la navigation principale,
+  - un label optionnel pour la région `<main>` (appliqué en `aria-label` si saisi).
+- Chaque bloc image dispose côté admin d’un champ “Texte alternatif (alt)” obligatoire et d’un champ “Légende” optionnel.
+- L’UI signale clairement les images sans texte alternatif (badge d’avertissement ou similaire).
+
+### US10.5 – Stylage du focus et navigation clavier
+
+- Tous les éléments interactifs exposent un focus visible (outline, ring Tailwind) cohérent sur l’admin et le site public.
+- L’ordre de tabulation reste logique et les contrôles personnalisés (modales, overlays) piègent le focus.
+- Les modales se ferment avec `Escape` et restituent le focus à l’élément déclencheur.
+
+### US10.6 – Paramètres d’accessibilité globaux (site)
+
+- Paramètres > Accessibilité expose des préférences par site :
+  - “Activer les animations non essentielles” (booléen branché sur EPIC 12),
+  - “Contraste élevé” (champ prêt mais optionnel pour V1),
+  - rappel sur l’usage de `prefers-reduced-motion`.
+- Le JSON de config du site stocke ces préférences (`accessibility.animationsEnabled`, `accessibility.highContrast`…).
+
+### US10.7 – Audit d’accessibilité de base au build
+
+- Lors d’un `build`, un rapport texte liste les problèmes détectés (sans casser le build) :
+  - pages avec > 1 `<h1>`,
+  - images sans `alt` (hors décoratives déclarées),
+  - liens ou boutons sans libellé ni `aria-label`.
+- Le rapport mentionne le slug du site, le chemin du fichier et un court message.
+- Le rapport est affiché en console et écrit dans `build/a11y-report.txt` ou équivalent.
 
 ---
 

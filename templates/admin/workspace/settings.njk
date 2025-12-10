@@ -234,6 +234,14 @@
         </button>
         <button
           type="button"
+          data-settings-tab="accessibility"
+          class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          aria-selected="false"
+        >
+          Accessibilité
+        </button>
+        <button
+          type="button"
           data-settings-tab="ai"
           class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 inline-flex items-center gap-1.5"
           aria-selected="false"
@@ -560,6 +568,61 @@
               class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
             >
               Enregistrer les scripts
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Accessibility Panel -->
+      <section data-settings-panel="accessibility" class="space-y-6 hidden">
+        <div class="space-y-1">
+          <p class="text-xs uppercase tracking-tight text-slate-500">Accessibilité</p>
+          <h2 class="text-lg font-semibold text-slate-900">Préférences globales</h2>
+          <p class="text-sm text-slate-600">
+            Ces paramètres s’appliquent à l’ensemble du site public pour respecter les préférences utilisateurs.
+          </p>
+        </div>
+        <form data-accessibility-form class="space-y-5 max-w-xl">
+          <label class="flex items-start gap-3 rounded-2xl border border-slate-200 p-4">
+            <input
+              type="checkbox"
+              data-accessibility-animations
+              class="mt-1 h-4 w-4 rounded border-slate-300 text-[#9C6BFF] focus:ring-[#9C6BFF]"
+            />
+            <div class="space-y-1">
+              <span class="text-sm font-semibold text-slate-800">Activer les animations non essentielles</span>
+              <p class="text-xs text-slate-500">
+                Si décoché, tous les blocs avec <code>data-anim</code> seront affichés sans animation (utile pour les visiteurs sensibles au mouvement).
+              </p>
+            </div>
+          </label>
+          <label class="flex items-start gap-3 rounded-2xl border border-slate-200 p-4">
+            <input
+              type="checkbox"
+              data-accessibility-contrast
+              class="mt-1 h-4 w-4 rounded border-slate-300 text-[#9C6BFF] focus:ring-[#9C6BFF]"
+            />
+            <div class="space-y-1">
+              <span class="text-sm font-semibold text-slate-800">Mode contraste élevé (préparer le terrain)</span>
+              <p class="text-xs text-slate-500">
+                Champ prévu pour les futurs thèmes à contraste renforcé. Il n’a pas d’impact direct pour l’instant.
+              </p>
+            </div>
+          </label>
+          <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            <p class="font-semibold text-slate-700">À savoir</p>
+            <p class="text-xs text-slate-500">
+              Les animations sont aussi automatiquement désactivées pour les visiteurs ayant activé <code>prefers-reduced-motion</code> dans leur système. Ce panneau permet simplement de forcer/désactiver les animations pour tout le monde.
+            </p>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <p data-accessibility-feedback role="status" class="text-sm text-slate-500"></p>
+            <button
+              type="submit"
+              data-accessibility-save
+              class="inline-flex items-center gap-2 rounded-xl bg-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8654f5]"
+            >
+              Enregistrer l’accessibilité
             </button>
           </div>
         </form>
