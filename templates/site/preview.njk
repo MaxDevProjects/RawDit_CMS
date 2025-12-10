@@ -61,7 +61,7 @@
                 <span>{{ site.title or 'Site' }}</span>
               {% endif %}
             </a>
-            {# Navigation #}
+            {# Navigation Desktop #}
             {% if header.nav and header.nav | length > 0 %}
               <ul class="hidden md:flex items-center gap-6">
                 {% for item in header.nav %}
@@ -73,7 +73,7 @@
                 {% endfor %}
               </ul>
             {% endif %}
-            {# CTA #}
+            {# CTA Desktop #}
             {% if header.cta and header.cta.text %}
               {% set ctaStyle = header.cta.style or 'primary' %}
               {% if ctaStyle == 'primary' %}
@@ -83,9 +83,43 @@
               {% else %}
                 {% set ctaClass = 'text-violet-600 hover:text-violet-700' %}
               {% endif %}
-              <a href="{{ header.cta.url or '#' }}" class="hidden sm:inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaClass }}">
+              <a href="{{ header.cta.url or '#' }}" class="hidden md:inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaClass }}">
                 {{ header.cta.text }}
               </a>
+            {% endif %}
+            {# Menu Burger Mobile (natif avec details/summary) #}
+            {% if (header.nav and header.nav | length > 0) or (header.cta and header.cta.text) %}
+              <details class="md:hidden relative">
+                <summary class="list-none cursor-pointer p-2 -m-2 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Menu">
+                  <svg class="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                  </svg>
+                </summary>
+                <div class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                  {% if header.nav and header.nav | length > 0 %}
+                    {% for item in header.nav %}
+                      <a href="{{ item.url or '#' }}" class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+                        {{ item.label or item.url }}
+                      </a>
+                    {% endfor %}
+                  {% endif %}
+                  {% if header.cta and header.cta.text %}
+                    <div class="border-t border-slate-100 mt-2 pt-2 px-4">
+                      {% set ctaStyle = header.cta.style or 'primary' %}
+                      {% if ctaStyle == 'primary' %}
+                        {% set ctaMobileClass = 'bg-violet-600 text-white hover:bg-violet-700' %}
+                      {% elif ctaStyle == 'secondary' %}
+                        {% set ctaMobileClass = 'border border-violet-600 text-violet-600 hover:bg-violet-50' %}
+                      {% else %}
+                        {% set ctaMobileClass = 'text-violet-600 hover:text-violet-700' %}
+                      {% endif %}
+                      <a href="{{ header.cta.url or '#' }}" class="block w-full text-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaMobileClass }}">
+                        {{ header.cta.text }}
+                      </a>
+                    </div>
+                  {% endif %}
+                </div>
+              </details>
             {% endif %}
           </nav>
         </div>
