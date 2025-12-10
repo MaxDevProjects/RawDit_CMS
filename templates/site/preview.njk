@@ -127,7 +127,8 @@
         
         {% if type == 'hero' %}
           {% set content_align = settings.contentAlign or 'items-center' %}
-          {% set text_align = settings.textAlign or 'text-center items-center' %}
+          {% set horizontal_align = settings.horizontalAlign or 'items-center' %}
+          {% set text_align = settings.textAlign or 'text-center' %}
           {% set has_image = settings.image %}
           {% set layout = settings.layout or 'fullwidth-bg' %}
           {% set is_fullwidth = layout == 'fullwidth-bg' %}
@@ -152,7 +153,7 @@
                 <div class="absolute inset-0 {{ overlay if overlay != 'bg-black/0' else 'bg-black/30' }}"></div>
               {% endif %}
               {# Contenu centré #}
-              <div class="relative z-10 w-full max-w-4xl mx-auto px-8 py-16 flex flex-col gap-6 {{ text_align }}">
+              <div class="relative z-10 w-full max-w-4xl mx-auto px-8 py-16 flex flex-col gap-6 {{ horizontal_align }} {{ text_align }}">
                 <p class="text-xs uppercase tracking-[0.3em] {% if has_image %}text-white/80{% else %}text-violet-400{% endif %}">
                   {{ block.status or 'Brouillon' }}
                 </p>

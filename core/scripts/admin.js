@@ -775,6 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
           layout: 'hero-layout',
           height: 'hero-height',
           contentAlign: 'hero-content-align',
+          horizontalAlign: 'hero-horizontal-align',
           textAlign: 'hero-text-align',
           overlay: 'hero-overlay',
           titleSize: 'hero-title-size',
