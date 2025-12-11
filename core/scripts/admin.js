@@ -174,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     entry.trigger?.focus?.();
   };
   const mobilePanelOverlay = document.querySelector('[data-mobile-panels-overlay]');
+  const mobilePanelLayer = document.querySelector('[data-mobile-panels-layer]');
   const mobilePanels = {
     left: document.querySelector('[data-mobile-panel="left"]'),
     right: document.querySelector('[data-mobile-panel="right"]'),
@@ -234,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
       mobilePanelOverlay?.classList.remove('pointer-events-auto');
       mobilePanelOverlay?.classList.add('pointer-events-none');
       mobilePanelOverlay?.setAttribute('aria-hidden', 'true');
+      mobilePanelLayer?.classList.add('pointer-events-none');
       document.body.classList.remove('overflow-hidden');
       trigger?.focus?.();
       activeMobilePanel = null;
@@ -259,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mobilePanelOverlay?.classList.remove('hidden', 'pointer-events-none');
     mobilePanelOverlay?.classList.add('pointer-events-auto');
     mobilePanelOverlay?.setAttribute('aria-hidden', 'false');
+    mobilePanelLayer?.classList.remove('pointer-events-none');
     document.body.classList.add('overflow-hidden');
     const focusTarget = panel.querySelector(focusableSelector);
     window.setTimeout(() => {
@@ -268,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const syncMobilePanelsWithViewport = () => {
     if (isDesktopViewport()) {
       mobilePanelOverlay?.classList.add('hidden');
+      mobilePanelLayer?.classList.add('pointer-events-none');
       document.body.classList.remove('overflow-hidden');
       activeMobilePanel = null;
       Object.keys(mobilePanels).forEach((side) => {
@@ -296,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mobilePanelOverlay?.classList.add('hidden', 'pointer-events-none');
         mobilePanelOverlay?.classList.remove('pointer-events-auto');
         mobilePanelOverlay?.setAttribute('aria-hidden', 'true');
+        mobilePanelLayer?.classList.add('pointer-events-none');
       }
     }
   };
