@@ -231,6 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
     mobilePanelTriggers[side] = null;
     if (activeMobilePanel === side) {
       mobilePanelOverlay?.classList.add('hidden');
+      mobilePanelOverlay?.classList.remove('pointer-events-auto');
+      mobilePanelOverlay?.classList.add('pointer-events-none');
+      mobilePanelOverlay?.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('overflow-hidden');
       trigger?.focus?.();
       activeMobilePanel = null;
@@ -253,7 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (trigger) {
       trigger.setAttribute('aria-expanded', 'true');
     }
-    mobilePanelOverlay?.classList.remove('hidden');
+    mobilePanelOverlay?.classList.remove('hidden', 'pointer-events-none');
+    mobilePanelOverlay?.classList.add('pointer-events-auto');
+    mobilePanelOverlay?.setAttribute('aria-hidden', 'false');
     document.body.classList.add('overflow-hidden');
     const focusTarget = panel.querySelector(focusableSelector);
     window.setTimeout(() => {
@@ -287,6 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
           setPanelHiddenState(panel, true);
         }
       });
+      if (!activeMobilePanel) {
+        mobilePanelOverlay?.classList.add('hidden', 'pointer-events-none');
+        mobilePanelOverlay?.classList.remove('pointer-events-auto');
+        mobilePanelOverlay?.setAttribute('aria-hidden', 'true');
+      }
     }
   };
   if (mobilePanelToggles.length > 0) {
