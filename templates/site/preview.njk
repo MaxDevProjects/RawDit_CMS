@@ -437,6 +437,17 @@
           {% set group_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set group_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
           {% set children = block.children or [] %}
+          {% set group_mobile_layout = settings.mobileLayout if settings.mobileLayout else 'stack' %}
+          {% set group_is_horizontal = group_mobile_layout == 'horizontal-scroll' %}
+          {% if group_is_horizontal %}
+            {% set group_container_classes = 'flex ' ~ gap_class ~ ' ' ~ items_align ~ ' overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid ' ~ desktop_class ~ ' md:overflow-visible md:snap-none' %}
+          {% else %}
+            {% set group_container_classes = 'grid ' ~ gap_class ~ ' ' ~ mobile_class ~ ' ' ~ desktop_class ~ ' ' ~ items_align %}
+          {% endif %}
+          {% set group_item_wrapper_classes = 'group-child-wrapper' %}
+          {% if group_is_horizontal %}
+            {% set group_item_wrapper_classes = group_item_wrapper_classes ~ ' snap-center snap-always flex-shrink-0 w-64 min-w-[16rem] md:w-auto md:min-w-0 md:snap-none' %}
+          {% endif %}
           <section
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
@@ -454,17 +465,17 @@
                   {{ mobile_class }} · {{ desktop_class }}
                 </span>
               </div>
-              <div class="grid {{ gap_class }} {{ mobile_class }} {{ desktop_class }} {{ items_align }}">
-                <div class="h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm">+</div>
-                <div class="h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm">+</div>
-                <div class="h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm">+</div>
+              <div class="{{ group_container_classes }}" {% if group_is_horizontal %}role="list" aria-label="{{ (block.label or 'Bloc groupe') }} – défilement horizontal"{% endif %}>
+                <div class="h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm{% if group_is_horizontal %} snap-center snap-always flex-shrink-0 w-64 min-w-[16rem] md:w-auto md:min-w-0 md:snap-none{% endif %}">+</div>
+                <div class="h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm{% if group_is_horizontal %} snap-center snap-always flex-shrink-0 w-64 min-w-[16rem] md:w-auto md:min-w-0 md:snap-none{% endif %}">+</div>
+                <div class="h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm{% if group_is_horizontal %} snap-center snap-always flex-shrink-0 w-64 min-w-[16rem] md:w-auto md:min-w-0 md:snap-none{% endif %}">+</div>
               </div>
             {% else %}
-              <div class="grid {{ gap_class }} {{ mobile_class }} {{ desktop_class }} {{ items_align }}">
+              <div class="{{ group_container_classes }}" {% if group_is_horizontal %}role="list" aria-label="{{ (block.label or 'Bloc groupe') }} – défilement horizontal"{% endif %}>
                 {% for child in children %}
                   {% set c_type = (child.type or '') | lower %}
                   {% set c_settings = child.settings or {} %}
-                  <div class="group-child-wrapper" data-preview-block="{{ child.id }}" {{ animationAttrs(c_settings) | safe }}>
+                  <div class="{{ group_item_wrapper_classes }}" data-preview-block="{{ child.id }}" {{ animationAttrs(c_settings) | safe }}>
                     {# ─── Rendu complet des enfants (inline, pas de récursion) ─── #}
                     {% if c_type == 'hero' %}
                       {% set c_content_align = c_settings.contentAlign or 'items-center' %}
@@ -626,6 +637,17 @@
           {% set coll_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
           {% set coll_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set coll_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
+          {% set coll_mobile_layout = settings.mobileLayout if settings.mobileLayout else 'stack' %}
+          {% set coll_is_horizontal = coll_mobile_layout == 'horizontal-scroll' %}
+          {% if coll_is_horizontal %}
+            {% set coll_container_classes = 'flex ' ~ coll_gap ~ ' overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid ' ~ coll_desktop ~ ' md:overflow-visible md:snap-none' %}
+          {% else %}
+            {% set coll_container_classes = 'grid ' ~ coll_gap ~ ' ' ~ coll_mobile ~ ' ' ~ coll_desktop %}
+          {% endif %}
+          {% set coll_item_classes = coll_card_rounded ~ ' border border-slate-100 bg-slate-50 p-4 space-y-2' %}
+          {% if coll_is_horizontal %}
+            {% set coll_item_classes = coll_item_classes ~ ' snap-center snap-always flex-shrink-0 w-64 min-w-[16rem] md:w-auto md:min-w-0 md:snap-none' %}
+          {% endif %}
           <section
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
@@ -645,10 +667,10 @@
             {% if itemCount == 0 %}
               <p class="text-sm text-slate-500">Aucun item disponible dans cette collection.</p>
             {% else %}
-              <div class="grid {{ coll_gap }} {{ coll_mobile }} {{ coll_desktop }}">
+              <div class="{{ coll_container_classes }}" {% if coll_is_horizontal %}role="list" aria-label="{{ (block.label or 'Grille de contenus') }} – défilement horizontal"{% endif %}>
                 {% for item in allItems %}
                   {% if loop.index0 < limit %}
-                  <article class="{{ coll_card_rounded }} border border-slate-100 bg-slate-50 p-4 space-y-2">
+                  <article class="{{ coll_item_classes }}">
                     {% if item.image %}
                     <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-32 object-cover rounded-lg mb-2" />
                     {% endif %}

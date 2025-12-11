@@ -885,6 +885,7 @@ document.addEventListener('DOMContentLoaded', () => {
           columnsDesktop: 'group-columns-desktop',
           gap: 'group-gap',
           itemsAlign: 'group-items-align',
+          mobileLayout: 'group-mobile-layout',
           // Card style
           bg: 'group-bg',
           borderRadius: 'group-border-radius',
@@ -902,6 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
           gap: 'collection-gap',
           itemsAlign: 'collection-items-align',
           cardRounded: 'collection-card-rounded',
+          mobileLayout: 'collection-mobile-layout',
           // Card style
           bg: 'collection-bg',
           borderRadius: 'collection-border-radius',
@@ -1574,6 +1576,7 @@ document.addEventListener('DOMContentLoaded', () => {
           layout: 'grid',
           columnsMobile: '1',
           columnsDesktop: '3',
+          mobileLayout: 'stack',
         },
       },
       collectiongrid: {
@@ -1584,6 +1587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         settings: {
           collectionId: '',
           limit: 6,
+          mobileLayout: 'stack',
         },
       },
       form: {
@@ -1670,6 +1674,7 @@ document.addEventListener('DOMContentLoaded', () => {
           layout: 'grid',
           columnsMobile: '1',
           columnsDesktop: '2',
+          mobileLayout: 'stack',
         },
       ),
     ];

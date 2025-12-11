@@ -109,6 +109,18 @@ ClowerEdit = CMS statique éco-conçu pour créer des sites :
   - props `colsMobile`, `colsDesktop`.
 - Génère les classes Tailwind correspondantes (ex. `grid-cols-1 md:grid-cols-3`).
 
+### US4.7 – Choisir le layout mobile d’une grille bloc par bloc
+
+- Pour chaque bloc de type grille (`Groupe` en mode grille/cartes et `CollectionGrid`), l’éditeur peut définir un champ `mobileLayout` avec deux valeurs :
+  - `stack` : comportement actuel, items empilés verticalement,
+  - `horizontal-scroll` : cartes sur une ligne avec scroll horizontal natif.
+- Valeur par défaut : `stack` pour préserver l’existant et pour tout nouveau bloc.
+- Quand `mobileLayout = "horizontal-scroll"` :
+  - Sur mobile, la grille devient `flex gap-* overflow-x-auto snap-x snap-mandatory pb-4 scroll-smooth` avec scrollbar masqué (`[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`) et un `aria-label` explicite si nécessaire.
+  - Chaque carte devient `snap-center snap-always flex-shrink-0 w-64 md:w-auto` afin de créer un carrousel “swipe” fluide sans boutons ni JS lourd.
+  - À partir du breakpoint desktop (md+), le layout redevient la grille classique (colonnes configurées, overflow visible).
+- L’option est éditable dans le panneau droit, onglet “Apparence” du bloc concerné, section “Affichage sur mobile” avec une aide rappelant le comportement.
+
 ---
 
 ## EPIC 5 – Onglet Contenus (collections)
