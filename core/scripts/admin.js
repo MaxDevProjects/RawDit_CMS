@@ -173,6 +173,146 @@ document.addEventListener('DOMContentLoaded', () => {
     const [entry] = modalStack.splice(index, 1);
     entry.trigger?.focus?.();
   };
+  const mobilePanelOverlay = document.querySelector('[data-mobile-panels-overlay]');
+  const mobilePanels = {
+    left: document.querySelector('[data-mobile-panel="left"]'),
+    right: document.querySelector('[data-mobile-panel="right"]'),
+  };
+  const mobilePanelToggles = document.querySelectorAll('[data-mobile-panel-toggle]');
+  const mobilePanelCloseButtons = document.querySelectorAll('[data-mobile-panel-close]');
+  const mobilePanelTriggers = { left: null, right: null };
+  let activeMobilePanel = null;
+  const isDesktopViewport = () => window.matchMedia('(min-width: 1024px)').matches;
+  const applyPanelClasses = (panel, classes, method) => {
+    if (!panel || !classes) {
+      return;
+    }
+    classes
+      .split(' ')
+      .map((cls) => cls.trim())
+      .filter(Boolean)
+      .forEach((cls) => panel.classList[method](cls));
+  };
+  const setPanelHiddenState = (panel, hidden) => {
+    if (!panel) {
+      return;
+    }
+    const hiddenClasses = panel.dataset.mobilePanelHidden || '';
+    const visibleClasses = panel.dataset.mobilePanelVisible || 'translate-x-0';
+    if (hidden) {
+      applyPanelClasses(panel, visibleClasses, 'remove');
+      applyPanelClasses(panel, hiddenClasses, 'add');
+      panel.classList.add('pointer-events-none');
+      panel.classList.remove('pointer-events-auto');
+      panel.setAttribute('aria-hidden', 'true');
+      panel.dataset.mobilePanelOpen = 'false';
+    } else {
+      applyPanelClasses(panel, hiddenClasses, 'remove');
+      applyPanelClasses(panel, visibleClasses, 'add');
+      panel.classList.remove('pointer-events-none');
+      panel.classList.add('pointer-events-auto');
+      panel.setAttribute('aria-hidden', 'false');
+      panel.dataset.mobilePanelOpen = 'true';
+    }
+  };
+  const closeMobilePanel = (side = activeMobilePanel) => {
+    if (!side || isDesktopViewport()) {
+      return;
+    }
+    const panel = mobilePanels[side];
+    if (!panel) {
+      return;
+    }
+    setPanelHiddenState(panel, true);
+    const trigger = mobilePanelTriggers[side];
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+    mobilePanelTriggers[side] = null;
+    if (activeMobilePanel === side) {
+      mobilePanelOverlay?.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      trigger?.focus?.();
+      activeMobilePanel = null;
+    }
+  };
+  const openMobilePanel = (side, trigger) => {
+    if (!side || isDesktopViewport()) {
+      return;
+    }
+    const panel = mobilePanels[side];
+    if (!panel) {
+      return;
+    }
+    if (activeMobilePanel && activeMobilePanel !== side) {
+      closeMobilePanel(activeMobilePanel);
+    }
+    setPanelHiddenState(panel, false);
+    activeMobilePanel = side;
+    mobilePanelTriggers[side] = trigger || null;
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+    mobilePanelOverlay?.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    const focusTarget = panel.querySelector(focusableSelector);
+    window.setTimeout(() => {
+      focusTarget?.focus?.();
+    }, 0);
+  };
+  const syncMobilePanelsWithViewport = () => {
+    if (isDesktopViewport()) {
+      mobilePanelOverlay?.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      activeMobilePanel = null;
+      Object.keys(mobilePanels).forEach((side) => {
+        const panel = mobilePanels[side];
+        if (!panel) {
+          return;
+        }
+        panel.classList.remove('pointer-events-none');
+        panel.classList.add('pointer-events-auto');
+        panel.setAttribute('aria-hidden', 'false');
+        panel.dataset.mobilePanelOpen = 'false';
+        const trigger = mobilePanelTriggers[side];
+        trigger?.setAttribute('aria-expanded', 'false');
+        mobilePanelTriggers[side] = null;
+      });
+    } else {
+      Object.entries(mobilePanels).forEach(([side, panel]) => {
+        if (!panel) {
+          return;
+        }
+        if (panel.dataset.mobilePanelOpen !== 'true') {
+          setPanelHiddenState(panel, true);
+        }
+      });
+    }
+  };
+  if (mobilePanelToggles.length > 0) {
+    mobilePanelToggles.forEach((button) => {
+      const side = button.dataset.mobilePanelToggle;
+      button.addEventListener('click', () => {
+        if (activeMobilePanel === side) {
+          closeMobilePanel(side);
+        } else {
+          openMobilePanel(side, button);
+        }
+      });
+    });
+    mobilePanelCloseButtons.forEach((button) => {
+      const side = button.dataset.mobilePanelClose;
+      button.addEventListener('click', () => closeMobilePanel(side));
+    });
+    mobilePanelOverlay?.addEventListener('click', () => closeMobilePanel());
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && activeMobilePanel && !isDesktopViewport()) {
+        closeMobilePanel();
+      }
+    });
+    window.addEventListener('resize', syncMobilePanelsWithViewport);
+    syncMobilePanelsWithViewport();
+  }
 
   const showToast = (message) => {
     if (!siteToast || !siteToastMessage) {
