@@ -33,6 +33,10 @@
         {% set finalAssetBase = '/assets' %}
       {% endif %}
     {% endif %}
+    {% set siteBasePath = '' %}
+    {% if finalAssetBase %}
+      {% set siteBasePath = finalAssetBase | replace('/assets', '') %}
+    {% endif %}
     <link rel="stylesheet" href="{{ finalAssetBase }}/theme.css" />
     <link rel="stylesheet" href="{{ finalAssetBase }}/site.css" />
     {# US9.B2 - Analytics head code injection #}
@@ -63,23 +67,26 @@
     <a href="#main-content" class="skip-link focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9C6BFF] focus-visible:ring-offset-2">Aller au contenu principal</a>
     {% set collectionMap = collections or {} %}
     {% macro linkHref(urlValue) -%}
-      {%- set raw = (urlValue | default('') | trim) -%}
+      {%- set raw = ((urlValue | default('')) ~ '') | trim -%}
       {%- if not raw -%}
         #
       {%- else -%}
         {%- set lower = raw | lower -%}
-        {%- if raw | first == '#' -%}
+        {%- set firstChar = raw | slice(0, 1) -%}
+        {%- set twoChars = raw | slice(0, 2) -%}
+        {%- if firstChar == '#' -%}
           {{- raw -}}
-        {%- elif raw | slice(0, 2) == '//' -%}
-          {{- raw -}}
-        {%- elif raw | first == '/' -%}
+        {%- elif twoChars == '//' -%}
           {{- raw -}}
         {%- elif lower | slice(0, 7) == 'http://' or lower | slice(0, 8) == 'https://' -%}
           {{- raw -}}
         {%- elif lower | slice(0, 7) == 'mailto:' or lower | slice(0, 4) == 'tel:' -%}
           {{- raw -}}
+        {%- elif firstChar == '/' -%}
+          {{- siteBasePath ~ raw if siteBasePath else raw -}}
         {%- else -%}
-          /{{- raw -}}
+          {%- set normalized = '/' ~ raw -%}
+          {{- siteBasePath ~ normalized if siteBasePath else normalized -}}
         {%- endif -%}
       {%- endif -%}
     {%- endmacro %}
