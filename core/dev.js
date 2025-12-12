@@ -505,6 +505,111 @@ const normalizeColorToken = (value, fallback) => {
   return legacy || fallback;
 };
 
+const THEME_DEFAULTS = {
+  colors: {
+    primary: 'violet-500',
+    secondary: 'indigo-400',
+    accent: 'emerald-500',
+    background: 'slate-50',
+    text: 'slate-900',
+  },
+  typography: {
+    headings: 'Inter, sans-serif',
+    body: 'Inter, sans-serif',
+  },
+  radius: {
+    small: '8px',
+    medium: '16px',
+    large: '24px',
+  },
+};
+
+async function readThemeConfig(siteSlug) {
+  if (!siteSlug) {
+    return {};
+  }
+  const normalizedSlug = sanitizeSiteSlug(siteSlug);
+  if (!normalizedSlug) {
+    return {};
+  }
+  const configPath = getThemeConfigPath(siteSlug);
+  try {
+    const raw = await fs.readFile(configPath, 'utf8');
+    return JSON.parse(raw || '{}');
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      throw err;
+    }
+    const legacyPath = path.join(SITES_DATA_ROOT, normalizedSlug, 'theme.json');
+    try {
+      const legacyRaw = await fs.readFile(legacyPath, 'utf8');
+      return JSON.parse(legacyRaw || '{}');
+    } catch (legacyErr) {
+      if (legacyErr.code === 'ENOENT') {
+        return {};
+      }
+      throw legacyErr;
+    }
+  }
+}
+
+function normalizeThemeConfig(config = {}) {
+  return {
+    colors: {
+      primary: normalizeColorToken(config.colors?.primary, THEME_DEFAULTS.colors.primary),
+      secondary: normalizeColorToken(config.colors?.secondary, THEME_DEFAULTS.colors.secondary),
+      accent: normalizeColorToken(config.colors?.accent, THEME_DEFAULTS.colors.accent),
+      background: normalizeColorToken(config.colors?.background, THEME_DEFAULTS.colors.background),
+      text: normalizeColorToken(config.colors?.text, THEME_DEFAULTS.colors.text),
+    },
+    typography: {
+      headings: config.typography?.headings || THEME_DEFAULTS.typography.headings,
+      body: config.typography?.body || THEME_DEFAULTS.typography.body,
+    },
+    radius: {
+      small: config.radius?.small || THEME_DEFAULTS.radius.small,
+      medium: config.radius?.medium || THEME_DEFAULTS.radius.medium,
+      large: config.radius?.large || THEME_DEFAULTS.radius.large,
+    },
+  };
+}
+
+const colorTokenToHex = (token, fallback) => {
+  if (typeof token !== 'string' || !token) {
+    return fallback;
+  }
+  if (token === 'white') {
+    return '#ffffff';
+  }
+  if (token === 'black') {
+    return '#000000';
+  }
+  if (token === 'transparent') {
+    return 'transparent';
+  }
+  const [hue, shade] = token.split('-');
+  const color = tailwindColors[hue]?.[shade];
+  return color || fallback;
+};
+
+function buildThemeCss(config = {}) {
+  const normalized = normalizeThemeConfig(config);
+  return [
+    ':root {',
+    `  --color-primary: ${colorTokenToHex(normalized.colors.primary, '#9C6BFF')};`,
+    `  --color-secondary: ${colorTokenToHex(normalized.colors.secondary, '#0EA5E9')};`,
+    `  --color-accent: ${colorTokenToHex(normalized.colors.accent, '#F97316')};`,
+    `  --color-background: ${colorTokenToHex(normalized.colors.background, '#FFFFFF')};`,
+    `  --color-text: ${colorTokenToHex(normalized.colors.text, '#0F172A')};`,
+    `  --font-headings: ${normalized.typography.headings};`,
+    `  --font-body: ${normalized.typography.body};`,
+    `  --radius-small: ${normalized.radius.small};`,
+    `  --radius-medium: ${normalized.radius.medium};`,
+    `  --radius-large: ${normalized.radius.large};`,
+    '}',
+  ].join('\n');
+}
+
 function normalizeMediaReferences(value, safeSlug) {
   if (!safeSlug) {
     return value;
@@ -653,27 +758,7 @@ async function buildSitePages(siteSlug) {
   const siteRecord = sites.find((s) => s.slug === normalizeSlug(siteSlug)) || {};
   const siteConfig = await readSiteConfig(siteSlug);
   const normalizedSiteConfig = normalizeSiteConfig(siteConfig);
-  const themeConfigPath = getThemeConfigPath(siteSlug);
-  const themeConfig = await fs
-    .readFile(themeConfigPath, 'utf8')
-    .then((raw) => JSON.parse(raw || '{}'))
-    .catch(() => ({}));
-  const normalizedThemeColors = {
-    primary: normalizeColorToken(themeConfig.colors?.primary, 'violet-500'),
-    secondary: normalizeColorToken(themeConfig.colors?.secondary, 'indigo-400'),
-    accent: normalizeColorToken(themeConfig.colors?.accent, 'emerald-500'),
-    background: normalizeColorToken(themeConfig.colors?.background, 'slate-50'),
-    text: normalizeColorToken(themeConfig.colors?.text, 'slate-900'),
-  };
-  const colorToHex = (token, fallback) => {
-    if (typeof token !== 'string') return fallback;
-    if (token === 'white') return '#ffffff';
-    if (token === 'black') return '#000000';
-    if (token === 'transparent') return 'transparent';
-    const [hue, shade] = token.split('-');
-    const color = tailwindColors[hue]?.[shade];
-    return color || fallback;
-  };
+  const themeConfig = await readThemeConfig(siteSlug);
   const siteMeta = {
     title: normalizedSiteConfig.name || siteRecord.name || 'Site',
     slug: siteRecord.slug || siteSlug,
@@ -698,20 +783,7 @@ async function buildSitePages(siteSlug) {
     await fs.cp(globalAssets, siteAssets, { recursive: true });
   }
   // inject theme css variables
-  const themeCss = [
-    ':root {',
-    `  --color-primary: ${colorToHex(normalizedThemeColors.primary, '#9C6BFF')};`,
-    `  --color-secondary: ${colorToHex(normalizedThemeColors.secondary, '#0EA5E9')};`,
-    `  --color-accent: ${colorToHex(normalizedThemeColors.accent, '#F97316')};`,
-    `  --color-background: ${colorToHex(normalizedThemeColors.background, '#FFFFFF')};`,
-    `  --color-text: ${colorToHex(normalizedThemeColors.text, '#0F172A')};`,
-    `  --font-headings: ${themeConfig.typography?.headings || 'Inter, sans-serif'};`,
-    `  --font-body: ${themeConfig.typography?.body || 'Inter, sans-serif'};`,
-    `  --radius-small: ${themeConfig.radius?.small || '8px'};`,
-    `  --radius-medium: ${themeConfig.radius?.medium || '16px'};`,
-    `  --radius-large: ${themeConfig.radius?.large || '24px'};`,
-    '}',
-  ].join('\n');
+  const themeCss = buildThemeCss(themeConfig);
   await ensureDir(siteAssets);
   await fs.writeFile(path.join(siteAssets, 'theme.css'), themeCss, 'utf8');
 
@@ -2428,27 +2500,9 @@ async function start() {
     if (!siteSlug) {
       return res.status(400).json({ message: 'Site invalide.' });
     }
-    const filePath = getThemeConfigPath(siteSlug);
     try {
-      const raw = await fs.readFile(filePath, 'utf8').catch(() => '{}');
-      const config = JSON.parse(raw || '{}');
-      const colors = {
-        primary: normalizeColorToken(config.colors?.primary, 'violet-500'),
-        secondary: normalizeColorToken(config.colors?.secondary, 'indigo-400'),
-        accent: normalizeColorToken(config.colors?.accent, 'emerald-500'),
-        background: normalizeColorToken(config.colors?.background, 'slate-50'),
-        text: normalizeColorToken(config.colors?.text, 'slate-900'),
-      };
-      const typography = {
-        headings: config.typography?.headings || 'Inter, sans-serif',
-        body: config.typography?.body || 'Inter, sans-serif',
-      };
-      const radius = {
-        small: config.radius?.small || '8px',
-        medium: config.radius?.medium || '16px',
-        large: config.radius?.large || '24px',
-      };
-      res.json({ colors, typography, radius });
+      const config = await readThemeConfig(siteSlug);
+      res.json(normalizeThemeConfig(config));
     } catch (err) {
       console.error('[theme] load failed', err);
       res.status(500).json({ message: 'Impossible de charger le thème.' });
@@ -2597,6 +2651,7 @@ async function start() {
         accessibility: normalizedSiteConfig.accessibility,
       };
       const assetBase = resolveAssetBase(previewSite, { isPreview: true });
+      const inlineThemeCss = buildThemeCss(siteSlug ? await readThemeConfig(siteSlug) : {});
       const html = previewEnv.render('preview.njk', {
         page,
         site: previewSite,
@@ -2606,6 +2661,7 @@ async function start() {
         allPages,
         isPreview: true,
         assetBase,
+        inlineThemeCss,
       });
       const css = await buildPreviewCss(html);
       const finalHtml = injectPreviewCss(html, css);

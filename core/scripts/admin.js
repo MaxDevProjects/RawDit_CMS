@@ -179,11 +179,39 @@ document.addEventListener('DOMContentLoaded', () => {
     left: document.querySelector('[data-mobile-panel="left"]'),
     right: document.querySelector('[data-mobile-panel="right"]'),
   };
+  let mobilePanelLayerPlaceholder = null;
+  if (mobilePanelLayer?.parentElement) {
+    mobilePanelLayerPlaceholder = document.createComment('mobile-panels-layer-placeholder');
+    mobilePanelLayer.parentElement.insertBefore(mobilePanelLayerPlaceholder, mobilePanelLayer);
+  }
   const mobilePanelToggles = document.querySelectorAll('[data-mobile-panel-toggle]');
   const mobilePanelCloseButtons = document.querySelectorAll('[data-mobile-panel-close]');
   const mobilePanelTriggers = { left: null, right: null };
   let activeMobilePanel = null;
   const isDesktopViewport = () => window.matchMedia('(min-width: 1024px)').matches;
+  const ensureMobilePanelLayerPlacement = () => {
+    if (!mobilePanelLayer || !mobilePanelLayerPlaceholder) {
+      return;
+    }
+    if (isDesktopViewport()) {
+      const targetParent = mobilePanelLayerPlaceholder.parentElement;
+      if (!targetParent) {
+        return;
+      }
+      if (mobilePanelLayer.parentElement !== targetParent) {
+        targetParent.insertBefore(mobilePanelLayer, mobilePanelLayerPlaceholder.nextSibling);
+      } else if (mobilePanelLayerPlaceholder.nextSibling !== mobilePanelLayer) {
+        targetParent.insertBefore(mobilePanelLayer, mobilePanelLayerPlaceholder.nextSibling);
+      }
+      mobilePanelLayer.dataset.mobilePanelPlacement = 'sidebar';
+      return;
+    }
+    if (mobilePanelLayer.parentElement !== document.body) {
+      document.body.appendChild(mobilePanelLayer);
+      mobilePanelLayer.dataset.mobilePanelPlacement = 'overlay';
+    }
+  };
+  ensureMobilePanelLayerPlacement();
   const applyPanelClasses = (panel, classes, method) => {
     if (!panel || !classes) {
       return;
@@ -269,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 0);
   };
   const syncMobilePanelsWithViewport = () => {
+    ensureMobilePanelLayerPlacement();
     if (isDesktopViewport()) {
       mobilePanelOverlay?.classList.add('hidden');
       mobilePanelLayer?.classList.add('pointer-events-none');
@@ -3938,23 +3967,57 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // Afficher les checkboxes pour chaque page
-    const renderPageCheckboxes = () => {
-      if (!headerPagesList) return;
-      headerPagesList.innerHTML = '';
-      
-      if (sitePages.length === 0) {
+  const normalizeNavPageUrl = (value) => {
+    const raw = (value || '').toString().trim();
+    if (!raw || raw === '/' || raw === 'index') {
+      return '/';
+    }
+    const lower = raw.toLowerCase();
+    if (raw.startsWith('#')) {
+      return raw;
+    }
+    if (lower.startsWith('mailto:') || lower.startsWith('tel:')) {
+      return raw;
+    }
+    if (/^[a-z]+:\/\//i.test(raw)) {
+      return raw;
+    }
+    if (raw.startsWith('//')) {
+      const withoutSlashes = raw.slice(2);
+      if (withoutSlashes.includes('.')) {
+        return raw;
+      }
+      const cleanedInternal = withoutSlashes.replace(/^\/+/, '').replace(/\/+$/, '');
+      return cleanedInternal ? `/${cleanedInternal}` : '/';
+    }
+    const cleaned = raw.replace(/^\/+/, '').replace(/\/+$/, '');
+    return cleaned ? `/${cleaned}` : '/';
+  };
+  const normalizeOptionalNavUrl = (value, defaultValue = '') => {
+    const trimmed = (value || '').toString().trim();
+    if (!trimmed) {
+      return defaultValue;
+    }
+    return normalizeNavPageUrl(trimmed);
+  };
+
+  const renderPageCheckboxes = () => {
+    if (!headerPagesList) return;
+    headerPagesList.innerHTML = '';
+
+    if (sitePages.length === 0) {
         headerPagesList.innerHTML = '<p class="text-xs text-slate-400 italic">Aucune page disponible</p>';
         return;
       }
       
-      sitePages.forEach(page => {
-        const pageSlug = page.slug || page.id;
-        // Use page.name (short name) if available, fallback to title
-        const pageDisplayName = page.name || page.title || pageSlug;
-        const pageUrl = pageSlug === 'index' ? '/' : `/${pageSlug}`;
-        
-        // Vérifier si cette page est sélectionnée dans la nav
-        const isSelected = selectedNavPages.some(nav => nav.url === pageUrl);
+    sitePages.forEach(page => {
+      const pageSlug = page.slug || page.id || '';
+      // Use page.name (short name) if available, fallback to title
+      const pageDisplayName = page.name || page.title || pageSlug;
+      const pageUrl = normalizeNavPageUrl(pageSlug);
+
+      // Vérifier si cette page est sélectionnée dans la nav
+      const isSelected = selectedNavPages.some(nav => nav.url === pageUrl);
         
         const label = document.createElement('label');
         label.className = 'flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors';
@@ -3988,7 +4051,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Collecter les pages cochées dans l'ordre actuel
       const nav = [];
       headerPagesList?.querySelectorAll('input[name="nav-page"]:checked').forEach(checkbox => {
-        const url = checkbox.value;
+        const url = normalizeNavPageUrl(checkbox.value);
         const label = checkbox.dataset.pageTitle || url;
         nav.push({ label, url });
       });
@@ -3997,12 +4060,12 @@ document.addEventListener('DOMContentLoaded', () => {
         logo: {
           src: headerFields.logo?.value?.trim() || '',
           alt: headerFields.logoAlt?.value?.trim() || '',
-          url: headerFields.logoUrl?.value?.trim() || '/',
+          url: normalizeOptionalNavUrl(headerFields.logoUrl?.value, '/'),
         },
         nav,
         cta: {
           text: headerFields.ctaText?.value?.trim() || '',
-          url: headerFields.ctaUrl?.value?.trim() || '',
+          url: normalizeOptionalNavUrl(headerFields.ctaUrl?.value, ''),
           style: headerFields.ctaStyle?.value || 'primary',
         },
         style: {
@@ -4016,15 +4079,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!data) return;
       if (headerFields.logo) headerFields.logo.value = data.logo?.src || '';
       if (headerFields.logoAlt) headerFields.logoAlt.value = data.logo?.alt || '';
-      if (headerFields.logoUrl) headerFields.logoUrl.value = data.logo?.url || '/';
+      if (headerFields.logoUrl) headerFields.logoUrl.value = normalizeOptionalNavUrl(data.logo?.url, '/');
       if (headerFields.ctaText) headerFields.ctaText.value = data.cta?.text || '';
-      if (headerFields.ctaUrl) headerFields.ctaUrl.value = data.cta?.url || '';
+      if (headerFields.ctaUrl) headerFields.ctaUrl.value = normalizeOptionalNavUrl(data.cta?.url, '');
       if (headerFields.ctaStyle) headerFields.ctaStyle.value = data.cta?.style || 'primary';
       if (headerFields.position) headerFields.position.value = data.style?.position || 'static';
       if (headerFields.bg) headerFields.bg.value = data.style?.bg || 'bg-white';
       
       // Stocker les pages sélectionnées pour les checkboxes
-      selectedNavPages = data.nav || [];
+      selectedNavPages = (data.nav || []).map((item) => ({
+        ...item,
+        url: normalizeNavPageUrl(item.url),
+      }));
       
       // Charger les pages et afficher les checkboxes
       await loadSitePagesForHeader();
@@ -5537,7 +5603,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const loadTheme = async () => {
         if (!themeApi) return;
         try {
-          const response = await fetch(themeApi, { headers: { Accept: 'application/json' } });
+          const response = await fetch(themeApi, {
+            headers: { Accept: 'application/json' },
+            credentials: 'include',
+          });
           if (!response.ok) return;
           const payload = await response.json().catch(() => ({}));
           setColorFields('primary', payload.colors?.primary || 'violet-500');
@@ -5590,6 +5659,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const response = await fetch(themeApi, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(payload),
           });
           const result = await response.json().catch(() => ({}));
