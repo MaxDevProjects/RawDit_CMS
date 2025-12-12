@@ -62,6 +62,27 @@
   <body class="font-['Inter'] text-slate-900" data-animations="{{ 'on' if animationsAllowed else 'off' }}">
     <a href="#main-content" class="skip-link focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9C6BFF] focus-visible:ring-offset-2">Aller au contenu principal</a>
     {% set collectionMap = collections or {} %}
+    {% macro linkHref(urlValue) -%}
+      {%- set raw = (urlValue | default('') | trim) -%}
+      {%- if not raw -%}
+        #
+      {%- else -%}
+        {%- set lower = raw | lower -%}
+        {%- if raw | first == '#' -%}
+          {{- raw -}}
+        {%- elif raw | slice(0, 2) == '//' -%}
+          {{- raw -}}
+        {%- elif raw | first == '/' -%}
+          {{- raw -}}
+        {%- elif lower | slice(0, 7) == 'http://' or lower | slice(0, 8) == 'https://' -%}
+          {{- raw -}}
+        {%- elif lower | slice(0, 7) == 'mailto:' or lower | slice(0, 4) == 'tel:' -%}
+          {{- raw -}}
+        {%- else -%}
+          /{{- raw -}}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endmacro %}
     {% macro each_fallback_nav(pages, currentSlug) %}
       {% for entry in pages %}
         {% set includeInNav = true %}
@@ -69,13 +90,7 @@
           {% set includeInNav = entry.accessibility.showInMainNav %}
         {% endif %}
         {% if includeInNav %}
-          {% set navUrl = entry.slug or '/' %}
-          {% if not navUrl %}
-            {% set navUrl = '/' %}
-          {% endif %}
-          {% if navUrl and navUrl[0] != '/' and '://' not in navUrl and navUrl[0] != '#' %}
-            {% set navUrl = '/' ~ navUrl %}
-          {% endif %}
+          {% set navUrl = linkHref(entry.slug or '/') %}
           {% set isCurrent = navUrl == currentSlug %}
           {{ caller(entry, navUrl, isCurrent) }}
         {% endif %}
@@ -94,7 +109,8 @@
       <header class="{{ headerBg }} {{ positionClass }} shadow-sm border-b border-slate-100">
         <div class="max-w-6xl mx-auto px-6 py-4">
           <nav class="flex items-center justify-between gap-6" aria-label="Navigation principale">
-            <a href="{{ header.logo.url or '/' }}" class="flex items-center gap-3 font-bold text-xl">
+            {% set logoHref = linkHref(header.logo.url or '/') %}
+            <a href="{{ logoHref }}" class="flex items-center gap-3 font-bold text-xl">
               {% if header.logo.src %}
                 <img src="{{ header.logo.src }}" alt="{{ header.logo.alt or site.title or 'Logo' }}" class="h-8 w-auto" />
               {% endif %}
@@ -107,16 +123,7 @@
             {% if hasCustomNav %}
               <ul class="hidden md:flex items-center gap-6">
                 {% for item in header.nav %}
-                  {% set navUrl = (item.url or '#') | trim %}
-                  {% if not navUrl %}
-                    {% set navUrl = '#' %}
-                  {% endif %}
-                  {% if navUrl == '//' %}
-                    {% set navUrl = '/' %}
-                  {% endif %}
-                  {% if navUrl and navUrl[0] != '/' and '://' not in navUrl and navUrl[0] != '#' %}
-                    {% set navUrl = '/' ~ navUrl %}
-                  {% endif %}
+                  {% set navUrl = linkHref(item.url or '#') %}
                   {% set isCurrent = navUrl == currentSlug %}
                   <li>
                     <a href="{{ navUrl }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
@@ -145,7 +152,8 @@
               {% else %}
                 {% set ctaClass = 'text-violet-600 hover:text-violet-700' %}
               {% endif %}
-              <a href="{{ header.cta.url or '#' }}" class="hidden md:inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaClass }}">
+              {% set ctaHref = linkHref(header.cta.url or '#') %}
+              <a href="{{ ctaHref }}" class="hidden md:inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaClass }}">
                 {{ header.cta.text }}
               </a>
             {% endif %}
@@ -159,16 +167,7 @@
                 <div class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
                   {% if hasCustomNav %}
                     {% for item in header.nav %}
-                      {% set navUrl = (item.url or '#') | trim %}
-                      {% if not navUrl %}
-                        {% set navUrl = '#' %}
-                      {% endif %}
-                      {% if navUrl == '//' %}
-                        {% set navUrl = '/' %}
-                      {% endif %}
-                      {% if navUrl and navUrl[0] != '/' and '://' not in navUrl and navUrl[0] != '#' %}
-                        {% set navUrl = '/' ~ navUrl %}
-                      {% endif %}
+                      {% set navUrl = linkHref(item.url or '#') %}
                       {% set isCurrent = navUrl == currentSlug %}
                       <a href="{{ navUrl }}" class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
                         {{ item.label or item.url }}
@@ -191,7 +190,7 @@
                       {% else %}
                         {% set ctaMobileClass = 'text-violet-600 hover:text-violet-700' %}
                       {% endif %}
-                      <a href="{{ header.cta.url or '#' }}" class="block w-full text-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaMobileClass }}">
+                      <a href="{{ ctaHref }}" class="block w-full text-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaMobileClass }}">
                         {{ header.cta.text }}
                       </a>
                     </div>
@@ -306,7 +305,7 @@
                 </div>
                 {% if settings.ctaLabel %}
                   <a
-                    href="{{ settings.ctaUrl or '#' }}"
+                    href="{{ linkHref(settings.ctaUrl or '#') }}"
                     class="inline-flex w-fit items-center justify-center rounded-full {% if has_image %}bg-white text-slate-900 hover:bg-white/90{% else %}bg-violet-600 text-white hover:bg-violet-500{% endif %} px-6 py-3 text-sm font-semibold shadow-lg"
                   >
                     {{ settings.ctaLabel }}
@@ -344,7 +343,7 @@
                   </div>
                   {% if settings.ctaLabel %}
                     <a
-                      href="{{ settings.ctaUrl or '#' }}"
+                      href="{{ linkHref(settings.ctaUrl or '#') }}"
                       class="inline-flex w-fit items-center justify-center rounded-full bg-violet-600 px-5 py-2 text-white text-sm font-semibold hover:bg-violet-500"
                     >
                       {{ settings.ctaLabel }}
@@ -495,7 +494,7 @@
                             {{ (c_settings.subtitle or child.description or '') | safe }}
                           </div>
                           {% if c_settings.ctaLabel %}
-                            <a href="{{ c_settings.ctaUrl or '#' }}" class="inline-flex rounded-full bg-violet-600 px-4 py-2 text-white text-sm font-semibold hover:bg-violet-500">
+                            <a href="{{ linkHref(c_settings.ctaUrl or '#') }}" class="inline-flex rounded-full bg-violet-600 px-4 py-2 text-white text-sm font-semibold hover:bg-violet-500">
                               {{ c_settings.ctaLabel }}
                             </a>
                           {% endif %}
@@ -543,7 +542,7 @@
                       {% set c_btn_text_color = c_settings.textColor if c_settings.textColor else 'text-white' %}
                       {% set c_btn_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-xl' %}
                       {% set c_btn_size = c_settings.size or 'px-5 py-2.5' %}
-                      <a href="{{ c_settings.url or '#' }}" class="inline-flex items-center gap-2 {{ c_btn_radius }} {{ c_btn_bg }} {{ c_btn_size }} text-sm font-semibold {{ c_btn_text_color }} hover:opacity-90 transition-opacity">
+                      <a href="{{ linkHref(c_settings.url or '#') }}" class="inline-flex items-center gap-2 {{ c_btn_radius }} {{ c_btn_bg }} {{ c_btn_size }} text-sm font-semibold {{ c_btn_text_color }} hover:opacity-90 transition-opacity">
                         {{ c_settings.text or child.label or 'Bouton' }}
                         {% if c_settings.icon %}
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -578,7 +577,7 @@
                         <h4 class="text-lg font-semibold">{{ c_settings.title or child.label or 'Carte' }}</h4>
                         <p class="text-sm text-slate-600">{{ c_settings.description or child.description or '' }}</p>
                         {% if c_settings.ctaText %}
-                          <a href="{{ c_settings.ctaUrl or '#' }}" class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:text-violet-700">
+                          <a href="{{ linkHref(c_settings.ctaUrl or '#') }}" class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:text-violet-700">
                             {{ c_settings.ctaText }}
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -681,7 +680,7 @@
                     <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">{{ (item.summary or item.excerpt or '') | safe }}</div>
                     {% if item.cta and item.cta.text %}
                     <a 
-                      href="{{ item.cta.url or '#' }}" 
+                      href="{{ linkHref(item.cta.url or '#') }}" 
                       class="inline-flex items-center gap-1 mt-2 px-4 py-2 text-sm font-medium text-white bg-[#9C6BFF] hover:bg-[#8654f5] rounded-xl transition-colors"
                     >
                       {{ item.cta.text }}
@@ -791,7 +790,7 @@
           {% set btn_align = settings.align or 'text-left' %}
           <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ btn_align }}">
             <a 
-              href="{{ settings.url or '#' }}" 
+              href="{{ linkHref(settings.url or '#') }}" 
               class="inline-flex items-center gap-2 {{ btn_radius }} {{ btn_bg }} {{ btn_size }} text-sm font-semibold {{ btn_text_color }} hover:opacity-90 transition-opacity"
             >
               {{ settings.text or block.label or 'Bouton' }}
@@ -829,7 +828,7 @@
             <h3 class="text-xl font-semibold">{{ settings.title or block.label or 'Carte' }}</h3>
             <p class="text-sm text-slate-600">{{ settings.description or block.description or '' }}</p>
             {% if settings.ctaText %}
-              <a href="{{ settings.ctaUrl or '#' }}" class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:text-violet-700">
+              <a href="{{ linkHref(settings.ctaUrl or '#') }}" class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:text-violet-700">
                 {{ settings.ctaText }}
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -907,7 +906,7 @@
                     <ul class="space-y-2">
                       {% for link in column.links %}
                         <li>
-                          <a href="{{ link.url or '#' }}" class="text-sm opacity-70 hover:opacity-100 transition-opacity">
+                          <a href="{{ linkHref(link.url or '#') }}" class="text-sm opacity-70 hover:opacity-100 transition-opacity">
                             {{ link.label or link.url }}
                           </a>
                         </li>
@@ -964,10 +963,10 @@
             {% if footer.legal %}
               <div class="flex items-center gap-4">
                 {% if footer.legal.url %}
-                  <a href="{{ footer.legal.url }}" class="hover:opacity-100 transition-opacity">Mentions légales</a>
+                  <a href="{{ linkHref(footer.legal.url) }}" class="hover:opacity-100 transition-opacity">Mentions légales</a>
                 {% endif %}
                 {% if footer.legal.privacyUrl %}
-                  <a href="{{ footer.legal.privacyUrl }}" class="hover:opacity-100 transition-opacity">Confidentialité</a>
+                  <a href="{{ linkHref(footer.legal.privacyUrl) }}" class="hover:opacity-100 transition-opacity">Confidentialité</a>
                 {% endif %}
               </div>
             {% endif %}
