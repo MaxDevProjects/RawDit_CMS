@@ -78,6 +78,8 @@ const TAILWIND_SHADES = ['50', '100', '200', '300', '400', '500', '600', '700', 
 const ALLOWED_COLOR_TOKENS = TAILWIND_HUES.flatMap((hue) =>
   TAILWIND_SHADES.map((shade) => `${hue}-${shade}`),
 );
+const NEUTRAL_COLOR_TOKENS = ['white', 'black', 'transparent'];
+const ALLOWED_COLOR_VALUES = [...ALLOWED_COLOR_TOKENS, ...NEUTRAL_COLOR_TOKENS];
 const ENV_ALLOW_FTP = process.env.ALLOW_FTP === 'true';
 const DEFAULT_COLLECTIONS = [
   {
@@ -479,6 +481,30 @@ const getSiteConfigPath = (siteSlug) =>
 const getThemeConfigPath = (siteSlug) =>
   path.join(SITES_DATA_ROOT, sanitizeSiteSlug(siteSlug), 'config', THEME_CONFIG_FILENAME);
 
+const LEGACY_HEX_TO_TOKEN = {
+  '#9C6BFF': 'violet-500',
+  '#0EA5E9': 'sky-500',
+  '#F97316': 'orange-500',
+  '#FFFFFF': 'white',
+  '#FFF': 'white',
+  '#1E293B': 'slate-800',
+  '#0F172A': 'slate-900',
+  '#000000': 'black',
+};
+const normalizeColorToken = (value, fallback) => {
+  if (!value) {
+    return fallback;
+  }
+  const cleaned = typeof value === 'string' ? value.trim() : '';
+  const lower = cleaned.toLowerCase();
+  if (ALLOWED_COLOR_VALUES.includes(lower)) {
+    return lower;
+  }
+  const legacy =
+    LEGACY_HEX_TO_TOKEN[cleaned.toUpperCase ? cleaned.toUpperCase() : cleaned] || null;
+  return legacy || fallback;
+};
+
 function normalizeMediaReferences(value, safeSlug) {
   if (!safeSlug) {
     return value;
@@ -632,8 +658,18 @@ async function buildSitePages(siteSlug) {
     .readFile(themeConfigPath, 'utf8')
     .then((raw) => JSON.parse(raw || '{}'))
     .catch(() => ({}));
+  const normalizedThemeColors = {
+    primary: normalizeColorToken(themeConfig.colors?.primary, 'violet-500'),
+    secondary: normalizeColorToken(themeConfig.colors?.secondary, 'indigo-400'),
+    accent: normalizeColorToken(themeConfig.colors?.accent, 'emerald-500'),
+    background: normalizeColorToken(themeConfig.colors?.background, 'slate-50'),
+    text: normalizeColorToken(themeConfig.colors?.text, 'slate-900'),
+  };
   const colorToHex = (token, fallback) => {
     if (typeof token !== 'string') return fallback;
+    if (token === 'white') return '#ffffff';
+    if (token === 'black') return '#000000';
+    if (token === 'transparent') return 'transparent';
     const [hue, shade] = token.split('-');
     const color = tailwindColors[hue]?.[shade];
     return color || fallback;
@@ -664,11 +700,11 @@ async function buildSitePages(siteSlug) {
   // inject theme css variables
   const themeCss = [
     ':root {',
-    `  --color-primary: ${colorToHex(themeConfig.colors?.primary, '#9C6BFF')};`,
-    `  --color-secondary: ${colorToHex(themeConfig.colors?.secondary, '#0EA5E9')};`,
-    `  --color-accent: ${colorToHex(themeConfig.colors?.accent, '#F97316')};`,
-    `  --color-background: ${colorToHex(themeConfig.colors?.background, '#FFFFFF')};`,
-    `  --color-text: ${colorToHex(themeConfig.colors?.text, '#0F172A')};`,
+    `  --color-primary: ${colorToHex(normalizedThemeColors.primary, '#9C6BFF')};`,
+    `  --color-secondary: ${colorToHex(normalizedThemeColors.secondary, '#0EA5E9')};`,
+    `  --color-accent: ${colorToHex(normalizedThemeColors.accent, '#F97316')};`,
+    `  --color-background: ${colorToHex(normalizedThemeColors.background, '#FFFFFF')};`,
+    `  --color-text: ${colorToHex(normalizedThemeColors.text, '#0F172A')};`,
     `  --font-headings: ${themeConfig.typography?.headings || 'Inter, sans-serif'};`,
     `  --font-body: ${themeConfig.typography?.body || 'Inter, sans-serif'};`,
     `  --radius-small: ${themeConfig.radius?.small || '8px'};`,
@@ -2396,23 +2432,23 @@ async function start() {
     try {
       const raw = await fs.readFile(filePath, 'utf8').catch(() => '{}');
       const config = JSON.parse(raw || '{}');
-      res.json({
-        colors: {
-          primary: config.colors?.primary || '#9C6BFF',
-          secondary: config.colors?.secondary || '#0EA5E9',
-          accent: config.colors?.accent || '#F97316',
-          background: config.colors?.background || '#FFFFFF',
-        },
-        typography: {
-          headings: config.typography?.headings || 'Inter, sans-serif',
-          body: config.typography?.body || 'Inter, sans-serif',
-        },
-        radius: {
-          small: config.radius?.small || '8px',
-          medium: config.radius?.medium || '16px',
-          large: config.radius?.large || '24px',
-        },
-      });
+      const colors = {
+        primary: normalizeColorToken(config.colors?.primary, 'violet-500'),
+        secondary: normalizeColorToken(config.colors?.secondary, 'indigo-400'),
+        accent: normalizeColorToken(config.colors?.accent, 'emerald-500'),
+        background: normalizeColorToken(config.colors?.background, 'slate-50'),
+        text: normalizeColorToken(config.colors?.text, 'slate-900'),
+      };
+      const typography = {
+        headings: config.typography?.headings || 'Inter, sans-serif',
+        body: config.typography?.body || 'Inter, sans-serif',
+      };
+      const radius = {
+        small: config.radius?.small || '8px',
+        medium: config.radius?.medium || '16px',
+        large: config.radius?.large || '24px',
+      };
+      res.json({ colors, typography, radius });
     } catch (err) {
       console.error('[theme] load failed', err);
       res.status(500).json({ message: 'Impossible de charger le thème.' });
@@ -2426,14 +2462,14 @@ async function start() {
     }
     const payload = req.body || {};
     const colors = {
-      primary: payload.colors?.primary || 'violet-500',
-      secondary: payload.colors?.secondary || 'indigo-400',
-      accent: payload.colors?.accent || 'emerald-500',
-      background: payload.colors?.background || 'slate-50',
-      text: payload.colors?.text || 'slate-900',
+      primary: normalizeColorToken(payload.colors?.primary, 'violet-500'),
+      secondary: normalizeColorToken(payload.colors?.secondary, 'indigo-400'),
+      accent: normalizeColorToken(payload.colors?.accent, 'emerald-500'),
+      background: normalizeColorToken(payload.colors?.background, 'slate-50'),
+      text: normalizeColorToken(payload.colors?.text, 'slate-900'),
     };
     const colorTokens = Object.values(colors);
-    const invalidColor = colorTokens.find((token) => !ALLOWED_COLOR_TOKENS.includes(token));
+    const invalidColor = colorTokens.find((token) => !ALLOWED_COLOR_VALUES.includes(token));
     if (invalidColor) {
       return res.status(400).json({ message: `Couleur invalide: ${invalidColor}` });
     }
