@@ -80,7 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const storedSite = { slug: null, name: '' };
   const loadStoredSite = () => {
     try {
-      storedSite.slug = window.localStorage.getItem(ACTIVE_SITE_KEY);
+      const rawSlug = window.localStorage.getItem(ACTIVE_SITE_KEY);
+      storedSite.slug = rawSlug ? ensureLeadingSlash(stripLeadingSlash(rawSlug)) : null;
       storedSite.name = window.localStorage.getItem(ACTIVE_SITE_NAME_KEY) || '';
     } catch {
       storedSite.slug = null;
@@ -254,6 +255,34 @@ document.addEventListener('DOMContentLoaded', () => {
     ensureRightPanelPlacement();
   };
   ensureMobilePanelPlacement();
+  const panelDefaultZ = {};
+  Object.entries(mobilePanels).forEach(([side, panel]) => {
+    if (!panel) {
+      return;
+    }
+    const computedZ = Number(window.getComputedStyle(panel).zIndex) || 0;
+    panelDefaultZ[side] = computedZ;
+  });
+  const maxDefaultZ =
+    Object.values(panelDefaultZ).reduce((max, value) => Math.max(max, value || 0), 0) || 150;
+  const activePanelZ = maxDefaultZ + 5;
+  const setPanelZState = (side, isActive) => {
+    const panel = mobilePanels[side];
+    if (!panel) {
+      return;
+    }
+    if (isDesktopViewport()) {
+      panel.style.removeProperty('z-index');
+      return;
+    }
+    if (isActive) {
+      panel.style.zIndex = String(activePanelZ);
+    } else if (panelDefaultZ[side]) {
+      panel.style.zIndex = String(panelDefaultZ[side]);
+    } else {
+      panel.style.removeProperty('z-index');
+    }
+  };
   const applyPanelClasses = (panel, classes, method) => {
     if (!panel || !classes) {
       return;
@@ -294,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!panel) {
       return;
     }
+    setPanelZState(side, false);
     setPanelHiddenState(panel, true);
     const trigger = mobilePanelTriggers[side];
     if (trigger) {
@@ -323,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeMobilePanel(activeMobilePanel);
     }
     setPanelHiddenState(panel, false);
+    setPanelZState(side, true);
     activeMobilePanel = side;
     mobilePanelTriggers[side] = trigger || null;
     if (trigger) {
@@ -350,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!panel) {
           return;
         }
+        setPanelZState(side, false);
         panel.classList.remove('pointer-events-none');
         panel.classList.add('pointer-events-auto');
         panel.setAttribute('aria-hidden', 'false');
@@ -365,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (panel.dataset.mobilePanelOpen !== 'true') {
           setPanelHiddenState(panel, true);
+          setPanelZState(side, false);
         }
       });
       if (!activeMobilePanel) {
@@ -418,11 +451,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!slug) {
       return '';
     }
-    return slug.startsWith('/') ? slug : `/${slug}`;
+    const trimmed = `${slug}`.trim();
+    if (!trimmed) {
+      return '';
+    }
+    const withoutLeading = trimmed.replace(/^\/+/, '');
+    if (!withoutLeading) {
+      return '/';
+    }
+    return `/${withoutLeading}`;
   }
 
   function stripLeadingSlash(slug) {
-    return slug?.replace(/^\//, '') || '';
+    if (!slug) {
+      return '';
+    }
+    return `${slug}`.replace(/^\/+/, '');
   }
 
   const persistSiteState = (slug, name) => {
@@ -3884,13 +3928,87 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const contentSectionButtons = document.querySelectorAll('[data-content-section]');
     const contentSectionTriggers = document.querySelectorAll('[data-content-section-trigger]');
-    const contentDrawer = document.querySelector('[data-content-drawer]');
-    const contentDrawerBackdrop = document.querySelector('[data-content-drawer-backdrop]');
-    const contentDrawerOpenButtons = document.querySelectorAll('[data-content-drawer-open]');
-    const contentDrawerCloseButtons = document.querySelectorAll('[data-content-drawer-close]');
     const headerStatusIndicator = document.querySelector('[data-header-status]');
     const footerStatusIndicator = document.querySelector('[data-footer-status]');
     const collectionCountEl = document.querySelector('[data-collection-count]');
+    const itemPanel = document.querySelector('[data-item-panel]');
+    const itemPanelCloseButtons = document.querySelectorAll('[data-item-panel-close]');
+    const collectionEmptyState = document.querySelector('[data-collection-empty]');
+    const collectionItemsEmpty = document.querySelector('[data-collection-items-empty]');
+    const itemTableWrapper = document.querySelector('[data-item-table-wrapper]');
+    const itemTableBody = document.querySelector('[data-item-table-body]');
+    const collectionTitle = document.querySelector('[data-collection-title]');
+    const collectionDescription = document.querySelector('[data-collection-description]');
+    const itemAddButton = document.querySelector('[data-item-add]');
+    const itemDetailEmpty = document.querySelector('[data-item-detail-empty]');
+    const itemForm = document.querySelector('[data-item-form]');
+    const itemFormFields = itemForm
+      ? {
+          title: itemForm.querySelector('[name="item-title"]'),
+          slug: itemForm.querySelector('[name="item-slug"]'),
+          excerpt: itemForm.querySelector('[name="item-excerpt"]'),
+          content: itemForm.querySelector('[name="item-content"]'),
+          image: itemForm.querySelector('[name="item-image"]'),
+          ctaText: itemForm.querySelector('[name="item-cta-text"]'),
+          ctaUrl: itemForm.querySelector('[name="item-cta-url"]'),
+          status: itemForm.querySelector('[name="item-status"]'),
+        }
+      : {};
+    const itemStatusBadge = document.querySelector('[data-item-status-badge]');
+    const itemDeleteButton = document.querySelector('[data-item-delete]');
+    const itemDeleteModal = document.querySelector('[data-item-delete-modal]');
+    const itemDeleteCancel = document.querySelector('[data-item-delete-cancel]');
+    const itemDeleteConfirm = document.querySelector('[data-item-delete-confirm]');
+    const itemFormCancel = document.querySelector('[data-item-cancel]');
+    const itemFormSave = document.querySelector('[data-item-save]');
+    const statusBadgeBaseClass = 'rounded-full px-3 py-1 text-xs font-semibold';
+    const isDesktopViewport = () => window.matchMedia('(min-width: 1024px)').matches;
+    const setItemPanelHiddenState = (hidden) => {
+      if (!itemPanel || isDesktopViewport()) {
+        return;
+      }
+      const hiddenClasses = itemPanel.dataset.itemPanelHidden || '';
+      const visibleClasses = itemPanel.dataset.itemPanelVisible || '';
+      if (hidden) {
+        applyPanelClasses(itemPanel, visibleClasses, 'remove');
+        applyPanelClasses(itemPanel, hiddenClasses, 'add');
+        itemPanel.classList.add('pointer-events-none');
+        itemPanel.dataset.itemPanelOpen = 'false';
+      } else {
+        applyPanelClasses(itemPanel, hiddenClasses, 'remove');
+        applyPanelClasses(itemPanel, visibleClasses, 'add');
+        itemPanel.classList.remove('pointer-events-none');
+        itemPanel.dataset.itemPanelOpen = 'true';
+      }
+    };
+    const syncItemPanelWithViewport = () => {
+      if (!itemPanel) {
+        return;
+      }
+      if (isDesktopViewport()) {
+        const hiddenClasses = itemPanel.dataset.itemPanelHidden || '';
+        applyPanelClasses(itemPanel, hiddenClasses, 'remove');
+        itemPanel.classList.remove('pointer-events-none');
+        itemPanel.dataset.itemPanelOpen = 'true';
+        return;
+      }
+      if (itemForm?.classList.contains('hidden')) {
+        setItemPanelHiddenState(true);
+      } else {
+        setItemPanelHiddenState(false);
+      }
+    };
+    window.addEventListener('resize', syncItemPanelWithViewport);
+    itemPanelCloseButtons.forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (isDesktopViewport()) {
+          return;
+        }
+        hideItemForm();
+      });
+    });
+    syncItemPanelWithViewport();
     
     // Header fields
     const headerFields = {
@@ -3955,24 +4073,6 @@ document.addEventListener('DOMContentLoaded', () => {
       activeContentSection = viewName;
     };
     
-    // Drawer management
-    const openContentDrawer = () => {
-      contentDrawer?.classList.add('is-open');
-      contentDrawer && (contentDrawer.style.transform = 'translateX(0)');
-      contentDrawerBackdrop?.classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
-    };
-    const closeContentDrawer = () => {
-      contentDrawer?.classList.remove('is-open');
-      contentDrawer && (contentDrawer.style.transform = '');
-      contentDrawerBackdrop?.classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
-    };
-    
-    contentDrawerOpenButtons.forEach(btn => btn.addEventListener('click', openContentDrawer));
-    contentDrawerCloseButtons.forEach(btn => btn.addEventListener('click', closeContentDrawer));
-    contentDrawerBackdrop?.addEventListener('click', closeContentDrawer);
-    
     // Section button handlers
     contentSectionButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3980,7 +4080,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (section === 'header' || section === 'footer') {
           showContentView(section);
         }
-        closeContentDrawer();
       });
     });
     contentSectionTriggers.forEach(btn => {
@@ -4312,40 +4411,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize layout data
     loadLayoutData();
     
-    // ═══════════════════════════════════════════════════════════════════
-    // COLLECTIONS (existing code continues below)
-    // ═══════════════════════════════════════════════════════════════════
-    
-    const collectionEmptyState = document.querySelector('[data-collection-empty]');
-    const collectionItemsEmpty = document.querySelector('[data-collection-items-empty]');
-    const itemTableWrapper = document.querySelector('[data-item-table-wrapper]');
-    const itemTableBody = document.querySelector('[data-item-table-body]');
-    const collectionTitle = document.querySelector('[data-collection-title]');
-    const collectionDescription = document.querySelector('[data-collection-description]');
-    const itemAddButton = document.querySelector('[data-item-add]');
-    const itemDetailEmpty = document.querySelector('[data-item-detail-empty]');
-    const itemForm = document.querySelector('[data-item-form]');
-    const itemFormFields = itemForm
-      ? {
-          title: itemForm.querySelector('[name="item-title"]'),
-          slug: itemForm.querySelector('[name="item-slug"]'),
-          excerpt: itemForm.querySelector('[name="item-excerpt"]'),
-          content: itemForm.querySelector('[name="item-content"]'),
-          image: itemForm.querySelector('[name="item-image"]'),
-          ctaText: itemForm.querySelector('[name="item-cta-text"]'),
-          ctaUrl: itemForm.querySelector('[name="item-cta-url"]'),
-          status: itemForm.querySelector('[name="item-status"]'),
-        }
-      : {};
-    const itemStatusBadge = document.querySelector('[data-item-status-badge]');
-    const itemDeleteButton = document.querySelector('[data-item-delete]');
-    const itemDeleteModal = document.querySelector('[data-item-delete-modal]');
-    const itemDeleteCancel = document.querySelector('[data-item-delete-cancel]');
-    const itemDeleteConfirm = document.querySelector('[data-item-delete-confirm]');
-    const itemFormCancel = document.querySelector('[data-item-cancel]');
-    const itemFormSave = document.querySelector('[data-item-save]');
-    const statusBadgeBaseClass = 'rounded-full px-3 py-1 text-xs font-semibold';
-
     const safeSiteSlugValue = stripLeadingSlash(
       workspaceContext?.slugValue || storedSite.slug || '',
     );
@@ -4424,6 +4489,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (itemDeleteButton) {
         itemDeleteButton.disabled = true;
       }
+      syncItemPanelWithViewport();
     };
 
     const showItemForm = () => {
@@ -4432,6 +4498,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       itemForm.classList.remove('hidden');
       itemDetailEmpty?.classList.add('hidden');
+      syncItemPanelWithViewport();
     };
 
     const syncAddButtonState = () => {
@@ -4503,9 +4570,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         button.addEventListener('click', () => {
           setActiveCollection(collection.id);
-          if (!window.matchMedia('(min-width: 1024px)').matches) {
-            closeContentDrawer();
-          }
         });
         collectionList.appendChild(button);
       });
@@ -5669,8 +5733,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       };
 
-      fillColorOptions();
-      initColorPreviews();
       applyButton?.addEventListener('click', async (event) => {
         event.preventDefault();
         if (!themeApi) {
@@ -5708,8 +5770,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!response.ok || result.success === false) {
             throw new Error(result.message || 'Application du thème échouée.');
           }
+          await loadTheme();
           setThemeFeedback(result.message || 'Thème appliqué.', 'success');
-          syncPreview();
         } catch (err) {
           console.error('[settings] apply theme failed', err);
           setThemeFeedback(err.message || 'Erreur lors de l’application du thème.', 'error');
@@ -5722,6 +5784,10 @@ document.addEventListener('DOMContentLoaded', () => {
       initColorPreviews();
       loadTheme();
       syncPreview();
+      document.addEventListener('ai-theme-updated', () => {
+        loadTheme();
+        setThemeFeedback('Thème mis à jour.', 'success');
+      });
     }
 
     // SEO Config form (US9.B1)

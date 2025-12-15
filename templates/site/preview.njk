@@ -22,7 +22,7 @@
     {% elseif site and site.slugValue %}
       {% set slugValue = site.slugValue %}
     {% endif %}
-    {% set slugPart = (slugValue or '') | replace('/', '') %}
+    {% set slugPart = (slugValue or '') | replace('^/+|/+$', '', 'g') | replace('/', '', 'g') %}
     {% if not finalAssetBase %}
       {% if isPreview and slugPart %}
         {% set finalAssetBase = '/sites/' ~ slugPart ~ '/assets' %}

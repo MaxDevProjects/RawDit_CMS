@@ -2,111 +2,61 @@
 {% set pageTitle = "Contenus" %}
 {% set activeWorkspaceTab = "content" %}
 
-{% block workspace_header_actions %}
-  <button
-    type="button"
-    data-content-drawer-open
-    class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#9C6BFF] hover:text-[#9C6BFF] sm:w-auto lg:hidden"
-  >
-    <span class="text-lg leading-none">☰</span>
-    Contenus
-  </button>
-{% endblock %}
+{% block workspace_header_actions %}{% endblock %}
 
 {% block sidebar_start %}
-  {# Mobile trigger #}
-  <div class="lg:hidden flex items-center justify-between gap-3 rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
-    <div>
-      <p class="text-xs uppercase tracking-wide text-slate-500">Contenus</p>
-      <p class="text-sm text-slate-700">Header, Collections, Footer</p>
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4">
+    <div class="space-y-1">
+      <p class="text-[11px] uppercase tracking-wide text-slate-500">Contenus</p>
+      <p class="text-sm text-slate-600">Header, collections structurées et footer.</p>
     </div>
-    <button
-      type="button"
-      data-content-drawer-open
-      class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
-    >
-      <span class="text-lg leading-none">☰</span>
-    </button>
-  </div>
-
-  {# Backdrop mobile #}
-  <div
-    data-content-drawer-backdrop
-    class="fixed inset-0 z-30 hidden bg-slate-900/30 backdrop-blur-sm lg:hidden"
-    aria-hidden="true"
-  ></div>
-
-  {# Sidebar drawer (mobile: fixed, desktop: static) #}
-  <section
-    data-content-drawer
-    class="fixed inset-y-0 left-0 z-40 w-[280px] max-w-[90vw] -translate-x-full transform transition-transform duration-300 lg:relative lg:inset-auto lg:z-auto lg:w-full lg:max-w-none lg:translate-x-0 lg:transform-none"
-    aria-label="Navigation des contenus"
-  >
-    <div class="h-full overflow-y-auto bg-white shadow-2xl lg:h-auto lg:overflow-visible lg:rounded-2xl lg:border lg:border-slate-200 lg:shadow-sm">
-      {# Header mobile #}
-      <div class="flex items-center justify-between border-b border-slate-200 p-4 lg:hidden">
-        <h2 class="text-lg font-semibold text-slate-900">Contenus</h2>
+    <div class="space-y-4">
+      <div class="space-y-2">
         <button
           type="button"
-          data-content-drawer-close
-          class="rounded-full p-2 text-sm text-slate-500 hover:bg-slate-100"
-          aria-label="Fermer"
+          data-content-section="header"
+          class="w-full flex items-center gap-3 rounded-xl border-2 border-transparent bg-gradient-to-r from-violet-50 to-white px-4 py-3 text-left transition-all hover:border-violet-200 hover:shadow-sm data-[active]:border-violet-400 data-[active]:bg-violet-50"
         >
-          ✕
+          <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-600 text-lg">
+            ⬆
+          </span>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-slate-900">Header & Navigation</p>
+            <p class="text-xs text-slate-500 truncate">Logo, menu, liens, CTA</p>
+          </div>
+          <span data-header-status class="h-2 w-2 rounded-full bg-slate-300" title="Non configuré"></span>
         </button>
       </div>
 
-      <div class="p-4 space-y-4">
-        {# SECTION HEADER #}
-        <div class="space-y-2">
-          <button
-            type="button"
-            data-content-section="header"
-            class="w-full flex items-center gap-3 rounded-xl border-2 border-transparent bg-gradient-to-r from-violet-50 to-white px-4 py-3 text-left transition-all hover:border-violet-200 hover:shadow-sm data-[active]:border-violet-400 data-[active]:bg-violet-50"
-          >
-            <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-600 text-lg">
-              ⬆
-            </span>
-            <div class="flex-1 min-w-0">
-              <p class="font-semibold text-slate-900">Header & Navigation</p>
-              <p class="text-xs text-slate-500 truncate">Logo, menu, liens, CTA</p>
-            </div>
-            <span data-header-status class="h-2 w-2 rounded-full bg-slate-300" title="Non configuré"></span>
-          </button>
+      <div class="space-y-2">
+        <div class="flex items-center justify-between px-1">
+          <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Collections</p>
+          <span data-collection-count class="text-xs text-slate-400">0</span>
         </div>
+        <ul
+          data-collection-list
+          class="space-y-1 max-h-[60vh] overflow-y-auto pr-1"
+          role="listbox"
+          aria-label="Collections de contenus"
+        ></ul>
+        <p data-collection-empty class="text-sm text-slate-500 text-center py-3">Aucune collection</p>
+      </div>
 
-        {# SECTION COLLECTIONS #}
-        <div class="space-y-2">
-          <div class="flex items-center justify-between px-1">
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Collections</p>
-            <span data-collection-count class="text-xs text-slate-400">0</span>
+      <div class="space-y-2 pt-2 border-t border-slate-100">
+        <button
+          type="button"
+          data-content-section="footer"
+          class="w-full flex items-center gap-3 rounded-xl border-2 border-transparent bg-gradient-to-r from-slate-50 to-white px-4 py-3 text-left transition-all hover:border-slate-300 hover:shadow-sm data-[active]:border-violet-400 data-[active]:bg-violet-50"
+        >
+          <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 text-lg">
+            ⬇
+          </span>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-slate-900">Footer</p>
+            <p class="text-xs text-slate-500 truncate">Colonnes, liens, réseaux, copyright</p>
           </div>
-          <ul
-            data-collection-list
-            class="space-y-1"
-            role="listbox"
-            aria-label="Collections de contenus"
-          ></ul>
-          <p data-collection-empty class="text-sm text-slate-500 text-center py-3">Aucune collection</p>
-        </div>
-
-        {# SECTION FOOTER #}
-        <div class="space-y-2 pt-2 border-t border-slate-100">
-          <button
-            type="button"
-            data-content-section="footer"
-            class="w-full flex items-center gap-3 rounded-xl border-2 border-transparent bg-gradient-to-r from-slate-50 to-white px-4 py-3 text-left transition-all hover:border-slate-300 hover:shadow-sm data-[active]:border-violet-400 data-[active]:bg-violet-50"
-          >
-            <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 text-lg">
-              ⬇
-            </span>
-            <div class="flex-1 min-w-0">
-              <p class="font-semibold text-slate-900">Footer</p>
-              <p class="text-xs text-slate-500 truncate">Colonnes, liens, réseaux, copyright</p>
-            </div>
-            <span data-footer-status class="h-2 w-2 rounded-full bg-slate-300" title="Non configuré"></span>
-          </button>
-        </div>
+          <span data-footer-status class="h-2 w-2 rounded-full bg-slate-300" title="Non configuré"></span>
+        </button>
       </div>
     </div>
   </section>
@@ -304,12 +254,30 @@
 {% endblock %}
 
 {% block sidebar_end %}
-  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+  <section
+    data-item-panel
+    data-item-panel-hidden="translate-x-full opacity-0 pointer-events-none"
+    data-item-panel-visible="translate-x-0 opacity-100 pointer-events-auto"
+    class="bg-white rounded-2xl border border-slate-200 shadow-sm fixed inset-y-4 right-4 z-[140] flex h-[calc(100vh-2rem)] w-[min(94vw,360px)] translate-x-full flex-col transition duration-300 ease-out lg:static lg:inset-auto lg:z-auto lg:h-auto lg:w-auto lg:max-w-none lg:translate-x-0 lg:pointer-events-auto lg:opacity-100"
+  >
     <div class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-      <h2 class="text-sm font-semibold text-slate-900">Édition de l'item</h2>
-      <span data-item-status-badge class="hidden rounded-full px-3 py-1 text-xs font-semibold"></span>
+      <div>
+        <p class="text-xs uppercase tracking-tight text-slate-500">Collection</p>
+        <h2 class="text-sm font-semibold text-slate-900">Édition de l'item</h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <span data-item-status-badge class="hidden rounded-full px-3 py-1 text-xs font-semibold"></span>
+        <button
+          type="button"
+          data-item-panel-close
+          class="lg:hidden rounded-full p-2 text-sm text-slate-500 transition hover:bg-slate-100"
+          aria-label="Fermer l’éditeur"
+        >
+          ✕
+        </button>
+      </div>
     </div>
-    <div class="p-5 space-y-4">
+    <div class="flex-1 overflow-y-auto p-5 space-y-4">
       <div data-item-detail-empty class="text-sm text-slate-500">Sélectionnez un item ou cliquez sur « Ajouter un item » pour commencer.</div>
       <form data-item-form class="hidden space-y-4">
         <div class="space-y-2">

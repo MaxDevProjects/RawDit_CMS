@@ -10,10 +10,7 @@
     {% elseif data and data.site and data.site.slug %}
       {% set slugPath = data.site.slug %}
     {% endif %}
-    {% set slugPart = slugPath %}
-    {% if slugPart and (slugPart | first) == '/' %}
-      {% set slugPart = slugPart | slice(1) %}
-    {% endif %}
+    {% set slugPart = (slugPath or '') | replace('^/+|/+$', '', 'g') | replace('/', '', 'g') %}
     {% if slugPart %}
       {% set assetBase = '/sites/' ~ slugPart ~ '/assets' %}
     {% else %}
