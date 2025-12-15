@@ -75,7 +75,7 @@
     </div>
 
     <div class=" w-full mx-auto grid grid-cols-1 gap-4 px-4 py-6 lg:grid-cols-[280px_1fr_320px] lg:gap-6 lg:items-start">
-      <aside class="space-y-4 sticky sm:relative top-8">
+      <aside class="space-y-4 lg:sticky relative lg:top-8">
         {% block sidebar_start %}
           <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
             <p class="text-sm text-slate-600">Navigation contextualisée.</p>
@@ -91,7 +91,7 @@
         {% endblock %}
       </main>
 
-      <aside class="space-y-4 sticky sm:relative top-8 h-[80dvh] overflow-y-auto" aria-label="Panneau latéral">
+      <aside class="space-y-4 lg:sticky relative lg:top-8 h-[80dvh] overflow-y-auto" aria-label="Panneau latéral">
         {% block sidebar_end %}
           <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
             <p class="text-sm text-slate-600">Panneau latéral.</p>
