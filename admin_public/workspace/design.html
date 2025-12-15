@@ -128,7 +128,7 @@
     </div>
 
     <div class=" w-full mx-auto grid grid-cols-1 gap-4 px-4 py-6 lg:grid-cols-[280px_1fr_320px] lg:gap-6 lg:items-start">
-      <aside class="space-y-4 sticky sm:relative top-8">
+      <aside class="space-y-4 lg:sticky relative lg:top-8">
         
   <div
     data-mobile-panels-layer
@@ -694,22 +694,47 @@
 
     <div class="rounded-3xl border border-slate-200 bg-slate-100 p-4 lg:sticky lg:top-8">
       <div class="flex flex-wrap items-center justify-between gap-3 pb-3 text-xs font-semibold text-slate-500">
-        <div class="inline-flex items-center gap-3">
+        <div class="inline-flex flex-wrap items-center gap-3" role="group" aria-label="Choisir la vue">
           <span>Vue :</span>
-          <button type="button" class="rounded-full bg-slate-900 px-3 py-1 text-white" disabled>Desktop</button>
-          <button type="button" class="rounded-full bg-slate-200 px-3 py-1 text-slate-500" disabled>Mobile</button>
+          <button
+            type="button"
+            data-preview-view-button
+            data-preview-view="desktop"
+            aria-pressed="true"
+            class="rounded-full bg-slate-900 px-3 py-1 text-white transition"
+          >
+            Desktop
+          </button>
+          <button
+            type="button"
+            data-preview-view-button
+            data-preview-view="mobile"
+            aria-pressed="false"
+            class="rounded-full bg-slate-200 px-3 py-1 text-slate-500 transition"
+          >
+            Mobile
+          </button>
+          <span
+            data-page-preview-current-view
+            aria-live="polite"
+            class="text-[10px] uppercase tracking-wide text-slate-400"
+          >
+            Vue bureau
+          </span>
         </div>
         <div data-preview-status class="hidden text-emerald-600">À jour</div>
       </div>
       <div class="lg:relative rounded-[34px] bg-gradient-to-b from-slate-50 to-slate-100 shadow-lg border border-slate-200">
         <div class="hidden lg:block lg:absolute lg:inset-x-1 lg:top-1 mx-auto h-6 w-36 rounded-full bg-slate-200/70"></div>
         <div class="mt-4 lg:mt-7 rounded-[30px] border border-slate-200 bg-white overflow-hidden" data-page-preview-shell>
-          <iframe
-            data-page-preview-frame
-            class="w-full h-[640px] bg-white"
-            title="Prévisualisation de la page"
-            src=""
-          ></iframe>
+          <div class="flex justify-center px-4 pb-5 pt-5 lg:p-6" data-page-preview-frame-wrapper>
+            <iframe
+              data-page-preview-frame
+              class="w-full h-[640px] bg-white transition-all"
+              title="Prévisualisation de la page"
+              src=""
+            ></iframe>
+          </div>
         </div>
         <div
           data-preview-highlight
@@ -729,7 +754,7 @@
 
       </main>
 
-      <aside class="space-y-4 sticky sm:relative top-8 h-[80dvh] overflow-y-auto" aria-label="Panneau latéral">
+      <aside class="space-y-4 lg:sticky relative lg:top-8 h-[80dvh] overflow-y-auto" aria-label="Panneau latéral">
         
   <section
     id="design-panel-right"
@@ -854,180 +879,11 @@
       <label class="space-y-1 block">
         <span class="text-xs font-medium text-slate-600">Fond</span>
         <div class="relative flex items-center gap-2">
-          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #ffffff;"></span>
-          <select name="paragraph-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
-            <optgroup label="Neutres">
-              <option value="bg-white" data-color="#ffffff">⬜ Blanc</option>
-              <option value="bg-transparent" data-color="transparent">⬜ Transparent</option>
-              <option value="bg-black" data-color="#000000">⬛ Noir</option>
-            </optgroup>
-            <optgroup label="Slate (Gris bleuté)">
-              <option value="bg-slate-50" data-color="#f8fafc">🔲 Slate-50</option>
-              <option value="bg-slate-100" data-color="#f1f5f9">🔲 Slate-100</option>
-              <option value="bg-slate-200" data-color="#e2e8f0">🔲 Slate-200</option>
-            <option value="bg-slate-300" data-color="#cbd5e1">🔲 Slate-300</option>
-            <option value="bg-slate-400" data-color="#94a3b8">🔲 Slate-400</option>
-            <option value="bg-slate-500" data-color="#64748b">🔲 Slate-500</option>
-            <option value="bg-slate-600" data-color="#475569">🔲 Slate-600</option>
-            <option value="bg-slate-700" data-color="#334155">🔲 Slate-700</option>
-            <option value="bg-slate-800" data-color="#1e293b">🔲 Slate-800</option>
-            <option value="bg-slate-900" data-color="#0f172a">🔲 Slate-900</option>
-          </optgroup>
-          <optgroup label="Gray (Gris neutre)">
-            <option value="bg-gray-50" data-color="#f9fafb">🔲 Gray-50</option>
-            <option value="bg-gray-100" data-color="#f3f4f6">🔲 Gray-100</option>
-            <option value="bg-gray-200" data-color="#e5e7eb">🔲 Gray-200</option>
-            <option value="bg-gray-300" data-color="#d1d5db">🔲 Gray-300</option>
-            <option value="bg-gray-400" data-color="#9ca3af">🔲 Gray-400</option>
-            <option value="bg-gray-500" data-color="#6b7280">🔲 Gray-500</option>
-            <option value="bg-gray-600" data-color="#4b5563">🔲 Gray-600</option>
-            <option value="bg-gray-700" data-color="#374151">🔲 Gray-700</option>
-            <option value="bg-gray-800" data-color="#1f2937">🔲 Gray-800</option>
-            <option value="bg-gray-900" data-color="#111827">🔲 Gray-900</option>
-          </optgroup>
-          <optgroup label="Violet">
-            <option value="bg-violet-50" data-color="#f5f3ff">🟪 Violet-50</option>
-            <option value="bg-violet-100" data-color="#ede9fe">🟪 Violet-100</option>
-            <option value="bg-violet-200" data-color="#ddd6fe">🟪 Violet-200</option>
-            <option value="bg-violet-300" data-color="#c4b5fd">🟪 Violet-300</option>
-            <option value="bg-violet-400" data-color="#a78bfa">🟪 Violet-400</option>
-            <option value="bg-violet-500" data-color="#8b5cf6">🟪 Violet-500</option>
-            <option value="bg-violet-600" data-color="#7c3aed">🟪 Violet-600</option>
-            <option value="bg-violet-700" data-color="#6d28d9">🟪 Violet-700</option>
-            <option value="bg-violet-800" data-color="#5b21b6">🟪 Violet-800</option>
-            <option value="bg-violet-900" data-color="#4c1d95">🟪 Violet-900</option>
-          </optgroup>
-          <optgroup label="Blue (Bleu)">
-            <option value="bg-blue-50" data-color="#eff6ff">🟦 Blue-50</option>
-            <option value="bg-blue-100" data-color="#dbeafe">🟦 Blue-100</option>
-            <option value="bg-blue-200" data-color="#bfdbfe">🟦 Blue-200</option>
-            <option value="bg-blue-300" data-color="#93c5fd">🟦 Blue-300</option>
-            <option value="bg-blue-400" data-color="#60a5fa">🟦 Blue-400</option>
-            <option value="bg-blue-500" data-color="#3b82f6">🟦 Blue-500</option>
-            <option value="bg-blue-600" data-color="#2563eb">🟦 Blue-600</option>
-            <option value="bg-blue-700" data-color="#1d4ed8">🟦 Blue-700</option>
-            <option value="bg-blue-800" data-color="#1e40af">🟦 Blue-800</option>
-            <option value="bg-blue-900" data-color="#1e3a8a">🟦 Blue-900</option>
-          </optgroup>
-          <optgroup label="Sky (Bleu ciel)">
-            <option value="bg-sky-50" data-color="#f0f9ff">🔵 Sky-50</option>
-            <option value="bg-sky-100" data-color="#e0f2fe">🔵 Sky-100</option>
-            <option value="bg-sky-200" data-color="#bae6fd">🔵 Sky-200</option>
-            <option value="bg-sky-300" data-color="#7dd3fc">🔵 Sky-300</option>
-            <option value="bg-sky-400" data-color="#38bdf8">🔵 Sky-400</option>
-            <option value="bg-sky-500" data-color="#0ea5e9">🔵 Sky-500</option>
-          </optgroup>
-          <optgroup label="Emerald (Vert émeraude)">
-            <option value="bg-emerald-50" data-color="#ecfdf5">🟩 Emerald-50</option>
-            <option value="bg-emerald-100" data-color="#d1fae5">🟩 Emerald-100</option>
-            <option value="bg-emerald-200" data-color="#a7f3d0">🟩 Emerald-200</option>
-            <option value="bg-emerald-300" data-color="#6ee7b7">🟩 Emerald-300</option>
-            <option value="bg-emerald-400" data-color="#34d399">🟩 Emerald-400</option>
-            <option value="bg-emerald-500" data-color="#10b981">🟩 Emerald-500</option>
-            <option value="bg-emerald-600" data-color="#059669">🟩 Emerald-600</option>
-            <option value="bg-emerald-700" data-color="#047857">🟩 Emerald-700</option>
-            <option value="bg-emerald-800" data-color="#065f46">🟩 Emerald-800</option>
-            <option value="bg-emerald-900" data-color="#064e3b">🟩 Emerald-900</option>
-          </optgroup>
-          <optgroup label="Green (Vert)">
-            <option value="bg-green-50" data-color="#f0fdf4">🟢 Green-50</option>
-            <option value="bg-green-100" data-color="#dcfce7">🟢 Green-100</option>
-            <option value="bg-green-200" data-color="#bbf7d0">🟢 Green-200</option>
-            <option value="bg-green-300" data-color="#86efac">🟢 Green-300</option>
-            <option value="bg-green-400" data-color="#4ade80">🟢 Green-400</option>
-            <option value="bg-green-500" data-color="#22c55e">🟢 Green-500</option>
-          </optgroup>
-          <optgroup label="Yellow (Jaune)">
-            <option value="bg-yellow-50" data-color="#fefce8">🟨 Yellow-50</option>
-            <option value="bg-yellow-100" data-color="#fef9c3">🟨 Yellow-100</option>
-            <option value="bg-yellow-200" data-color="#fef08a">🟨 Yellow-200</option>
-            <option value="bg-yellow-300" data-color="#fde047">🟨 Yellow-300</option>
-            <option value="bg-yellow-400" data-color="#facc15">🟨 Yellow-400</option>
-            <option value="bg-yellow-500" data-color="#eab308">🟨 Yellow-500</option>
-          </optgroup>
-          <optgroup label="Amber (Ambre)">
-            <option value="bg-amber-50" data-color="#fffbeb">🟧 Amber-50</option>
-            <option value="bg-amber-100" data-color="#fef3c7">🟧 Amber-100</option>
-            <option value="bg-amber-200" data-color="#fde68a">🟧 Amber-200</option>
-            <option value="bg-amber-300" data-color="#fcd34d">🟧 Amber-300</option>
-            <option value="bg-amber-400" data-color="#fbbf24">🟧 Amber-400</option>
-            <option value="bg-amber-500" data-color="#f59e0b">🟧 Amber-500</option>
-          </optgroup>
-          <optgroup label="Orange">
-            <option value="bg-orange-50" data-color="#fff7ed">🟠 Orange-50</option>
-            <option value="bg-orange-100" data-color="#ffedd5">🟠 Orange-100</option>
-            <option value="bg-orange-200" data-color="#fed7aa">🟠 Orange-200</option>
-            <option value="bg-orange-300" data-color="#fdba74">🟠 Orange-300</option>
-            <option value="bg-orange-400" data-color="#fb923c">🟠 Orange-400</option>
-            <option value="bg-orange-500" data-color="#f97316">🟠 Orange-500</option>
-          </optgroup>
-          <optgroup label="Red (Rouge)">
-            <option value="bg-red-50" data-color="#fef2f2">🟥 Red-50</option>
-            <option value="bg-red-100" data-color="#fee2e2">🟥 Red-100</option>
-            <option value="bg-red-200" data-color="#fecaca">🟥 Red-200</option>
-            <option value="bg-red-300" data-color="#fca5a5">🟥 Red-300</option>
-            <option value="bg-red-400" data-color="#f87171">🟥 Red-400</option>
-            <option value="bg-red-500" data-color="#ef4444">🟥 Red-500</option>
-            <option value="bg-red-600" data-color="#dc2626">🟥 Red-600</option>
-            <option value="bg-red-700" data-color="#b91c1c">🟥 Red-700</option>
-          </optgroup>
-          <optgroup label="Rose">
-            <option value="bg-rose-50" data-color="#fff1f2">🌸 Rose-50</option>
-            <option value="bg-rose-100" data-color="#ffe4e6">🌸 Rose-100</option>
-            <option value="bg-rose-200" data-color="#fecdd3">🌸 Rose-200</option>
-            <option value="bg-rose-300" data-color="#fda4af">🌸 Rose-300</option>
-            <option value="bg-rose-400" data-color="#fb7185">🌸 Rose-400</option>
-            <option value="bg-rose-500" data-color="#f43f5e">🌸 Rose-500</option>
-          </optgroup>
-          <optgroup label="Pink (Rose vif)">
-            <option value="bg-pink-50" data-color="#fdf2f8">💗 Pink-50</option>
-            <option value="bg-pink-100" data-color="#fce7f3">💗 Pink-100</option>
-            <option value="bg-pink-200" data-color="#fbcfe8">💗 Pink-200</option>
-            <option value="bg-pink-300" data-color="#f9a8d4">💗 Pink-300</option>
-            <option value="bg-pink-400" data-color="#f472b6">💗 Pink-400</option>
-            <option value="bg-pink-500" data-color="#ec4899">💗 Pink-500</option>
-          </optgroup>
-          <optgroup label="Fuchsia">
-            <option value="bg-fuchsia-50" data-color="#fdf4ff">💜 Fuchsia-50</option>
-            <option value="bg-fuchsia-100" data-color="#fae8ff">💜 Fuchsia-100</option>
-            <option value="bg-fuchsia-200" data-color="#f5d0fe">💜 Fuchsia-200</option>
-            <option value="bg-fuchsia-300" data-color="#f0abfc">💜 Fuchsia-300</option>
-            <option value="bg-fuchsia-400" data-color="#e879f9">💜 Fuchsia-400</option>
-            <option value="bg-fuchsia-500" data-color="#d946ef">💜 Fuchsia-500</option>
-          </optgroup>
-          <optgroup label="Purple (Mauve)">
-            <option value="bg-purple-50" data-color="#faf5ff">🔮 Purple-50</option>
-            <option value="bg-purple-100" data-color="#f3e8ff">🔮 Purple-100</option>
-            <option value="bg-purple-200" data-color="#e9d5ff">🔮 Purple-200</option>
-            <option value="bg-purple-300" data-color="#d8b4fe">🔮 Purple-300</option>
-            <option value="bg-purple-400" data-color="#c084fc">🔮 Purple-400</option>
-            <option value="bg-purple-500" data-color="#a855f7">🔮 Purple-500</option>
-          </optgroup>
-          <optgroup label="Indigo">
-            <option value="bg-indigo-50" data-color="#eef2ff">🔷 Indigo-50</option>
-            <option value="bg-indigo-100" data-color="#e0e7ff">🔷 Indigo-100</option>
-            <option value="bg-indigo-200" data-color="#c7d2fe">🔷 Indigo-200</option>
-            <option value="bg-indigo-300" data-color="#a5b4fc">🔷 Indigo-300</option>
-            <option value="bg-indigo-400" data-color="#818cf8">🔷 Indigo-400</option>
-            <option value="bg-indigo-500" data-color="#6366f1">🔷 Indigo-500</option>
-          </optgroup>
-          <optgroup label="Teal (Sarcelle)">
-            <option value="bg-teal-50" data-color="#f0fdfa">🩵 Teal-50</option>
-            <option value="bg-teal-100" data-color="#ccfbf1">🩵 Teal-100</option>
-            <option value="bg-teal-200" data-color="#99f6e4">🩵 Teal-200</option>
-            <option value="bg-teal-300" data-color="#5eead4">🩵 Teal-300</option>
-            <option value="bg-teal-400" data-color="#2dd4bf">🩵 Teal-400</option>
-            <option value="bg-teal-500" data-color="#14b8a6">🩵 Teal-500</option>
-          </optgroup>
-          <optgroup label="Cyan">
-            <option value="bg-cyan-50" data-color="#ecfeff">🔹 Cyan-50</option>
-            <option value="bg-cyan-100" data-color="#cffafe">🔹 Cyan-100</option>
-            <option value="bg-cyan-200" data-color="#a5f3fc">🔹 Cyan-200</option>
-            <option value="bg-cyan-300" data-color="#67e8f9">🔹 Cyan-300</option>
-            <option value="bg-cyan-400" data-color="#22d3ee">🔹 Cyan-400</option>
-            <option value="bg-cyan-500" data-color="#06b6d4">🔹 Cyan-500</option>
-          </optgroup>
-        </select>
+          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+          <select name="paragraph-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select data-theme-color-select disabled>
+            <option value="" disabled>Chargement...</option>
+          </select>
+          <span data-theme-color-chip class="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
         </div>
       </label>
       <label class="space-y-1 block">
@@ -1049,6 +905,19 @@
           <option value="shadow-lg">Forte (lg)</option>
           <option value="shadow-xl">Très forte (xl)</option>
           <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Bordure</span>
+        <select
+          name="paragraph-border"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+          data-default="border border-slate-100 theme-border-accent"
+        >
+          <option value="border-none">Aucune</option>
+          <option value="border border-slate-100 theme-border-accent">Fine (1px)</option>
+          <option value="border-2 border border-slate-200 theme-border-accent">Moyenne (2px)</option>
+          <option value="border-4 border border-slate-200 theme-border-accent">Épaisse (4px)</option>
         </select>
       </label>
     </div>
@@ -1184,180 +1053,11 @@
       <label class="space-y-1 block">
         <span class="text-xs font-medium text-slate-600">Fond</span>
         <div class="relative flex items-center gap-2">
-          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #ffffff;"></span>
-          <select name="hero-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
-            <optgroup label="Neutres">
-              <option value="bg-white" data-color="#ffffff">⬜ Blanc</option>
-              <option value="bg-transparent" data-color="transparent">⬜ Transparent</option>
-              <option value="bg-black" data-color="#000000">⬛ Noir</option>
-            </optgroup>
-            <optgroup label="Slate (Gris bleuté)">
-              <option value="bg-slate-50" data-color="#f8fafc">🔲 Slate-50</option>
-              <option value="bg-slate-100" data-color="#f1f5f9">🔲 Slate-100</option>
-              <option value="bg-slate-200" data-color="#e2e8f0">🔲 Slate-200</option>
-            <option value="bg-slate-300" data-color="#cbd5e1">🔲 Slate-300</option>
-            <option value="bg-slate-400" data-color="#94a3b8">🔲 Slate-400</option>
-            <option value="bg-slate-500" data-color="#64748b">🔲 Slate-500</option>
-            <option value="bg-slate-600" data-color="#475569">🔲 Slate-600</option>
-            <option value="bg-slate-700" data-color="#334155">🔲 Slate-700</option>
-            <option value="bg-slate-800" data-color="#1e293b">🔲 Slate-800</option>
-            <option value="bg-slate-900" data-color="#0f172a">🔲 Slate-900</option>
-          </optgroup>
-          <optgroup label="Gray (Gris neutre)">
-            <option value="bg-gray-50" data-color="#f9fafb">🔲 Gray-50</option>
-            <option value="bg-gray-100" data-color="#f3f4f6">🔲 Gray-100</option>
-            <option value="bg-gray-200" data-color="#e5e7eb">🔲 Gray-200</option>
-            <option value="bg-gray-300" data-color="#d1d5db">🔲 Gray-300</option>
-            <option value="bg-gray-400" data-color="#9ca3af">🔲 Gray-400</option>
-            <option value="bg-gray-500" data-color="#6b7280">🔲 Gray-500</option>
-            <option value="bg-gray-600" data-color="#4b5563">🔲 Gray-600</option>
-            <option value="bg-gray-700" data-color="#374151">🔲 Gray-700</option>
-            <option value="bg-gray-800" data-color="#1f2937">🔲 Gray-800</option>
-            <option value="bg-gray-900" data-color="#111827">🔲 Gray-900</option>
-          </optgroup>
-          <optgroup label="Violet">
-            <option value="bg-violet-50" data-color="#f5f3ff">🟪 Violet-50</option>
-            <option value="bg-violet-100" data-color="#ede9fe">🟪 Violet-100</option>
-            <option value="bg-violet-200" data-color="#ddd6fe">🟪 Violet-200</option>
-            <option value="bg-violet-300" data-color="#c4b5fd">🟪 Violet-300</option>
-            <option value="bg-violet-400" data-color="#a78bfa">🟪 Violet-400</option>
-            <option value="bg-violet-500" data-color="#8b5cf6">🟪 Violet-500</option>
-            <option value="bg-violet-600" data-color="#7c3aed">🟪 Violet-600</option>
-            <option value="bg-violet-700" data-color="#6d28d9">🟪 Violet-700</option>
-            <option value="bg-violet-800" data-color="#5b21b6">🟪 Violet-800</option>
-            <option value="bg-violet-900" data-color="#4c1d95">🟪 Violet-900</option>
-          </optgroup>
-          <optgroup label="Blue (Bleu)">
-            <option value="bg-blue-50" data-color="#eff6ff">🟦 Blue-50</option>
-            <option value="bg-blue-100" data-color="#dbeafe">🟦 Blue-100</option>
-            <option value="bg-blue-200" data-color="#bfdbfe">🟦 Blue-200</option>
-            <option value="bg-blue-300" data-color="#93c5fd">🟦 Blue-300</option>
-            <option value="bg-blue-400" data-color="#60a5fa">🟦 Blue-400</option>
-            <option value="bg-blue-500" data-color="#3b82f6">🟦 Blue-500</option>
-            <option value="bg-blue-600" data-color="#2563eb">🟦 Blue-600</option>
-            <option value="bg-blue-700" data-color="#1d4ed8">🟦 Blue-700</option>
-            <option value="bg-blue-800" data-color="#1e40af">🟦 Blue-800</option>
-            <option value="bg-blue-900" data-color="#1e3a8a">🟦 Blue-900</option>
-          </optgroup>
-          <optgroup label="Sky (Bleu ciel)">
-            <option value="bg-sky-50" data-color="#f0f9ff">🔵 Sky-50</option>
-            <option value="bg-sky-100" data-color="#e0f2fe">🔵 Sky-100</option>
-            <option value="bg-sky-200" data-color="#bae6fd">🔵 Sky-200</option>
-            <option value="bg-sky-300" data-color="#7dd3fc">🔵 Sky-300</option>
-            <option value="bg-sky-400" data-color="#38bdf8">🔵 Sky-400</option>
-            <option value="bg-sky-500" data-color="#0ea5e9">🔵 Sky-500</option>
-          </optgroup>
-          <optgroup label="Emerald (Vert émeraude)">
-            <option value="bg-emerald-50" data-color="#ecfdf5">🟩 Emerald-50</option>
-            <option value="bg-emerald-100" data-color="#d1fae5">🟩 Emerald-100</option>
-            <option value="bg-emerald-200" data-color="#a7f3d0">🟩 Emerald-200</option>
-            <option value="bg-emerald-300" data-color="#6ee7b7">🟩 Emerald-300</option>
-            <option value="bg-emerald-400" data-color="#34d399">🟩 Emerald-400</option>
-            <option value="bg-emerald-500" data-color="#10b981">🟩 Emerald-500</option>
-            <option value="bg-emerald-600" data-color="#059669">🟩 Emerald-600</option>
-            <option value="bg-emerald-700" data-color="#047857">🟩 Emerald-700</option>
-            <option value="bg-emerald-800" data-color="#065f46">🟩 Emerald-800</option>
-            <option value="bg-emerald-900" data-color="#064e3b">🟩 Emerald-900</option>
-          </optgroup>
-          <optgroup label="Green (Vert)">
-            <option value="bg-green-50" data-color="#f0fdf4">🟢 Green-50</option>
-            <option value="bg-green-100" data-color="#dcfce7">🟢 Green-100</option>
-            <option value="bg-green-200" data-color="#bbf7d0">🟢 Green-200</option>
-            <option value="bg-green-300" data-color="#86efac">🟢 Green-300</option>
-            <option value="bg-green-400" data-color="#4ade80">🟢 Green-400</option>
-            <option value="bg-green-500" data-color="#22c55e">🟢 Green-500</option>
-          </optgroup>
-          <optgroup label="Yellow (Jaune)">
-            <option value="bg-yellow-50" data-color="#fefce8">🟨 Yellow-50</option>
-            <option value="bg-yellow-100" data-color="#fef9c3">🟨 Yellow-100</option>
-            <option value="bg-yellow-200" data-color="#fef08a">🟨 Yellow-200</option>
-            <option value="bg-yellow-300" data-color="#fde047">🟨 Yellow-300</option>
-            <option value="bg-yellow-400" data-color="#facc15">🟨 Yellow-400</option>
-            <option value="bg-yellow-500" data-color="#eab308">🟨 Yellow-500</option>
-          </optgroup>
-          <optgroup label="Amber (Ambre)">
-            <option value="bg-amber-50" data-color="#fffbeb">🟧 Amber-50</option>
-            <option value="bg-amber-100" data-color="#fef3c7">🟧 Amber-100</option>
-            <option value="bg-amber-200" data-color="#fde68a">🟧 Amber-200</option>
-            <option value="bg-amber-300" data-color="#fcd34d">🟧 Amber-300</option>
-            <option value="bg-amber-400" data-color="#fbbf24">🟧 Amber-400</option>
-            <option value="bg-amber-500" data-color="#f59e0b">🟧 Amber-500</option>
-          </optgroup>
-          <optgroup label="Orange">
-            <option value="bg-orange-50" data-color="#fff7ed">🟠 Orange-50</option>
-            <option value="bg-orange-100" data-color="#ffedd5">🟠 Orange-100</option>
-            <option value="bg-orange-200" data-color="#fed7aa">🟠 Orange-200</option>
-            <option value="bg-orange-300" data-color="#fdba74">🟠 Orange-300</option>
-            <option value="bg-orange-400" data-color="#fb923c">🟠 Orange-400</option>
-            <option value="bg-orange-500" data-color="#f97316">🟠 Orange-500</option>
-          </optgroup>
-          <optgroup label="Red (Rouge)">
-            <option value="bg-red-50" data-color="#fef2f2">🟥 Red-50</option>
-            <option value="bg-red-100" data-color="#fee2e2">🟥 Red-100</option>
-            <option value="bg-red-200" data-color="#fecaca">🟥 Red-200</option>
-            <option value="bg-red-300" data-color="#fca5a5">🟥 Red-300</option>
-            <option value="bg-red-400" data-color="#f87171">🟥 Red-400</option>
-            <option value="bg-red-500" data-color="#ef4444">🟥 Red-500</option>
-            <option value="bg-red-600" data-color="#dc2626">🟥 Red-600</option>
-            <option value="bg-red-700" data-color="#b91c1c">🟥 Red-700</option>
-          </optgroup>
-          <optgroup label="Rose">
-            <option value="bg-rose-50" data-color="#fff1f2">🌸 Rose-50</option>
-            <option value="bg-rose-100" data-color="#ffe4e6">🌸 Rose-100</option>
-            <option value="bg-rose-200" data-color="#fecdd3">🌸 Rose-200</option>
-            <option value="bg-rose-300" data-color="#fda4af">🌸 Rose-300</option>
-            <option value="bg-rose-400" data-color="#fb7185">🌸 Rose-400</option>
-            <option value="bg-rose-500" data-color="#f43f5e">🌸 Rose-500</option>
-          </optgroup>
-          <optgroup label="Pink (Rose vif)">
-            <option value="bg-pink-50" data-color="#fdf2f8">💗 Pink-50</option>
-            <option value="bg-pink-100" data-color="#fce7f3">💗 Pink-100</option>
-            <option value="bg-pink-200" data-color="#fbcfe8">💗 Pink-200</option>
-            <option value="bg-pink-300" data-color="#f9a8d4">💗 Pink-300</option>
-            <option value="bg-pink-400" data-color="#f472b6">💗 Pink-400</option>
-            <option value="bg-pink-500" data-color="#ec4899">💗 Pink-500</option>
-          </optgroup>
-          <optgroup label="Fuchsia">
-            <option value="bg-fuchsia-50" data-color="#fdf4ff">💜 Fuchsia-50</option>
-            <option value="bg-fuchsia-100" data-color="#fae8ff">💜 Fuchsia-100</option>
-            <option value="bg-fuchsia-200" data-color="#f5d0fe">💜 Fuchsia-200</option>
-            <option value="bg-fuchsia-300" data-color="#f0abfc">💜 Fuchsia-300</option>
-            <option value="bg-fuchsia-400" data-color="#e879f9">💜 Fuchsia-400</option>
-            <option value="bg-fuchsia-500" data-color="#d946ef">💜 Fuchsia-500</option>
-          </optgroup>
-          <optgroup label="Purple (Mauve)">
-            <option value="bg-purple-50" data-color="#faf5ff">🔮 Purple-50</option>
-            <option value="bg-purple-100" data-color="#f3e8ff">🔮 Purple-100</option>
-            <option value="bg-purple-200" data-color="#e9d5ff">🔮 Purple-200</option>
-            <option value="bg-purple-300" data-color="#d8b4fe">🔮 Purple-300</option>
-            <option value="bg-purple-400" data-color="#c084fc">🔮 Purple-400</option>
-            <option value="bg-purple-500" data-color="#a855f7">🔮 Purple-500</option>
-          </optgroup>
-          <optgroup label="Indigo">
-            <option value="bg-indigo-50" data-color="#eef2ff">🔷 Indigo-50</option>
-            <option value="bg-indigo-100" data-color="#e0e7ff">🔷 Indigo-100</option>
-            <option value="bg-indigo-200" data-color="#c7d2fe">🔷 Indigo-200</option>
-            <option value="bg-indigo-300" data-color="#a5b4fc">🔷 Indigo-300</option>
-            <option value="bg-indigo-400" data-color="#818cf8">🔷 Indigo-400</option>
-            <option value="bg-indigo-500" data-color="#6366f1">🔷 Indigo-500</option>
-          </optgroup>
-          <optgroup label="Teal (Sarcelle)">
-            <option value="bg-teal-50" data-color="#f0fdfa">🩵 Teal-50</option>
-            <option value="bg-teal-100" data-color="#ccfbf1">🩵 Teal-100</option>
-            <option value="bg-teal-200" data-color="#99f6e4">🩵 Teal-200</option>
-            <option value="bg-teal-300" data-color="#5eead4">🩵 Teal-300</option>
-            <option value="bg-teal-400" data-color="#2dd4bf">🩵 Teal-400</option>
-            <option value="bg-teal-500" data-color="#14b8a6">🩵 Teal-500</option>
-          </optgroup>
-          <optgroup label="Cyan">
-            <option value="bg-cyan-50" data-color="#ecfeff">🔹 Cyan-50</option>
-            <option value="bg-cyan-100" data-color="#cffafe">🔹 Cyan-100</option>
-            <option value="bg-cyan-200" data-color="#a5f3fc">🔹 Cyan-200</option>
-            <option value="bg-cyan-300" data-color="#67e8f9">🔹 Cyan-300</option>
-            <option value="bg-cyan-400" data-color="#22d3ee">🔹 Cyan-400</option>
-            <option value="bg-cyan-500" data-color="#06b6d4">🔹 Cyan-500</option>
-          </optgroup>
-        </select>
+          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+          <select name="hero-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select data-theme-color-select disabled>
+            <option value="" disabled>Chargement...</option>
+          </select>
+          <span data-theme-color-chip class="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
         </div>
       </label>
       <label class="space-y-1 block">
@@ -1379,6 +1079,19 @@
           <option value="shadow-lg">Forte (lg)</option>
           <option value="shadow-xl">Très forte (xl)</option>
           <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Bordure</span>
+        <select
+          name="hero-border"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+          data-default="border-none"
+        >
+          <option value="border-none">Aucune</option>
+          <option value="border border-slate-100 theme-border-accent">Fine (1px)</option>
+          <option value="border-2 border border-slate-200 theme-border-accent">Moyenne (2px)</option>
+          <option value="border-4 border border-slate-200 theme-border-accent">Épaisse (4px)</option>
         </select>
       </label>
     </div>
@@ -1506,180 +1219,11 @@
       <label class="space-y-1 block">
         <span class="text-xs font-medium text-slate-600">Fond</span>
         <div class="relative flex items-center gap-2">
-          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #ffffff;"></span>
-          <select name="image-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
-            <optgroup label="Neutres">
-              <option value="bg-white" data-color="#ffffff">⬜ Blanc</option>
-              <option value="bg-transparent" data-color="transparent">⬜ Transparent</option>
-              <option value="bg-black" data-color="#000000">⬛ Noir</option>
-            </optgroup>
-            <optgroup label="Slate (Gris bleuté)">
-              <option value="bg-slate-50" data-color="#f8fafc">🔲 Slate-50</option>
-              <option value="bg-slate-100" data-color="#f1f5f9">🔲 Slate-100</option>
-              <option value="bg-slate-200" data-color="#e2e8f0">🔲 Slate-200</option>
-            <option value="bg-slate-300" data-color="#cbd5e1">🔲 Slate-300</option>
-            <option value="bg-slate-400" data-color="#94a3b8">🔲 Slate-400</option>
-            <option value="bg-slate-500" data-color="#64748b">🔲 Slate-500</option>
-            <option value="bg-slate-600" data-color="#475569">🔲 Slate-600</option>
-            <option value="bg-slate-700" data-color="#334155">🔲 Slate-700</option>
-            <option value="bg-slate-800" data-color="#1e293b">🔲 Slate-800</option>
-            <option value="bg-slate-900" data-color="#0f172a">🔲 Slate-900</option>
-          </optgroup>
-          <optgroup label="Gray (Gris neutre)">
-            <option value="bg-gray-50" data-color="#f9fafb">🔲 Gray-50</option>
-            <option value="bg-gray-100" data-color="#f3f4f6">🔲 Gray-100</option>
-            <option value="bg-gray-200" data-color="#e5e7eb">🔲 Gray-200</option>
-            <option value="bg-gray-300" data-color="#d1d5db">🔲 Gray-300</option>
-            <option value="bg-gray-400" data-color="#9ca3af">🔲 Gray-400</option>
-            <option value="bg-gray-500" data-color="#6b7280">🔲 Gray-500</option>
-            <option value="bg-gray-600" data-color="#4b5563">🔲 Gray-600</option>
-            <option value="bg-gray-700" data-color="#374151">🔲 Gray-700</option>
-            <option value="bg-gray-800" data-color="#1f2937">🔲 Gray-800</option>
-            <option value="bg-gray-900" data-color="#111827">🔲 Gray-900</option>
-          </optgroup>
-          <optgroup label="Violet">
-            <option value="bg-violet-50" data-color="#f5f3ff">🟪 Violet-50</option>
-            <option value="bg-violet-100" data-color="#ede9fe">🟪 Violet-100</option>
-            <option value="bg-violet-200" data-color="#ddd6fe">🟪 Violet-200</option>
-            <option value="bg-violet-300" data-color="#c4b5fd">🟪 Violet-300</option>
-            <option value="bg-violet-400" data-color="#a78bfa">🟪 Violet-400</option>
-            <option value="bg-violet-500" data-color="#8b5cf6">🟪 Violet-500</option>
-            <option value="bg-violet-600" data-color="#7c3aed">🟪 Violet-600</option>
-            <option value="bg-violet-700" data-color="#6d28d9">🟪 Violet-700</option>
-            <option value="bg-violet-800" data-color="#5b21b6">🟪 Violet-800</option>
-            <option value="bg-violet-900" data-color="#4c1d95">🟪 Violet-900</option>
-          </optgroup>
-          <optgroup label="Blue (Bleu)">
-            <option value="bg-blue-50" data-color="#eff6ff">🟦 Blue-50</option>
-            <option value="bg-blue-100" data-color="#dbeafe">🟦 Blue-100</option>
-            <option value="bg-blue-200" data-color="#bfdbfe">🟦 Blue-200</option>
-            <option value="bg-blue-300" data-color="#93c5fd">🟦 Blue-300</option>
-            <option value="bg-blue-400" data-color="#60a5fa">🟦 Blue-400</option>
-            <option value="bg-blue-500" data-color="#3b82f6">🟦 Blue-500</option>
-            <option value="bg-blue-600" data-color="#2563eb">🟦 Blue-600</option>
-            <option value="bg-blue-700" data-color="#1d4ed8">🟦 Blue-700</option>
-            <option value="bg-blue-800" data-color="#1e40af">🟦 Blue-800</option>
-            <option value="bg-blue-900" data-color="#1e3a8a">🟦 Blue-900</option>
-          </optgroup>
-          <optgroup label="Sky (Bleu ciel)">
-            <option value="bg-sky-50" data-color="#f0f9ff">🔵 Sky-50</option>
-            <option value="bg-sky-100" data-color="#e0f2fe">🔵 Sky-100</option>
-            <option value="bg-sky-200" data-color="#bae6fd">🔵 Sky-200</option>
-            <option value="bg-sky-300" data-color="#7dd3fc">🔵 Sky-300</option>
-            <option value="bg-sky-400" data-color="#38bdf8">🔵 Sky-400</option>
-            <option value="bg-sky-500" data-color="#0ea5e9">🔵 Sky-500</option>
-          </optgroup>
-          <optgroup label="Emerald (Vert émeraude)">
-            <option value="bg-emerald-50" data-color="#ecfdf5">🟩 Emerald-50</option>
-            <option value="bg-emerald-100" data-color="#d1fae5">🟩 Emerald-100</option>
-            <option value="bg-emerald-200" data-color="#a7f3d0">🟩 Emerald-200</option>
-            <option value="bg-emerald-300" data-color="#6ee7b7">🟩 Emerald-300</option>
-            <option value="bg-emerald-400" data-color="#34d399">🟩 Emerald-400</option>
-            <option value="bg-emerald-500" data-color="#10b981">🟩 Emerald-500</option>
-            <option value="bg-emerald-600" data-color="#059669">🟩 Emerald-600</option>
-            <option value="bg-emerald-700" data-color="#047857">🟩 Emerald-700</option>
-            <option value="bg-emerald-800" data-color="#065f46">🟩 Emerald-800</option>
-            <option value="bg-emerald-900" data-color="#064e3b">🟩 Emerald-900</option>
-          </optgroup>
-          <optgroup label="Green (Vert)">
-            <option value="bg-green-50" data-color="#f0fdf4">🟢 Green-50</option>
-            <option value="bg-green-100" data-color="#dcfce7">🟢 Green-100</option>
-            <option value="bg-green-200" data-color="#bbf7d0">🟢 Green-200</option>
-            <option value="bg-green-300" data-color="#86efac">🟢 Green-300</option>
-            <option value="bg-green-400" data-color="#4ade80">🟢 Green-400</option>
-            <option value="bg-green-500" data-color="#22c55e">🟢 Green-500</option>
-          </optgroup>
-          <optgroup label="Yellow (Jaune)">
-            <option value="bg-yellow-50" data-color="#fefce8">🟨 Yellow-50</option>
-            <option value="bg-yellow-100" data-color="#fef9c3">🟨 Yellow-100</option>
-            <option value="bg-yellow-200" data-color="#fef08a">🟨 Yellow-200</option>
-            <option value="bg-yellow-300" data-color="#fde047">🟨 Yellow-300</option>
-            <option value="bg-yellow-400" data-color="#facc15">🟨 Yellow-400</option>
-            <option value="bg-yellow-500" data-color="#eab308">🟨 Yellow-500</option>
-          </optgroup>
-          <optgroup label="Amber (Ambre)">
-            <option value="bg-amber-50" data-color="#fffbeb">🟧 Amber-50</option>
-            <option value="bg-amber-100" data-color="#fef3c7">🟧 Amber-100</option>
-            <option value="bg-amber-200" data-color="#fde68a">🟧 Amber-200</option>
-            <option value="bg-amber-300" data-color="#fcd34d">🟧 Amber-300</option>
-            <option value="bg-amber-400" data-color="#fbbf24">🟧 Amber-400</option>
-            <option value="bg-amber-500" data-color="#f59e0b">🟧 Amber-500</option>
-          </optgroup>
-          <optgroup label="Orange">
-            <option value="bg-orange-50" data-color="#fff7ed">🟠 Orange-50</option>
-            <option value="bg-orange-100" data-color="#ffedd5">🟠 Orange-100</option>
-            <option value="bg-orange-200" data-color="#fed7aa">🟠 Orange-200</option>
-            <option value="bg-orange-300" data-color="#fdba74">🟠 Orange-300</option>
-            <option value="bg-orange-400" data-color="#fb923c">🟠 Orange-400</option>
-            <option value="bg-orange-500" data-color="#f97316">🟠 Orange-500</option>
-          </optgroup>
-          <optgroup label="Red (Rouge)">
-            <option value="bg-red-50" data-color="#fef2f2">🟥 Red-50</option>
-            <option value="bg-red-100" data-color="#fee2e2">🟥 Red-100</option>
-            <option value="bg-red-200" data-color="#fecaca">🟥 Red-200</option>
-            <option value="bg-red-300" data-color="#fca5a5">🟥 Red-300</option>
-            <option value="bg-red-400" data-color="#f87171">🟥 Red-400</option>
-            <option value="bg-red-500" data-color="#ef4444">🟥 Red-500</option>
-            <option value="bg-red-600" data-color="#dc2626">🟥 Red-600</option>
-            <option value="bg-red-700" data-color="#b91c1c">🟥 Red-700</option>
-          </optgroup>
-          <optgroup label="Rose">
-            <option value="bg-rose-50" data-color="#fff1f2">🌸 Rose-50</option>
-            <option value="bg-rose-100" data-color="#ffe4e6">🌸 Rose-100</option>
-            <option value="bg-rose-200" data-color="#fecdd3">🌸 Rose-200</option>
-            <option value="bg-rose-300" data-color="#fda4af">🌸 Rose-300</option>
-            <option value="bg-rose-400" data-color="#fb7185">🌸 Rose-400</option>
-            <option value="bg-rose-500" data-color="#f43f5e">🌸 Rose-500</option>
-          </optgroup>
-          <optgroup label="Pink (Rose vif)">
-            <option value="bg-pink-50" data-color="#fdf2f8">💗 Pink-50</option>
-            <option value="bg-pink-100" data-color="#fce7f3">💗 Pink-100</option>
-            <option value="bg-pink-200" data-color="#fbcfe8">💗 Pink-200</option>
-            <option value="bg-pink-300" data-color="#f9a8d4">💗 Pink-300</option>
-            <option value="bg-pink-400" data-color="#f472b6">💗 Pink-400</option>
-            <option value="bg-pink-500" data-color="#ec4899">💗 Pink-500</option>
-          </optgroup>
-          <optgroup label="Fuchsia">
-            <option value="bg-fuchsia-50" data-color="#fdf4ff">💜 Fuchsia-50</option>
-            <option value="bg-fuchsia-100" data-color="#fae8ff">💜 Fuchsia-100</option>
-            <option value="bg-fuchsia-200" data-color="#f5d0fe">💜 Fuchsia-200</option>
-            <option value="bg-fuchsia-300" data-color="#f0abfc">💜 Fuchsia-300</option>
-            <option value="bg-fuchsia-400" data-color="#e879f9">💜 Fuchsia-400</option>
-            <option value="bg-fuchsia-500" data-color="#d946ef">💜 Fuchsia-500</option>
-          </optgroup>
-          <optgroup label="Purple (Mauve)">
-            <option value="bg-purple-50" data-color="#faf5ff">🔮 Purple-50</option>
-            <option value="bg-purple-100" data-color="#f3e8ff">🔮 Purple-100</option>
-            <option value="bg-purple-200" data-color="#e9d5ff">🔮 Purple-200</option>
-            <option value="bg-purple-300" data-color="#d8b4fe">🔮 Purple-300</option>
-            <option value="bg-purple-400" data-color="#c084fc">🔮 Purple-400</option>
-            <option value="bg-purple-500" data-color="#a855f7">🔮 Purple-500</option>
-          </optgroup>
-          <optgroup label="Indigo">
-            <option value="bg-indigo-50" data-color="#eef2ff">🔷 Indigo-50</option>
-            <option value="bg-indigo-100" data-color="#e0e7ff">🔷 Indigo-100</option>
-            <option value="bg-indigo-200" data-color="#c7d2fe">🔷 Indigo-200</option>
-            <option value="bg-indigo-300" data-color="#a5b4fc">🔷 Indigo-300</option>
-            <option value="bg-indigo-400" data-color="#818cf8">🔷 Indigo-400</option>
-            <option value="bg-indigo-500" data-color="#6366f1">🔷 Indigo-500</option>
-          </optgroup>
-          <optgroup label="Teal (Sarcelle)">
-            <option value="bg-teal-50" data-color="#f0fdfa">🩵 Teal-50</option>
-            <option value="bg-teal-100" data-color="#ccfbf1">🩵 Teal-100</option>
-            <option value="bg-teal-200" data-color="#99f6e4">🩵 Teal-200</option>
-            <option value="bg-teal-300" data-color="#5eead4">🩵 Teal-300</option>
-            <option value="bg-teal-400" data-color="#2dd4bf">🩵 Teal-400</option>
-            <option value="bg-teal-500" data-color="#14b8a6">🩵 Teal-500</option>
-          </optgroup>
-          <optgroup label="Cyan">
-            <option value="bg-cyan-50" data-color="#ecfeff">🔹 Cyan-50</option>
-            <option value="bg-cyan-100" data-color="#cffafe">🔹 Cyan-100</option>
-            <option value="bg-cyan-200" data-color="#a5f3fc">🔹 Cyan-200</option>
-            <option value="bg-cyan-300" data-color="#67e8f9">🔹 Cyan-300</option>
-            <option value="bg-cyan-400" data-color="#22d3ee">🔹 Cyan-400</option>
-            <option value="bg-cyan-500" data-color="#06b6d4">🔹 Cyan-500</option>
-          </optgroup>
-        </select>
+          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+          <select name="image-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select data-theme-color-select disabled>
+            <option value="" disabled>Chargement...</option>
+          </select>
+          <span data-theme-color-chip class="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
         </div>
       </label>
       <label class="space-y-1 block">
@@ -1701,6 +1245,19 @@
           <option value="shadow-lg">Forte (lg)</option>
           <option value="shadow-xl">Très forte (xl)</option>
           <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Bordure</span>
+        <select
+          name="image-border"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+          data-default="border border-slate-100 theme-border-accent"
+        >
+          <option value="border-none">Aucune</option>
+          <option value="border border-slate-100 theme-border-accent">Fine (1px)</option>
+          <option value="border-2 border border-slate-200 theme-border-accent">Moyenne (2px)</option>
+          <option value="border-4 border border-slate-200 theme-border-accent">Épaisse (4px)</option>
         </select>
       </label>
     </div>
@@ -1822,180 +1379,11 @@
       <label class="space-y-1 block">
         <span class="text-xs font-medium text-slate-600">Fond</span>
         <div class="relative flex items-center gap-2">
-          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #ffffff;"></span>
-          <select name="group-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
-            <optgroup label="Neutres">
-              <option value="bg-white" data-color="#ffffff">⬜ Blanc</option>
-              <option value="bg-transparent" data-color="transparent">⬜ Transparent</option>
-              <option value="bg-black" data-color="#000000">⬛ Noir</option>
-            </optgroup>
-            <optgroup label="Slate (Gris bleuté)">
-              <option value="bg-slate-50" data-color="#f8fafc">🔲 Slate-50</option>
-              <option value="bg-slate-100" data-color="#f1f5f9">🔲 Slate-100</option>
-              <option value="bg-slate-200" data-color="#e2e8f0">🔲 Slate-200</option>
-            <option value="bg-slate-300" data-color="#cbd5e1">🔲 Slate-300</option>
-            <option value="bg-slate-400" data-color="#94a3b8">🔲 Slate-400</option>
-            <option value="bg-slate-500" data-color="#64748b">🔲 Slate-500</option>
-            <option value="bg-slate-600" data-color="#475569">🔲 Slate-600</option>
-            <option value="bg-slate-700" data-color="#334155">🔲 Slate-700</option>
-            <option value="bg-slate-800" data-color="#1e293b">🔲 Slate-800</option>
-            <option value="bg-slate-900" data-color="#0f172a">🔲 Slate-900</option>
-          </optgroup>
-          <optgroup label="Gray (Gris neutre)">
-            <option value="bg-gray-50" data-color="#f9fafb">🔲 Gray-50</option>
-            <option value="bg-gray-100" data-color="#f3f4f6">🔲 Gray-100</option>
-            <option value="bg-gray-200" data-color="#e5e7eb">🔲 Gray-200</option>
-            <option value="bg-gray-300" data-color="#d1d5db">🔲 Gray-300</option>
-            <option value="bg-gray-400" data-color="#9ca3af">🔲 Gray-400</option>
-            <option value="bg-gray-500" data-color="#6b7280">🔲 Gray-500</option>
-            <option value="bg-gray-600" data-color="#4b5563">🔲 Gray-600</option>
-            <option value="bg-gray-700" data-color="#374151">🔲 Gray-700</option>
-            <option value="bg-gray-800" data-color="#1f2937">🔲 Gray-800</option>
-            <option value="bg-gray-900" data-color="#111827">🔲 Gray-900</option>
-          </optgroup>
-          <optgroup label="Violet">
-            <option value="bg-violet-50" data-color="#f5f3ff">🟪 Violet-50</option>
-            <option value="bg-violet-100" data-color="#ede9fe">🟪 Violet-100</option>
-            <option value="bg-violet-200" data-color="#ddd6fe">🟪 Violet-200</option>
-            <option value="bg-violet-300" data-color="#c4b5fd">🟪 Violet-300</option>
-            <option value="bg-violet-400" data-color="#a78bfa">🟪 Violet-400</option>
-            <option value="bg-violet-500" data-color="#8b5cf6">🟪 Violet-500</option>
-            <option value="bg-violet-600" data-color="#7c3aed">🟪 Violet-600</option>
-            <option value="bg-violet-700" data-color="#6d28d9">🟪 Violet-700</option>
-            <option value="bg-violet-800" data-color="#5b21b6">🟪 Violet-800</option>
-            <option value="bg-violet-900" data-color="#4c1d95">🟪 Violet-900</option>
-          </optgroup>
-          <optgroup label="Blue (Bleu)">
-            <option value="bg-blue-50" data-color="#eff6ff">🟦 Blue-50</option>
-            <option value="bg-blue-100" data-color="#dbeafe">🟦 Blue-100</option>
-            <option value="bg-blue-200" data-color="#bfdbfe">🟦 Blue-200</option>
-            <option value="bg-blue-300" data-color="#93c5fd">🟦 Blue-300</option>
-            <option value="bg-blue-400" data-color="#60a5fa">🟦 Blue-400</option>
-            <option value="bg-blue-500" data-color="#3b82f6">🟦 Blue-500</option>
-            <option value="bg-blue-600" data-color="#2563eb">🟦 Blue-600</option>
-            <option value="bg-blue-700" data-color="#1d4ed8">🟦 Blue-700</option>
-            <option value="bg-blue-800" data-color="#1e40af">🟦 Blue-800</option>
-            <option value="bg-blue-900" data-color="#1e3a8a">🟦 Blue-900</option>
-          </optgroup>
-          <optgroup label="Sky (Bleu ciel)">
-            <option value="bg-sky-50" data-color="#f0f9ff">🔵 Sky-50</option>
-            <option value="bg-sky-100" data-color="#e0f2fe">🔵 Sky-100</option>
-            <option value="bg-sky-200" data-color="#bae6fd">🔵 Sky-200</option>
-            <option value="bg-sky-300" data-color="#7dd3fc">🔵 Sky-300</option>
-            <option value="bg-sky-400" data-color="#38bdf8">🔵 Sky-400</option>
-            <option value="bg-sky-500" data-color="#0ea5e9">🔵 Sky-500</option>
-          </optgroup>
-          <optgroup label="Emerald (Vert émeraude)">
-            <option value="bg-emerald-50" data-color="#ecfdf5">🟩 Emerald-50</option>
-            <option value="bg-emerald-100" data-color="#d1fae5">🟩 Emerald-100</option>
-            <option value="bg-emerald-200" data-color="#a7f3d0">🟩 Emerald-200</option>
-            <option value="bg-emerald-300" data-color="#6ee7b7">🟩 Emerald-300</option>
-            <option value="bg-emerald-400" data-color="#34d399">🟩 Emerald-400</option>
-            <option value="bg-emerald-500" data-color="#10b981">🟩 Emerald-500</option>
-            <option value="bg-emerald-600" data-color="#059669">🟩 Emerald-600</option>
-            <option value="bg-emerald-700" data-color="#047857">🟩 Emerald-700</option>
-            <option value="bg-emerald-800" data-color="#065f46">🟩 Emerald-800</option>
-            <option value="bg-emerald-900" data-color="#064e3b">🟩 Emerald-900</option>
-          </optgroup>
-          <optgroup label="Green (Vert)">
-            <option value="bg-green-50" data-color="#f0fdf4">🟢 Green-50</option>
-            <option value="bg-green-100" data-color="#dcfce7">🟢 Green-100</option>
-            <option value="bg-green-200" data-color="#bbf7d0">🟢 Green-200</option>
-            <option value="bg-green-300" data-color="#86efac">🟢 Green-300</option>
-            <option value="bg-green-400" data-color="#4ade80">🟢 Green-400</option>
-            <option value="bg-green-500" data-color="#22c55e">🟢 Green-500</option>
-          </optgroup>
-          <optgroup label="Yellow (Jaune)">
-            <option value="bg-yellow-50" data-color="#fefce8">🟨 Yellow-50</option>
-            <option value="bg-yellow-100" data-color="#fef9c3">🟨 Yellow-100</option>
-            <option value="bg-yellow-200" data-color="#fef08a">🟨 Yellow-200</option>
-            <option value="bg-yellow-300" data-color="#fde047">🟨 Yellow-300</option>
-            <option value="bg-yellow-400" data-color="#facc15">🟨 Yellow-400</option>
-            <option value="bg-yellow-500" data-color="#eab308">🟨 Yellow-500</option>
-          </optgroup>
-          <optgroup label="Amber (Ambre)">
-            <option value="bg-amber-50" data-color="#fffbeb">🟧 Amber-50</option>
-            <option value="bg-amber-100" data-color="#fef3c7">🟧 Amber-100</option>
-            <option value="bg-amber-200" data-color="#fde68a">🟧 Amber-200</option>
-            <option value="bg-amber-300" data-color="#fcd34d">🟧 Amber-300</option>
-            <option value="bg-amber-400" data-color="#fbbf24">🟧 Amber-400</option>
-            <option value="bg-amber-500" data-color="#f59e0b">🟧 Amber-500</option>
-          </optgroup>
-          <optgroup label="Orange">
-            <option value="bg-orange-50" data-color="#fff7ed">🟠 Orange-50</option>
-            <option value="bg-orange-100" data-color="#ffedd5">🟠 Orange-100</option>
-            <option value="bg-orange-200" data-color="#fed7aa">🟠 Orange-200</option>
-            <option value="bg-orange-300" data-color="#fdba74">🟠 Orange-300</option>
-            <option value="bg-orange-400" data-color="#fb923c">🟠 Orange-400</option>
-            <option value="bg-orange-500" data-color="#f97316">🟠 Orange-500</option>
-          </optgroup>
-          <optgroup label="Red (Rouge)">
-            <option value="bg-red-50" data-color="#fef2f2">🟥 Red-50</option>
-            <option value="bg-red-100" data-color="#fee2e2">🟥 Red-100</option>
-            <option value="bg-red-200" data-color="#fecaca">🟥 Red-200</option>
-            <option value="bg-red-300" data-color="#fca5a5">🟥 Red-300</option>
-            <option value="bg-red-400" data-color="#f87171">🟥 Red-400</option>
-            <option value="bg-red-500" data-color="#ef4444">🟥 Red-500</option>
-            <option value="bg-red-600" data-color="#dc2626">🟥 Red-600</option>
-            <option value="bg-red-700" data-color="#b91c1c">🟥 Red-700</option>
-          </optgroup>
-          <optgroup label="Rose">
-            <option value="bg-rose-50" data-color="#fff1f2">🌸 Rose-50</option>
-            <option value="bg-rose-100" data-color="#ffe4e6">🌸 Rose-100</option>
-            <option value="bg-rose-200" data-color="#fecdd3">🌸 Rose-200</option>
-            <option value="bg-rose-300" data-color="#fda4af">🌸 Rose-300</option>
-            <option value="bg-rose-400" data-color="#fb7185">🌸 Rose-400</option>
-            <option value="bg-rose-500" data-color="#f43f5e">🌸 Rose-500</option>
-          </optgroup>
-          <optgroup label="Pink (Rose vif)">
-            <option value="bg-pink-50" data-color="#fdf2f8">💗 Pink-50</option>
-            <option value="bg-pink-100" data-color="#fce7f3">💗 Pink-100</option>
-            <option value="bg-pink-200" data-color="#fbcfe8">💗 Pink-200</option>
-            <option value="bg-pink-300" data-color="#f9a8d4">💗 Pink-300</option>
-            <option value="bg-pink-400" data-color="#f472b6">💗 Pink-400</option>
-            <option value="bg-pink-500" data-color="#ec4899">💗 Pink-500</option>
-          </optgroup>
-          <optgroup label="Fuchsia">
-            <option value="bg-fuchsia-50" data-color="#fdf4ff">💜 Fuchsia-50</option>
-            <option value="bg-fuchsia-100" data-color="#fae8ff">💜 Fuchsia-100</option>
-            <option value="bg-fuchsia-200" data-color="#f5d0fe">💜 Fuchsia-200</option>
-            <option value="bg-fuchsia-300" data-color="#f0abfc">💜 Fuchsia-300</option>
-            <option value="bg-fuchsia-400" data-color="#e879f9">💜 Fuchsia-400</option>
-            <option value="bg-fuchsia-500" data-color="#d946ef">💜 Fuchsia-500</option>
-          </optgroup>
-          <optgroup label="Purple (Mauve)">
-            <option value="bg-purple-50" data-color="#faf5ff">🔮 Purple-50</option>
-            <option value="bg-purple-100" data-color="#f3e8ff">🔮 Purple-100</option>
-            <option value="bg-purple-200" data-color="#e9d5ff">🔮 Purple-200</option>
-            <option value="bg-purple-300" data-color="#d8b4fe">🔮 Purple-300</option>
-            <option value="bg-purple-400" data-color="#c084fc">🔮 Purple-400</option>
-            <option value="bg-purple-500" data-color="#a855f7">🔮 Purple-500</option>
-          </optgroup>
-          <optgroup label="Indigo">
-            <option value="bg-indigo-50" data-color="#eef2ff">🔷 Indigo-50</option>
-            <option value="bg-indigo-100" data-color="#e0e7ff">🔷 Indigo-100</option>
-            <option value="bg-indigo-200" data-color="#c7d2fe">🔷 Indigo-200</option>
-            <option value="bg-indigo-300" data-color="#a5b4fc">🔷 Indigo-300</option>
-            <option value="bg-indigo-400" data-color="#818cf8">🔷 Indigo-400</option>
-            <option value="bg-indigo-500" data-color="#6366f1">🔷 Indigo-500</option>
-          </optgroup>
-          <optgroup label="Teal (Sarcelle)">
-            <option value="bg-teal-50" data-color="#f0fdfa">🩵 Teal-50</option>
-            <option value="bg-teal-100" data-color="#ccfbf1">🩵 Teal-100</option>
-            <option value="bg-teal-200" data-color="#99f6e4">🩵 Teal-200</option>
-            <option value="bg-teal-300" data-color="#5eead4">🩵 Teal-300</option>
-            <option value="bg-teal-400" data-color="#2dd4bf">🩵 Teal-400</option>
-            <option value="bg-teal-500" data-color="#14b8a6">🩵 Teal-500</option>
-          </optgroup>
-          <optgroup label="Cyan">
-            <option value="bg-cyan-50" data-color="#ecfeff">🔹 Cyan-50</option>
-            <option value="bg-cyan-100" data-color="#cffafe">🔹 Cyan-100</option>
-            <option value="bg-cyan-200" data-color="#a5f3fc">🔹 Cyan-200</option>
-            <option value="bg-cyan-300" data-color="#67e8f9">🔹 Cyan-300</option>
-            <option value="bg-cyan-400" data-color="#22d3ee">🔹 Cyan-400</option>
-            <option value="bg-cyan-500" data-color="#06b6d4">🔹 Cyan-500</option>
-          </optgroup>
-        </select>
+          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+          <select name="group-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select data-theme-color-select disabled>
+            <option value="" disabled>Chargement...</option>
+          </select>
+          <span data-theme-color-chip class="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
         </div>
       </label>
       <label class="space-y-1 block">
@@ -2017,6 +1405,19 @@
           <option value="shadow-lg">Forte (lg)</option>
           <option value="shadow-xl">Très forte (xl)</option>
           <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Bordure</span>
+        <select
+          name="group-border"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+          data-default="border border-slate-100 theme-border-accent"
+        >
+          <option value="border-none">Aucune</option>
+          <option value="border border-slate-100 theme-border-accent">Fine (1px)</option>
+          <option value="border-2 border border-slate-200 theme-border-accent">Moyenne (2px)</option>
+          <option value="border-4 border border-slate-200 theme-border-accent">Épaisse (4px)</option>
         </select>
       </label>
     </div>
@@ -2173,180 +1574,11 @@
       <label class="space-y-1 block">
         <span class="text-xs font-medium text-slate-600">Fond</span>
         <div class="relative flex items-center gap-2">
-          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #ffffff;"></span>
-          <select name="collection-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
-            <optgroup label="Neutres">
-              <option value="bg-white" data-color="#ffffff">⬜ Blanc</option>
-              <option value="bg-transparent" data-color="transparent">⬜ Transparent</option>
-              <option value="bg-black" data-color="#000000">⬛ Noir</option>
-            </optgroup>
-            <optgroup label="Slate (Gris bleuté)">
-              <option value="bg-slate-50" data-color="#f8fafc">🔲 Slate-50</option>
-              <option value="bg-slate-100" data-color="#f1f5f9">🔲 Slate-100</option>
-              <option value="bg-slate-200" data-color="#e2e8f0">🔲 Slate-200</option>
-            <option value="bg-slate-300" data-color="#cbd5e1">🔲 Slate-300</option>
-            <option value="bg-slate-400" data-color="#94a3b8">🔲 Slate-400</option>
-            <option value="bg-slate-500" data-color="#64748b">🔲 Slate-500</option>
-            <option value="bg-slate-600" data-color="#475569">🔲 Slate-600</option>
-            <option value="bg-slate-700" data-color="#334155">🔲 Slate-700</option>
-            <option value="bg-slate-800" data-color="#1e293b">🔲 Slate-800</option>
-            <option value="bg-slate-900" data-color="#0f172a">🔲 Slate-900</option>
-          </optgroup>
-          <optgroup label="Gray (Gris neutre)">
-            <option value="bg-gray-50" data-color="#f9fafb">🔲 Gray-50</option>
-            <option value="bg-gray-100" data-color="#f3f4f6">🔲 Gray-100</option>
-            <option value="bg-gray-200" data-color="#e5e7eb">🔲 Gray-200</option>
-            <option value="bg-gray-300" data-color="#d1d5db">🔲 Gray-300</option>
-            <option value="bg-gray-400" data-color="#9ca3af">🔲 Gray-400</option>
-            <option value="bg-gray-500" data-color="#6b7280">🔲 Gray-500</option>
-            <option value="bg-gray-600" data-color="#4b5563">🔲 Gray-600</option>
-            <option value="bg-gray-700" data-color="#374151">🔲 Gray-700</option>
-            <option value="bg-gray-800" data-color="#1f2937">🔲 Gray-800</option>
-            <option value="bg-gray-900" data-color="#111827">🔲 Gray-900</option>
-          </optgroup>
-          <optgroup label="Violet">
-            <option value="bg-violet-50" data-color="#f5f3ff">🟪 Violet-50</option>
-            <option value="bg-violet-100" data-color="#ede9fe">🟪 Violet-100</option>
-            <option value="bg-violet-200" data-color="#ddd6fe">🟪 Violet-200</option>
-            <option value="bg-violet-300" data-color="#c4b5fd">🟪 Violet-300</option>
-            <option value="bg-violet-400" data-color="#a78bfa">🟪 Violet-400</option>
-            <option value="bg-violet-500" data-color="#8b5cf6">🟪 Violet-500</option>
-            <option value="bg-violet-600" data-color="#7c3aed">🟪 Violet-600</option>
-            <option value="bg-violet-700" data-color="#6d28d9">🟪 Violet-700</option>
-            <option value="bg-violet-800" data-color="#5b21b6">🟪 Violet-800</option>
-            <option value="bg-violet-900" data-color="#4c1d95">🟪 Violet-900</option>
-          </optgroup>
-          <optgroup label="Blue (Bleu)">
-            <option value="bg-blue-50" data-color="#eff6ff">🟦 Blue-50</option>
-            <option value="bg-blue-100" data-color="#dbeafe">🟦 Blue-100</option>
-            <option value="bg-blue-200" data-color="#bfdbfe">🟦 Blue-200</option>
-            <option value="bg-blue-300" data-color="#93c5fd">🟦 Blue-300</option>
-            <option value="bg-blue-400" data-color="#60a5fa">🟦 Blue-400</option>
-            <option value="bg-blue-500" data-color="#3b82f6">🟦 Blue-500</option>
-            <option value="bg-blue-600" data-color="#2563eb">🟦 Blue-600</option>
-            <option value="bg-blue-700" data-color="#1d4ed8">🟦 Blue-700</option>
-            <option value="bg-blue-800" data-color="#1e40af">🟦 Blue-800</option>
-            <option value="bg-blue-900" data-color="#1e3a8a">🟦 Blue-900</option>
-          </optgroup>
-          <optgroup label="Sky (Bleu ciel)">
-            <option value="bg-sky-50" data-color="#f0f9ff">🔵 Sky-50</option>
-            <option value="bg-sky-100" data-color="#e0f2fe">🔵 Sky-100</option>
-            <option value="bg-sky-200" data-color="#bae6fd">🔵 Sky-200</option>
-            <option value="bg-sky-300" data-color="#7dd3fc">🔵 Sky-300</option>
-            <option value="bg-sky-400" data-color="#38bdf8">🔵 Sky-400</option>
-            <option value="bg-sky-500" data-color="#0ea5e9">🔵 Sky-500</option>
-          </optgroup>
-          <optgroup label="Emerald (Vert émeraude)">
-            <option value="bg-emerald-50" data-color="#ecfdf5">🟩 Emerald-50</option>
-            <option value="bg-emerald-100" data-color="#d1fae5">🟩 Emerald-100</option>
-            <option value="bg-emerald-200" data-color="#a7f3d0">🟩 Emerald-200</option>
-            <option value="bg-emerald-300" data-color="#6ee7b7">🟩 Emerald-300</option>
-            <option value="bg-emerald-400" data-color="#34d399">🟩 Emerald-400</option>
-            <option value="bg-emerald-500" data-color="#10b981">🟩 Emerald-500</option>
-            <option value="bg-emerald-600" data-color="#059669">🟩 Emerald-600</option>
-            <option value="bg-emerald-700" data-color="#047857">🟩 Emerald-700</option>
-            <option value="bg-emerald-800" data-color="#065f46">🟩 Emerald-800</option>
-            <option value="bg-emerald-900" data-color="#064e3b">🟩 Emerald-900</option>
-          </optgroup>
-          <optgroup label="Green (Vert)">
-            <option value="bg-green-50" data-color="#f0fdf4">🟢 Green-50</option>
-            <option value="bg-green-100" data-color="#dcfce7">🟢 Green-100</option>
-            <option value="bg-green-200" data-color="#bbf7d0">🟢 Green-200</option>
-            <option value="bg-green-300" data-color="#86efac">🟢 Green-300</option>
-            <option value="bg-green-400" data-color="#4ade80">🟢 Green-400</option>
-            <option value="bg-green-500" data-color="#22c55e">🟢 Green-500</option>
-          </optgroup>
-          <optgroup label="Yellow (Jaune)">
-            <option value="bg-yellow-50" data-color="#fefce8">🟨 Yellow-50</option>
-            <option value="bg-yellow-100" data-color="#fef9c3">🟨 Yellow-100</option>
-            <option value="bg-yellow-200" data-color="#fef08a">🟨 Yellow-200</option>
-            <option value="bg-yellow-300" data-color="#fde047">🟨 Yellow-300</option>
-            <option value="bg-yellow-400" data-color="#facc15">🟨 Yellow-400</option>
-            <option value="bg-yellow-500" data-color="#eab308">🟨 Yellow-500</option>
-          </optgroup>
-          <optgroup label="Amber (Ambre)">
-            <option value="bg-amber-50" data-color="#fffbeb">🟧 Amber-50</option>
-            <option value="bg-amber-100" data-color="#fef3c7">🟧 Amber-100</option>
-            <option value="bg-amber-200" data-color="#fde68a">🟧 Amber-200</option>
-            <option value="bg-amber-300" data-color="#fcd34d">🟧 Amber-300</option>
-            <option value="bg-amber-400" data-color="#fbbf24">🟧 Amber-400</option>
-            <option value="bg-amber-500" data-color="#f59e0b">🟧 Amber-500</option>
-          </optgroup>
-          <optgroup label="Orange">
-            <option value="bg-orange-50" data-color="#fff7ed">🟠 Orange-50</option>
-            <option value="bg-orange-100" data-color="#ffedd5">🟠 Orange-100</option>
-            <option value="bg-orange-200" data-color="#fed7aa">🟠 Orange-200</option>
-            <option value="bg-orange-300" data-color="#fdba74">🟠 Orange-300</option>
-            <option value="bg-orange-400" data-color="#fb923c">🟠 Orange-400</option>
-            <option value="bg-orange-500" data-color="#f97316">🟠 Orange-500</option>
-          </optgroup>
-          <optgroup label="Red (Rouge)">
-            <option value="bg-red-50" data-color="#fef2f2">🟥 Red-50</option>
-            <option value="bg-red-100" data-color="#fee2e2">🟥 Red-100</option>
-            <option value="bg-red-200" data-color="#fecaca">🟥 Red-200</option>
-            <option value="bg-red-300" data-color="#fca5a5">🟥 Red-300</option>
-            <option value="bg-red-400" data-color="#f87171">🟥 Red-400</option>
-            <option value="bg-red-500" data-color="#ef4444">🟥 Red-500</option>
-            <option value="bg-red-600" data-color="#dc2626">🟥 Red-600</option>
-            <option value="bg-red-700" data-color="#b91c1c">🟥 Red-700</option>
-          </optgroup>
-          <optgroup label="Rose">
-            <option value="bg-rose-50" data-color="#fff1f2">🌸 Rose-50</option>
-            <option value="bg-rose-100" data-color="#ffe4e6">🌸 Rose-100</option>
-            <option value="bg-rose-200" data-color="#fecdd3">🌸 Rose-200</option>
-            <option value="bg-rose-300" data-color="#fda4af">🌸 Rose-300</option>
-            <option value="bg-rose-400" data-color="#fb7185">🌸 Rose-400</option>
-            <option value="bg-rose-500" data-color="#f43f5e">🌸 Rose-500</option>
-          </optgroup>
-          <optgroup label="Pink (Rose vif)">
-            <option value="bg-pink-50" data-color="#fdf2f8">💗 Pink-50</option>
-            <option value="bg-pink-100" data-color="#fce7f3">💗 Pink-100</option>
-            <option value="bg-pink-200" data-color="#fbcfe8">💗 Pink-200</option>
-            <option value="bg-pink-300" data-color="#f9a8d4">💗 Pink-300</option>
-            <option value="bg-pink-400" data-color="#f472b6">💗 Pink-400</option>
-            <option value="bg-pink-500" data-color="#ec4899">💗 Pink-500</option>
-          </optgroup>
-          <optgroup label="Fuchsia">
-            <option value="bg-fuchsia-50" data-color="#fdf4ff">💜 Fuchsia-50</option>
-            <option value="bg-fuchsia-100" data-color="#fae8ff">💜 Fuchsia-100</option>
-            <option value="bg-fuchsia-200" data-color="#f5d0fe">💜 Fuchsia-200</option>
-            <option value="bg-fuchsia-300" data-color="#f0abfc">💜 Fuchsia-300</option>
-            <option value="bg-fuchsia-400" data-color="#e879f9">💜 Fuchsia-400</option>
-            <option value="bg-fuchsia-500" data-color="#d946ef">💜 Fuchsia-500</option>
-          </optgroup>
-          <optgroup label="Purple (Mauve)">
-            <option value="bg-purple-50" data-color="#faf5ff">🔮 Purple-50</option>
-            <option value="bg-purple-100" data-color="#f3e8ff">🔮 Purple-100</option>
-            <option value="bg-purple-200" data-color="#e9d5ff">🔮 Purple-200</option>
-            <option value="bg-purple-300" data-color="#d8b4fe">🔮 Purple-300</option>
-            <option value="bg-purple-400" data-color="#c084fc">🔮 Purple-400</option>
-            <option value="bg-purple-500" data-color="#a855f7">🔮 Purple-500</option>
-          </optgroup>
-          <optgroup label="Indigo">
-            <option value="bg-indigo-50" data-color="#eef2ff">🔷 Indigo-50</option>
-            <option value="bg-indigo-100" data-color="#e0e7ff">🔷 Indigo-100</option>
-            <option value="bg-indigo-200" data-color="#c7d2fe">🔷 Indigo-200</option>
-            <option value="bg-indigo-300" data-color="#a5b4fc">🔷 Indigo-300</option>
-            <option value="bg-indigo-400" data-color="#818cf8">🔷 Indigo-400</option>
-            <option value="bg-indigo-500" data-color="#6366f1">🔷 Indigo-500</option>
-          </optgroup>
-          <optgroup label="Teal (Sarcelle)">
-            <option value="bg-teal-50" data-color="#f0fdfa">🩵 Teal-50</option>
-            <option value="bg-teal-100" data-color="#ccfbf1">🩵 Teal-100</option>
-            <option value="bg-teal-200" data-color="#99f6e4">🩵 Teal-200</option>
-            <option value="bg-teal-300" data-color="#5eead4">🩵 Teal-300</option>
-            <option value="bg-teal-400" data-color="#2dd4bf">🩵 Teal-400</option>
-            <option value="bg-teal-500" data-color="#14b8a6">🩵 Teal-500</option>
-          </optgroup>
-          <optgroup label="Cyan">
-            <option value="bg-cyan-50" data-color="#ecfeff">🔹 Cyan-50</option>
-            <option value="bg-cyan-100" data-color="#cffafe">🔹 Cyan-100</option>
-            <option value="bg-cyan-200" data-color="#a5f3fc">🔹 Cyan-200</option>
-            <option value="bg-cyan-300" data-color="#67e8f9">🔹 Cyan-300</option>
-            <option value="bg-cyan-400" data-color="#22d3ee">🔹 Cyan-400</option>
-            <option value="bg-cyan-500" data-color="#06b6d4">🔹 Cyan-500</option>
-          </optgroup>
-        </select>
+          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+          <select name="collection-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select data-theme-color-select disabled>
+            <option value="" disabled>Chargement...</option>
+          </select>
+          <span data-theme-color-chip class="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
         </div>
       </label>
       <label class="space-y-1 block">
@@ -2368,6 +1600,19 @@
           <option value="shadow-lg">Forte (lg)</option>
           <option value="shadow-xl">Très forte (xl)</option>
           <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Bordure</span>
+        <select
+          name="collection-border"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+          data-default="border border-slate-100 theme-border-accent"
+        >
+          <option value="border-none">Aucune</option>
+          <option value="border border-slate-100 theme-border-accent">Fine (1px)</option>
+          <option value="border-2 border border-slate-200 theme-border-accent">Moyenne (2px)</option>
+          <option value="border-4 border border-slate-200 theme-border-accent">Épaisse (4px)</option>
         </select>
       </label>
     </div>
@@ -2511,180 +1756,11 @@
       <label class="space-y-1 block">
         <span class="text-xs font-medium text-slate-600">Fond</span>
         <div class="relative flex items-center gap-2">
-          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #ffffff;"></span>
-          <select name="form-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
-            <optgroup label="Neutres">
-              <option value="bg-white" data-color="#ffffff">⬜ Blanc</option>
-              <option value="bg-transparent" data-color="transparent">⬜ Transparent</option>
-              <option value="bg-black" data-color="#000000">⬛ Noir</option>
-            </optgroup>
-            <optgroup label="Slate (Gris bleuté)">
-              <option value="bg-slate-50" data-color="#f8fafc">🔲 Slate-50</option>
-              <option value="bg-slate-100" data-color="#f1f5f9">🔲 Slate-100</option>
-              <option value="bg-slate-200" data-color="#e2e8f0">🔲 Slate-200</option>
-            <option value="bg-slate-300" data-color="#cbd5e1">🔲 Slate-300</option>
-            <option value="bg-slate-400" data-color="#94a3b8">🔲 Slate-400</option>
-            <option value="bg-slate-500" data-color="#64748b">🔲 Slate-500</option>
-            <option value="bg-slate-600" data-color="#475569">🔲 Slate-600</option>
-            <option value="bg-slate-700" data-color="#334155">🔲 Slate-700</option>
-            <option value="bg-slate-800" data-color="#1e293b">🔲 Slate-800</option>
-            <option value="bg-slate-900" data-color="#0f172a">🔲 Slate-900</option>
-          </optgroup>
-          <optgroup label="Gray (Gris neutre)">
-            <option value="bg-gray-50" data-color="#f9fafb">🔲 Gray-50</option>
-            <option value="bg-gray-100" data-color="#f3f4f6">🔲 Gray-100</option>
-            <option value="bg-gray-200" data-color="#e5e7eb">🔲 Gray-200</option>
-            <option value="bg-gray-300" data-color="#d1d5db">🔲 Gray-300</option>
-            <option value="bg-gray-400" data-color="#9ca3af">🔲 Gray-400</option>
-            <option value="bg-gray-500" data-color="#6b7280">🔲 Gray-500</option>
-            <option value="bg-gray-600" data-color="#4b5563">🔲 Gray-600</option>
-            <option value="bg-gray-700" data-color="#374151">🔲 Gray-700</option>
-            <option value="bg-gray-800" data-color="#1f2937">🔲 Gray-800</option>
-            <option value="bg-gray-900" data-color="#111827">🔲 Gray-900</option>
-          </optgroup>
-          <optgroup label="Violet">
-            <option value="bg-violet-50" data-color="#f5f3ff">🟪 Violet-50</option>
-            <option value="bg-violet-100" data-color="#ede9fe">🟪 Violet-100</option>
-            <option value="bg-violet-200" data-color="#ddd6fe">🟪 Violet-200</option>
-            <option value="bg-violet-300" data-color="#c4b5fd">🟪 Violet-300</option>
-            <option value="bg-violet-400" data-color="#a78bfa">🟪 Violet-400</option>
-            <option value="bg-violet-500" data-color="#8b5cf6">🟪 Violet-500</option>
-            <option value="bg-violet-600" data-color="#7c3aed">🟪 Violet-600</option>
-            <option value="bg-violet-700" data-color="#6d28d9">🟪 Violet-700</option>
-            <option value="bg-violet-800" data-color="#5b21b6">🟪 Violet-800</option>
-            <option value="bg-violet-900" data-color="#4c1d95">🟪 Violet-900</option>
-          </optgroup>
-          <optgroup label="Blue (Bleu)">
-            <option value="bg-blue-50" data-color="#eff6ff">🟦 Blue-50</option>
-            <option value="bg-blue-100" data-color="#dbeafe">🟦 Blue-100</option>
-            <option value="bg-blue-200" data-color="#bfdbfe">🟦 Blue-200</option>
-            <option value="bg-blue-300" data-color="#93c5fd">🟦 Blue-300</option>
-            <option value="bg-blue-400" data-color="#60a5fa">🟦 Blue-400</option>
-            <option value="bg-blue-500" data-color="#3b82f6">🟦 Blue-500</option>
-            <option value="bg-blue-600" data-color="#2563eb">🟦 Blue-600</option>
-            <option value="bg-blue-700" data-color="#1d4ed8">🟦 Blue-700</option>
-            <option value="bg-blue-800" data-color="#1e40af">🟦 Blue-800</option>
-            <option value="bg-blue-900" data-color="#1e3a8a">🟦 Blue-900</option>
-          </optgroup>
-          <optgroup label="Sky (Bleu ciel)">
-            <option value="bg-sky-50" data-color="#f0f9ff">🔵 Sky-50</option>
-            <option value="bg-sky-100" data-color="#e0f2fe">🔵 Sky-100</option>
-            <option value="bg-sky-200" data-color="#bae6fd">🔵 Sky-200</option>
-            <option value="bg-sky-300" data-color="#7dd3fc">🔵 Sky-300</option>
-            <option value="bg-sky-400" data-color="#38bdf8">🔵 Sky-400</option>
-            <option value="bg-sky-500" data-color="#0ea5e9">🔵 Sky-500</option>
-          </optgroup>
-          <optgroup label="Emerald (Vert émeraude)">
-            <option value="bg-emerald-50" data-color="#ecfdf5">🟩 Emerald-50</option>
-            <option value="bg-emerald-100" data-color="#d1fae5">🟩 Emerald-100</option>
-            <option value="bg-emerald-200" data-color="#a7f3d0">🟩 Emerald-200</option>
-            <option value="bg-emerald-300" data-color="#6ee7b7">🟩 Emerald-300</option>
-            <option value="bg-emerald-400" data-color="#34d399">🟩 Emerald-400</option>
-            <option value="bg-emerald-500" data-color="#10b981">🟩 Emerald-500</option>
-            <option value="bg-emerald-600" data-color="#059669">🟩 Emerald-600</option>
-            <option value="bg-emerald-700" data-color="#047857">🟩 Emerald-700</option>
-            <option value="bg-emerald-800" data-color="#065f46">🟩 Emerald-800</option>
-            <option value="bg-emerald-900" data-color="#064e3b">🟩 Emerald-900</option>
-          </optgroup>
-          <optgroup label="Green (Vert)">
-            <option value="bg-green-50" data-color="#f0fdf4">🟢 Green-50</option>
-            <option value="bg-green-100" data-color="#dcfce7">🟢 Green-100</option>
-            <option value="bg-green-200" data-color="#bbf7d0">🟢 Green-200</option>
-            <option value="bg-green-300" data-color="#86efac">🟢 Green-300</option>
-            <option value="bg-green-400" data-color="#4ade80">🟢 Green-400</option>
-            <option value="bg-green-500" data-color="#22c55e">🟢 Green-500</option>
-          </optgroup>
-          <optgroup label="Yellow (Jaune)">
-            <option value="bg-yellow-50" data-color="#fefce8">🟨 Yellow-50</option>
-            <option value="bg-yellow-100" data-color="#fef9c3">🟨 Yellow-100</option>
-            <option value="bg-yellow-200" data-color="#fef08a">🟨 Yellow-200</option>
-            <option value="bg-yellow-300" data-color="#fde047">🟨 Yellow-300</option>
-            <option value="bg-yellow-400" data-color="#facc15">🟨 Yellow-400</option>
-            <option value="bg-yellow-500" data-color="#eab308">🟨 Yellow-500</option>
-          </optgroup>
-          <optgroup label="Amber (Ambre)">
-            <option value="bg-amber-50" data-color="#fffbeb">🟧 Amber-50</option>
-            <option value="bg-amber-100" data-color="#fef3c7">🟧 Amber-100</option>
-            <option value="bg-amber-200" data-color="#fde68a">🟧 Amber-200</option>
-            <option value="bg-amber-300" data-color="#fcd34d">🟧 Amber-300</option>
-            <option value="bg-amber-400" data-color="#fbbf24">🟧 Amber-400</option>
-            <option value="bg-amber-500" data-color="#f59e0b">🟧 Amber-500</option>
-          </optgroup>
-          <optgroup label="Orange">
-            <option value="bg-orange-50" data-color="#fff7ed">🟠 Orange-50</option>
-            <option value="bg-orange-100" data-color="#ffedd5">🟠 Orange-100</option>
-            <option value="bg-orange-200" data-color="#fed7aa">🟠 Orange-200</option>
-            <option value="bg-orange-300" data-color="#fdba74">🟠 Orange-300</option>
-            <option value="bg-orange-400" data-color="#fb923c">🟠 Orange-400</option>
-            <option value="bg-orange-500" data-color="#f97316">🟠 Orange-500</option>
-          </optgroup>
-          <optgroup label="Red (Rouge)">
-            <option value="bg-red-50" data-color="#fef2f2">🟥 Red-50</option>
-            <option value="bg-red-100" data-color="#fee2e2">🟥 Red-100</option>
-            <option value="bg-red-200" data-color="#fecaca">🟥 Red-200</option>
-            <option value="bg-red-300" data-color="#fca5a5">🟥 Red-300</option>
-            <option value="bg-red-400" data-color="#f87171">🟥 Red-400</option>
-            <option value="bg-red-500" data-color="#ef4444">🟥 Red-500</option>
-            <option value="bg-red-600" data-color="#dc2626">🟥 Red-600</option>
-            <option value="bg-red-700" data-color="#b91c1c">🟥 Red-700</option>
-          </optgroup>
-          <optgroup label="Rose">
-            <option value="bg-rose-50" data-color="#fff1f2">🌸 Rose-50</option>
-            <option value="bg-rose-100" data-color="#ffe4e6">🌸 Rose-100</option>
-            <option value="bg-rose-200" data-color="#fecdd3">🌸 Rose-200</option>
-            <option value="bg-rose-300" data-color="#fda4af">🌸 Rose-300</option>
-            <option value="bg-rose-400" data-color="#fb7185">🌸 Rose-400</option>
-            <option value="bg-rose-500" data-color="#f43f5e">🌸 Rose-500</option>
-          </optgroup>
-          <optgroup label="Pink (Rose vif)">
-            <option value="bg-pink-50" data-color="#fdf2f8">💗 Pink-50</option>
-            <option value="bg-pink-100" data-color="#fce7f3">💗 Pink-100</option>
-            <option value="bg-pink-200" data-color="#fbcfe8">💗 Pink-200</option>
-            <option value="bg-pink-300" data-color="#f9a8d4">💗 Pink-300</option>
-            <option value="bg-pink-400" data-color="#f472b6">💗 Pink-400</option>
-            <option value="bg-pink-500" data-color="#ec4899">💗 Pink-500</option>
-          </optgroup>
-          <optgroup label="Fuchsia">
-            <option value="bg-fuchsia-50" data-color="#fdf4ff">💜 Fuchsia-50</option>
-            <option value="bg-fuchsia-100" data-color="#fae8ff">💜 Fuchsia-100</option>
-            <option value="bg-fuchsia-200" data-color="#f5d0fe">💜 Fuchsia-200</option>
-            <option value="bg-fuchsia-300" data-color="#f0abfc">💜 Fuchsia-300</option>
-            <option value="bg-fuchsia-400" data-color="#e879f9">💜 Fuchsia-400</option>
-            <option value="bg-fuchsia-500" data-color="#d946ef">💜 Fuchsia-500</option>
-          </optgroup>
-          <optgroup label="Purple (Mauve)">
-            <option value="bg-purple-50" data-color="#faf5ff">🔮 Purple-50</option>
-            <option value="bg-purple-100" data-color="#f3e8ff">🔮 Purple-100</option>
-            <option value="bg-purple-200" data-color="#e9d5ff">🔮 Purple-200</option>
-            <option value="bg-purple-300" data-color="#d8b4fe">🔮 Purple-300</option>
-            <option value="bg-purple-400" data-color="#c084fc">🔮 Purple-400</option>
-            <option value="bg-purple-500" data-color="#a855f7">🔮 Purple-500</option>
-          </optgroup>
-          <optgroup label="Indigo">
-            <option value="bg-indigo-50" data-color="#eef2ff">🔷 Indigo-50</option>
-            <option value="bg-indigo-100" data-color="#e0e7ff">🔷 Indigo-100</option>
-            <option value="bg-indigo-200" data-color="#c7d2fe">🔷 Indigo-200</option>
-            <option value="bg-indigo-300" data-color="#a5b4fc">🔷 Indigo-300</option>
-            <option value="bg-indigo-400" data-color="#818cf8">🔷 Indigo-400</option>
-            <option value="bg-indigo-500" data-color="#6366f1">🔷 Indigo-500</option>
-          </optgroup>
-          <optgroup label="Teal (Sarcelle)">
-            <option value="bg-teal-50" data-color="#f0fdfa">🩵 Teal-50</option>
-            <option value="bg-teal-100" data-color="#ccfbf1">🩵 Teal-100</option>
-            <option value="bg-teal-200" data-color="#99f6e4">🩵 Teal-200</option>
-            <option value="bg-teal-300" data-color="#5eead4">🩵 Teal-300</option>
-            <option value="bg-teal-400" data-color="#2dd4bf">🩵 Teal-400</option>
-            <option value="bg-teal-500" data-color="#14b8a6">🩵 Teal-500</option>
-          </optgroup>
-          <optgroup label="Cyan">
-            <option value="bg-cyan-50" data-color="#ecfeff">🔹 Cyan-50</option>
-            <option value="bg-cyan-100" data-color="#cffafe">🔹 Cyan-100</option>
-            <option value="bg-cyan-200" data-color="#a5f3fc">🔹 Cyan-200</option>
-            <option value="bg-cyan-300" data-color="#67e8f9">🔹 Cyan-300</option>
-            <option value="bg-cyan-400" data-color="#22d3ee">🔹 Cyan-400</option>
-            <option value="bg-cyan-500" data-color="#06b6d4">🔹 Cyan-500</option>
-          </optgroup>
-        </select>
+          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+          <select name="form-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select data-theme-color-select disabled>
+            <option value="" disabled>Chargement...</option>
+          </select>
+          <span data-theme-color-chip class="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
         </div>
       </label>
       <label class="space-y-1 block">
@@ -2706,6 +1782,19 @@
           <option value="shadow-lg">Forte (lg)</option>
           <option value="shadow-xl">Très forte (xl)</option>
           <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Bordure</span>
+        <select
+          name="form-border"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+          data-default="border border-slate-100 theme-border-accent"
+        >
+          <option value="border-none">Aucune</option>
+          <option value="border border-slate-100 theme-border-accent">Fine (1px)</option>
+          <option value="border-2 border border-slate-200 theme-border-accent">Moyenne (2px)</option>
+          <option value="border-4 border border-slate-200 theme-border-accent">Épaisse (4px)</option>
         </select>
       </label>
     </div>
@@ -2818,180 +1907,11 @@
       <label class="space-y-1 block">
         <span class="text-xs font-medium text-slate-600">Fond</span>
         <div class="relative flex items-center gap-2">
-          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" style="background-color: #ffffff;"></span>
-          <select name="newsletter-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select>
-            <optgroup label="Neutres">
-              <option value="bg-white" data-color="#ffffff">⬜ Blanc</option>
-              <option value="bg-transparent" data-color="transparent">⬜ Transparent</option>
-              <option value="bg-black" data-color="#000000">⬛ Noir</option>
-            </optgroup>
-            <optgroup label="Slate (Gris bleuté)">
-              <option value="bg-slate-50" data-color="#f8fafc">🔲 Slate-50</option>
-              <option value="bg-slate-100" data-color="#f1f5f9">🔲 Slate-100</option>
-              <option value="bg-slate-200" data-color="#e2e8f0">🔲 Slate-200</option>
-            <option value="bg-slate-300" data-color="#cbd5e1">🔲 Slate-300</option>
-            <option value="bg-slate-400" data-color="#94a3b8">🔲 Slate-400</option>
-            <option value="bg-slate-500" data-color="#64748b">🔲 Slate-500</option>
-            <option value="bg-slate-600" data-color="#475569">🔲 Slate-600</option>
-            <option value="bg-slate-700" data-color="#334155">🔲 Slate-700</option>
-            <option value="bg-slate-800" data-color="#1e293b">🔲 Slate-800</option>
-            <option value="bg-slate-900" data-color="#0f172a">🔲 Slate-900</option>
-          </optgroup>
-          <optgroup label="Gray (Gris neutre)">
-            <option value="bg-gray-50" data-color="#f9fafb">🔲 Gray-50</option>
-            <option value="bg-gray-100" data-color="#f3f4f6">🔲 Gray-100</option>
-            <option value="bg-gray-200" data-color="#e5e7eb">🔲 Gray-200</option>
-            <option value="bg-gray-300" data-color="#d1d5db">🔲 Gray-300</option>
-            <option value="bg-gray-400" data-color="#9ca3af">🔲 Gray-400</option>
-            <option value="bg-gray-500" data-color="#6b7280">🔲 Gray-500</option>
-            <option value="bg-gray-600" data-color="#4b5563">🔲 Gray-600</option>
-            <option value="bg-gray-700" data-color="#374151">🔲 Gray-700</option>
-            <option value="bg-gray-800" data-color="#1f2937">🔲 Gray-800</option>
-            <option value="bg-gray-900" data-color="#111827">🔲 Gray-900</option>
-          </optgroup>
-          <optgroup label="Violet">
-            <option value="bg-violet-50" data-color="#f5f3ff">🟪 Violet-50</option>
-            <option value="bg-violet-100" data-color="#ede9fe">🟪 Violet-100</option>
-            <option value="bg-violet-200" data-color="#ddd6fe">🟪 Violet-200</option>
-            <option value="bg-violet-300" data-color="#c4b5fd">🟪 Violet-300</option>
-            <option value="bg-violet-400" data-color="#a78bfa">🟪 Violet-400</option>
-            <option value="bg-violet-500" data-color="#8b5cf6">🟪 Violet-500</option>
-            <option value="bg-violet-600" data-color="#7c3aed">🟪 Violet-600</option>
-            <option value="bg-violet-700" data-color="#6d28d9">🟪 Violet-700</option>
-            <option value="bg-violet-800" data-color="#5b21b6">🟪 Violet-800</option>
-            <option value="bg-violet-900" data-color="#4c1d95">🟪 Violet-900</option>
-          </optgroup>
-          <optgroup label="Blue (Bleu)">
-            <option value="bg-blue-50" data-color="#eff6ff">🟦 Blue-50</option>
-            <option value="bg-blue-100" data-color="#dbeafe">🟦 Blue-100</option>
-            <option value="bg-blue-200" data-color="#bfdbfe">🟦 Blue-200</option>
-            <option value="bg-blue-300" data-color="#93c5fd">🟦 Blue-300</option>
-            <option value="bg-blue-400" data-color="#60a5fa">🟦 Blue-400</option>
-            <option value="bg-blue-500" data-color="#3b82f6">🟦 Blue-500</option>
-            <option value="bg-blue-600" data-color="#2563eb">🟦 Blue-600</option>
-            <option value="bg-blue-700" data-color="#1d4ed8">🟦 Blue-700</option>
-            <option value="bg-blue-800" data-color="#1e40af">🟦 Blue-800</option>
-            <option value="bg-blue-900" data-color="#1e3a8a">🟦 Blue-900</option>
-          </optgroup>
-          <optgroup label="Sky (Bleu ciel)">
-            <option value="bg-sky-50" data-color="#f0f9ff">🔵 Sky-50</option>
-            <option value="bg-sky-100" data-color="#e0f2fe">🔵 Sky-100</option>
-            <option value="bg-sky-200" data-color="#bae6fd">🔵 Sky-200</option>
-            <option value="bg-sky-300" data-color="#7dd3fc">🔵 Sky-300</option>
-            <option value="bg-sky-400" data-color="#38bdf8">🔵 Sky-400</option>
-            <option value="bg-sky-500" data-color="#0ea5e9">🔵 Sky-500</option>
-          </optgroup>
-          <optgroup label="Emerald (Vert émeraude)">
-            <option value="bg-emerald-50" data-color="#ecfdf5">🟩 Emerald-50</option>
-            <option value="bg-emerald-100" data-color="#d1fae5">🟩 Emerald-100</option>
-            <option value="bg-emerald-200" data-color="#a7f3d0">🟩 Emerald-200</option>
-            <option value="bg-emerald-300" data-color="#6ee7b7">🟩 Emerald-300</option>
-            <option value="bg-emerald-400" data-color="#34d399">🟩 Emerald-400</option>
-            <option value="bg-emerald-500" data-color="#10b981">🟩 Emerald-500</option>
-            <option value="bg-emerald-600" data-color="#059669">🟩 Emerald-600</option>
-            <option value="bg-emerald-700" data-color="#047857">🟩 Emerald-700</option>
-            <option value="bg-emerald-800" data-color="#065f46">🟩 Emerald-800</option>
-            <option value="bg-emerald-900" data-color="#064e3b">🟩 Emerald-900</option>
-          </optgroup>
-          <optgroup label="Green (Vert)">
-            <option value="bg-green-50" data-color="#f0fdf4">🟢 Green-50</option>
-            <option value="bg-green-100" data-color="#dcfce7">🟢 Green-100</option>
-            <option value="bg-green-200" data-color="#bbf7d0">🟢 Green-200</option>
-            <option value="bg-green-300" data-color="#86efac">🟢 Green-300</option>
-            <option value="bg-green-400" data-color="#4ade80">🟢 Green-400</option>
-            <option value="bg-green-500" data-color="#22c55e">🟢 Green-500</option>
-          </optgroup>
-          <optgroup label="Yellow (Jaune)">
-            <option value="bg-yellow-50" data-color="#fefce8">🟨 Yellow-50</option>
-            <option value="bg-yellow-100" data-color="#fef9c3">🟨 Yellow-100</option>
-            <option value="bg-yellow-200" data-color="#fef08a">🟨 Yellow-200</option>
-            <option value="bg-yellow-300" data-color="#fde047">🟨 Yellow-300</option>
-            <option value="bg-yellow-400" data-color="#facc15">🟨 Yellow-400</option>
-            <option value="bg-yellow-500" data-color="#eab308">🟨 Yellow-500</option>
-          </optgroup>
-          <optgroup label="Amber (Ambre)">
-            <option value="bg-amber-50" data-color="#fffbeb">🟧 Amber-50</option>
-            <option value="bg-amber-100" data-color="#fef3c7">🟧 Amber-100</option>
-            <option value="bg-amber-200" data-color="#fde68a">🟧 Amber-200</option>
-            <option value="bg-amber-300" data-color="#fcd34d">🟧 Amber-300</option>
-            <option value="bg-amber-400" data-color="#fbbf24">🟧 Amber-400</option>
-            <option value="bg-amber-500" data-color="#f59e0b">🟧 Amber-500</option>
-          </optgroup>
-          <optgroup label="Orange">
-            <option value="bg-orange-50" data-color="#fff7ed">🟠 Orange-50</option>
-            <option value="bg-orange-100" data-color="#ffedd5">🟠 Orange-100</option>
-            <option value="bg-orange-200" data-color="#fed7aa">🟠 Orange-200</option>
-            <option value="bg-orange-300" data-color="#fdba74">🟠 Orange-300</option>
-            <option value="bg-orange-400" data-color="#fb923c">🟠 Orange-400</option>
-            <option value="bg-orange-500" data-color="#f97316">🟠 Orange-500</option>
-          </optgroup>
-          <optgroup label="Red (Rouge)">
-            <option value="bg-red-50" data-color="#fef2f2">🟥 Red-50</option>
-            <option value="bg-red-100" data-color="#fee2e2">🟥 Red-100</option>
-            <option value="bg-red-200" data-color="#fecaca">🟥 Red-200</option>
-            <option value="bg-red-300" data-color="#fca5a5">🟥 Red-300</option>
-            <option value="bg-red-400" data-color="#f87171">🟥 Red-400</option>
-            <option value="bg-red-500" data-color="#ef4444">🟥 Red-500</option>
-            <option value="bg-red-600" data-color="#dc2626">🟥 Red-600</option>
-            <option value="bg-red-700" data-color="#b91c1c">🟥 Red-700</option>
-          </optgroup>
-          <optgroup label="Rose">
-            <option value="bg-rose-50" data-color="#fff1f2">🌸 Rose-50</option>
-            <option value="bg-rose-100" data-color="#ffe4e6">🌸 Rose-100</option>
-            <option value="bg-rose-200" data-color="#fecdd3">🌸 Rose-200</option>
-            <option value="bg-rose-300" data-color="#fda4af">🌸 Rose-300</option>
-            <option value="bg-rose-400" data-color="#fb7185">🌸 Rose-400</option>
-            <option value="bg-rose-500" data-color="#f43f5e">🌸 Rose-500</option>
-          </optgroup>
-          <optgroup label="Pink (Rose vif)">
-            <option value="bg-pink-50" data-color="#fdf2f8">💗 Pink-50</option>
-            <option value="bg-pink-100" data-color="#fce7f3">💗 Pink-100</option>
-            <option value="bg-pink-200" data-color="#fbcfe8">💗 Pink-200</option>
-            <option value="bg-pink-300" data-color="#f9a8d4">💗 Pink-300</option>
-            <option value="bg-pink-400" data-color="#f472b6">💗 Pink-400</option>
-            <option value="bg-pink-500" data-color="#ec4899">💗 Pink-500</option>
-          </optgroup>
-          <optgroup label="Fuchsia">
-            <option value="bg-fuchsia-50" data-color="#fdf4ff">💜 Fuchsia-50</option>
-            <option value="bg-fuchsia-100" data-color="#fae8ff">💜 Fuchsia-100</option>
-            <option value="bg-fuchsia-200" data-color="#f5d0fe">💜 Fuchsia-200</option>
-            <option value="bg-fuchsia-300" data-color="#f0abfc">💜 Fuchsia-300</option>
-            <option value="bg-fuchsia-400" data-color="#e879f9">💜 Fuchsia-400</option>
-            <option value="bg-fuchsia-500" data-color="#d946ef">💜 Fuchsia-500</option>
-          </optgroup>
-          <optgroup label="Purple (Mauve)">
-            <option value="bg-purple-50" data-color="#faf5ff">🔮 Purple-50</option>
-            <option value="bg-purple-100" data-color="#f3e8ff">🔮 Purple-100</option>
-            <option value="bg-purple-200" data-color="#e9d5ff">🔮 Purple-200</option>
-            <option value="bg-purple-300" data-color="#d8b4fe">🔮 Purple-300</option>
-            <option value="bg-purple-400" data-color="#c084fc">🔮 Purple-400</option>
-            <option value="bg-purple-500" data-color="#a855f7">🔮 Purple-500</option>
-          </optgroup>
-          <optgroup label="Indigo">
-            <option value="bg-indigo-50" data-color="#eef2ff">🔷 Indigo-50</option>
-            <option value="bg-indigo-100" data-color="#e0e7ff">🔷 Indigo-100</option>
-            <option value="bg-indigo-200" data-color="#c7d2fe">🔷 Indigo-200</option>
-            <option value="bg-indigo-300" data-color="#a5b4fc">🔷 Indigo-300</option>
-            <option value="bg-indigo-400" data-color="#818cf8">🔷 Indigo-400</option>
-            <option value="bg-indigo-500" data-color="#6366f1">🔷 Indigo-500</option>
-          </optgroup>
-          <optgroup label="Teal (Sarcelle)">
-            <option value="bg-teal-50" data-color="#f0fdfa">🩵 Teal-50</option>
-            <option value="bg-teal-100" data-color="#ccfbf1">🩵 Teal-100</option>
-            <option value="bg-teal-200" data-color="#99f6e4">🩵 Teal-200</option>
-            <option value="bg-teal-300" data-color="#5eead4">🩵 Teal-300</option>
-            <option value="bg-teal-400" data-color="#2dd4bf">🩵 Teal-400</option>
-            <option value="bg-teal-500" data-color="#14b8a6">🩵 Teal-500</option>
-          </optgroup>
-          <optgroup label="Cyan">
-            <option value="bg-cyan-50" data-color="#ecfeff">🔹 Cyan-50</option>
-            <option value="bg-cyan-100" data-color="#cffafe">🔹 Cyan-100</option>
-            <option value="bg-cyan-200" data-color="#a5f3fc">🔹 Cyan-200</option>
-            <option value="bg-cyan-300" data-color="#67e8f9">🔹 Cyan-300</option>
-            <option value="bg-cyan-400" data-color="#22d3ee">🔹 Cyan-400</option>
-            <option value="bg-cyan-500" data-color="#06b6d4">🔹 Cyan-500</option>
-          </optgroup>
-        </select>
+          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+          <select name="newsletter-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select data-theme-color-select disabled>
+            <option value="" disabled>Chargement...</option>
+          </select>
+          <span data-theme-color-chip class="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
         </div>
       </label>
       <label class="space-y-1 block">
@@ -3013,6 +1933,19 @@
           <option value="shadow-lg">Forte (lg)</option>
           <option value="shadow-xl">Très forte (xl)</option>
           <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Bordure</span>
+        <select
+          name="newsletter-border"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+          data-default="border border-slate-100 theme-border-accent"
+        >
+          <option value="border-none">Aucune</option>
+          <option value="border border-slate-100 theme-border-accent">Fine (1px)</option>
+          <option value="border-2 border border-slate-200 theme-border-accent">Moyenne (2px)</option>
+          <option value="border-4 border border-slate-200 theme-border-accent">Épaisse (4px)</option>
         </select>
       </label>
     </div>
@@ -3411,41 +2344,53 @@
       
       <!-- Instructions pour IA / Utilisateur -->
       <div class="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl p-4 mb-4 space-y-3 border border-violet-100">
-        <h4 class="text-sm font-bold text-slate-800">📋 Instructions pour générer du JSON (pages + collections)</h4>
-        
-        <div class="text-xs text-slate-700 space-y-2">
+        <h4 class="text-sm font-bold text-slate-800">📋 Instructions RawDit (import & palette)</h4>
+        <div class="text-xs text-slate-700 space-y-3">
           <div class="bg-white/70 rounded-lg p-3 space-y-1">
-            <p class="font-semibold text-slate-800">📄 Formats acceptés :</p>
+            <p class="font-semibold text-slate-800">📄 Formats JSON autorisés :</p>
             <ul class="list-disc list-inside space-y-0.5 text-slate-600">
-              <li>Une seule page : <code class="bg-white px-1 rounded">{"title": "...", "blocks": [...]}</code></li>
-              <li>Plusieurs pages : <code class="bg-white px-1 rounded">[{page1}, {page2}]</code></li>
-              <li>Pages + Collections : <code class="bg-white px-1 rounded">{"pages": [...], "collections": {...}}</code></li>
+              <li>Une page : <code class="bg-white px-1 rounded">{"title": "...", "slug": "/...", "blocks": [...]}</code></li>
+              <li>Plusieurs pages : <code class="bg-white px-1 rounded">[{...}, {...}]</code></li>
+              <li>Site complet : <code class="bg-white px-1 rounded">{"pages": [...], "collections": {...}, "theme": {...}}</code></li>
             </ul>
+            <p class="text-[10px] text-slate-500 mt-1">À l’import, chaque page est créée ou mise à jour (reconnaissance par <code>id</code> ou <code>slug</code>) puis rebuildée ; les collections déclarées sont créées si elles n’existent pas.</p>
           </div>
-          
           <div class="bg-white/70 rounded-lg p-3 space-y-1">
-            <p class="font-semibold text-slate-800">🔑 Champs obligatoires d'une page :</p>
-            <ul class="list-disc list-inside space-y-0.5 text-slate-600">
-              <li><code>title</code> : Titre affiché de la page (string)</li>
-              <li><code>slug</code> : URL de la page, format "/kebab-case" (ex: "/about")</li>
-              <li><code>blocks</code> : Tableau des blocs de contenu</li>
-            </ul>
+            <p class="font-semibold text-slate-800">🎨 Palette & sémantique des couleurs :</p>
+            <p class="text-slate-600">
+              Définis ta palette dans <code>"theme": {"colors": {"primary": "...", "secondary": "...", "accent": "...", "background": "...", "text": "..."}}</code>.
+              Les couleurs sont exposées via <code>--color-primary</code> (CTA), <code>--color-secondary</code> (liens) et <code>--color-accent</code> (bords) : le reste du rendu s’appuie sur <code>theme-primary</code>, <code>theme-secondary</code>, <code>theme-accent</code>, <code>theme-background</code> et <code>theme-text</code> dans les <code>settings.bg</code>.
+            </p>
+            <p class="text-[10px] text-slate-500">
+              Les boutons (CTA) héritent automatiquement de <strong>primary</strong>, les liens de <strong>secondary</strong> et les bordures de <strong>accent</strong>, les textes du token <strong>text</strong> et les fonds du token <strong>background</strong>.
+              Si ta page ne précise pas de token, les sélecteurs restent sur une valeur par défaut jusqu’à ce que tu choisisses une couleur de thème dans le panneau Apparence.
+            </p>
           </div>
-          
           <div class="bg-white/70 rounded-lg p-3 space-y-1">
-            <p class="font-semibold text-slate-800">🧱 Structure d'un bloc :</p>
+            <p class="font-semibold text-slate-800">🔑 Structure d'une page & d'un bloc :</p>
             <ul class="list-disc list-inside space-y-0.5 text-slate-600">
-              <li><code>id</code> : Identifiant unique (ex: "hero-1")</li>
-              <li><code>type</code> : Type de bloc (voir ci-dessous)</li>
-              <li><code>label</code> : Libellé affiché dans l'éditeur</li>
-              <li><code>settings</code> : Paramètres du bloc</li>
+              <li><code>title</code> : requis (string), <code>slug</code> optionnel (normalisé en kebab-case, généré depuis <code>title</code> si absent)</li>
+              <li><code>blocks</code> : liste de blocs ; chaque bloc doit contenir un <code>type</code>, un <code>id</code> unique et des <code>settings</code> libres</li>
+              <li>Tu peux préciser un <code>description</code>, des <code>badges</code>, du <code>seo</code> ou des <code>accessibility</code> (nav/main/animations)</li>
             </ul>
+            <p class="text-[10px] text-slate-500 mt-1">Les blocs inconnus sont importés mais ne bénéficient pas encore de formulaires d’édition.</p>
           </div>
-          
+          <div class="bg-white/70 rounded-lg p-3 space-y-1">
+            <p class="font-semibold text-slate-800">🧱 Détails par bloc et imbrication :</p>
+            <p class="text-[10px] text-slate-500">
+              - <code>Hero</code> : <code>settings.title</code>, <code>subtitle</code>, <code>ctaLabel</code>, <code>ctaUrl</code>, <code>image</code>, <code>bg</code>, <code>border</code>, <code>shadow</code>, <code>overlay</code>.<br />
+              - <code>Paragraphe</code> : texte dans <code>settings.content</code>, alignement, tailles, espacement, plus les options de bordure/ombre.<br />
+              - <code>Image</code> : <code>settings.src</code>, <code>alt</code>, légende, ajustement, fond/bordure/shadow.<br />
+              - <code>Group</code> & <code>CollectionGrid</code> : ajoute un tableau <code>children</code> (chaque enfant est un bloc complet) et/ou <code>collectionId</code> + <code>items</code>, avec colonnes et gap. Les enfants héritent des mêmes options BG/border/shadow.
+            </p>
+            <p class="text-[10px] text-slate-500">
+              Tu peux imbriquer n’importe quelle combinaison (ex: <code>Group</code> contenant un <code>Hero</code> et un <code>CollectionGrid</code>) en créant les <code>children</code>. Les <code>CollectionGrid</code> récupèrent leurs éléments via <code>collections/{id}.json</code> ou directement dans <code>items</code>.
+            </p>
+          </div>
           <div class="bg-emerald-50 rounded-lg p-3 space-y-1 border border-emerald-200">
-            <p class="font-semibold text-emerald-800">📦 Collections (auto-créées si absentes) :</p>
-            <p class="text-emerald-700">Si un bloc <code>CollectionGrid</code> référence une collection qui n'existe pas, elle sera créée automatiquement.</p>
-            <p class="text-emerald-700 mt-1">Tu peux aussi fournir les données :</p>
+            <p class="font-semibold text-emerald-800">📦 Collections (& boutons) :</p>
+            <p class="text-emerald-700">Les <code>CollectionGrid</code> référencent des collections de <code>data/sites/{slug}/collections/*.json</code>; si la collection est absente, elle est créée à l’import.</p>
+            <p class="text-emerald-700 mt-1">Tu peux fournir les items directement dans le JSON, avec les champs suivants ou des champs libres :</p>
             <pre class="bg-white/80 rounded p-2 mt-1 text-[10px] overflow-x-auto"><code>"collections": {
   "projets": {
     "name": "Projets",
@@ -3455,18 +2400,18 @@
         "title": "Projet 1",
         "summary": "Description...",
         "image": "/assets/img.jpg",
+        "slug": "/projets/projet-1",
         "cta": {"text": "Découvrir", "url": "/projet-1"}
       },
       {"title": "Projet 2", "summary": "Description..."}
     ]
   }
 }</code></pre>
-            <p class="text-emerald-600 text-[10px] mt-1">💡 Propriétés d'un item : <code>title</code>, <code>summary</code>, <code>content</code>, <code>image</code>, <code>status</code>, <code>cta</code> (optionnel: <code>text</code> + <code>url</code>)</p>
+            <p class="text-emerald-600 text-[10px] mt-1">💡 Items supportés : <code>id</code>, <code>title</code>, <code>status</code>, <code>summary</code>, <code>slug</code>, <code>content</code>, <code>image</code>, <code>cta</code>, etc.</p>
           </div>
         </div>
-        
         <div class="bg-white/70 rounded-lg p-3">
-          <p class="font-semibold text-slate-800 text-xs mb-2">🎨 Types de blocs disponibles :</p>
+          <p class="font-semibold text-slate-800 text-xs mb-2">🎨 Types de blocs éditables :</p>
           <div class="flex flex-wrap gap-1.5">
             <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Hero</span>
             <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Paragraphe</span>
@@ -3475,6 +2420,9 @@
             <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">CollectionGrid</span>
             <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Form</span>
             <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">NewsletterEmbed</span>
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Bouton</span>
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Card</span>
+            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Video</span>
           </div>
         </div>
       </div>

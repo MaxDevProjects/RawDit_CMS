@@ -1,5 +1,5 @@
 /**
- * ClowerEdit AI Service
+ * RAWDIT AI Service
  * Service d'intégration avec Gemini Flash via SDK officiel @google/genai
  * Documentation: https://github.com/googleapis/js-genai
  */
@@ -104,7 +104,7 @@ function saveConversationHistory(siteSlug, history) {
 /**
  * Prompt système immuable avec instructions complètes
  */
-const SYSTEM_PROMPT_BASE = `Tu es l'assistant IA intégré de ClowerEdit, un CMS statique éco-conçu.
+const SYSTEM_PROMPT_BASE = `Tu es l'assistant IA intégré de RAWDIT, un CMS statique éco-conçu.
 
 === TON RÔLE ===
 Tu es l'expert créatif et technique du site. Tu dois :

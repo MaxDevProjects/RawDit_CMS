@@ -36,6 +36,63 @@
     {% endif %}
     <link rel="stylesheet" href="{{ finalAssetBase }}/theme.css" />
     <link rel="stylesheet" href="{{ finalAssetBase }}/site.css" />
+    <style>
+      .theme-border-accent {
+        border-color: var(--color-accent);
+      }
+      .theme-link-secondary {
+        color: var(--color-secondary);
+        transition: color 0.2s ease, opacity 0.2s ease;
+      }
+      .theme-link-secondary:hover {
+        opacity: 0.85;
+      }
+      .theme-cta-primary {
+        background: var(--color-primary);
+        color: var(--color-background);
+        border-color: transparent;
+      }
+      .theme-cta-primary:hover {
+        opacity: 0.92;
+      }
+      .theme-cta-secondary {
+        background: transparent;
+        color: var(--color-secondary);
+        border-color: var(--color-accent);
+      }
+      .theme-cta-secondary:hover {
+        opacity: 0.9;
+      }
+      .theme-bg-primary {
+        background: var(--color-primary);
+      }
+      .theme-bg-secondary {
+        background: var(--color-secondary);
+      }
+      .theme-bg-accent {
+        background: var(--color-accent);
+      }
+      .theme-bg-background {
+        background: var(--color-background);
+      }
+      .theme-bg-text {
+        background: var(--color-text);
+      }
+      body {
+        background-color: var(--color-background);
+        color: var(--color-text);
+      }
+      .skip-link:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 3px;
+      }
+      .theme-link-secondary:focus-visible,
+      .theme-cta-primary:focus-visible,
+      .theme-cta-secondary:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 3px;
+      }
+    </style>
     {% if inlineThemeCss %}
     <style data-theme-inline>
       {{ inlineThemeCss | safe }}
@@ -57,6 +114,13 @@
         {% set fallbackCount = fallbackCount + 1 %}
       {% endif %}
     {% endfor %}
+    {% set themeBgMap = {
+      'theme-primary': 'theme-bg-primary',
+      'theme-secondary': 'theme-bg-secondary',
+      'theme-accent': 'theme-bg-accent',
+      'theme-background': 'theme-bg-background',
+      'theme-text': 'theme-bg-text'
+    } %}
     {% set currentSlug = page.slug or '/' %}
     {% if not currentSlug %}
       {% set currentSlug = '/' %}
@@ -65,8 +129,8 @@
       {% set currentSlug = '/' ~ currentSlug %}
     {% endif %}
   </head>
-  <body class="font-['Inter'] text-slate-900" data-animations="{{ 'on' if animationsAllowed else 'off' }}">
-    <a href="#main-content" class="skip-link focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9C6BFF] focus-visible:ring-offset-2">Aller au contenu principal</a>
+  <body class="font-['Inter']" data-animations="{{ 'on' if animationsAllowed else 'off' }}">
+    <a href="#main-content" class="skip-link focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2">Aller au contenu principal</a>
     {% set collectionMap = collections or {} %}
     {% macro linkHref(urlValue) -%}
       {%- set raw = ((urlValue | default('')) ~ '') | trim -%}
@@ -150,7 +214,7 @@
       {% set positionClass = 'sticky top-0 z-50' if headerPosition == 'sticky' else ('fixed top-0 left-0 right-0 z-50' if headerPosition == 'fixed' else '') %}
       {% set hasCustomNav = header.nav and header.nav | length > 0 %}
       {% set hasFallbackNav = fallbackCount > 0 %}
-      <header class="{{ headerBg }} {{ positionClass }} shadow-sm border-b border-slate-100">
+      <header class="{{ headerBg }} {{ positionClass }} shadow-sm border-b theme-border-accent">
         <div class=" mx-auto px-6 py-4">
           <nav class="flex items-center justify-between gap-6" aria-label="Navigation principale">
             {% set logoHref = linkHref(header.logo.url or '/') %}
@@ -170,7 +234,7 @@
                   {% set navUrl = linkHref(item.url or '#') %}
                   {% set isCurrent = navUrl == currentSlug %}
                   <li>
-                    <a href="{{ navUrl }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
+                    <a href="{{ navUrl }}" class="text-sm font-medium transition-colors theme-link-secondary {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
                       {{ item.label or item.url }}
                     </a>
                   </li>
@@ -180,7 +244,7 @@
               <ul class="hidden md:flex items-center gap-6">
                 {% call(item, navUrl, isCurrent) each_fallback_nav(allPagesList, currentSlug) %}
                   <li>
-                    <a href="{{ navUrl }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
+                    <a href="{{ navUrl }}" class="text-sm font-medium transition-colors theme-link-secondary {% if isCurrent %}text-slate-900 font-semibold{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
                       {{ item.name or item.title or navUrl }}
                     </a>
                   </li>
@@ -190,11 +254,11 @@
             {% if header.cta and header.cta.text %}
               {% set ctaStyle = header.cta.style or 'primary' %}
               {% if ctaStyle == 'primary' %}
-                {% set ctaClass = 'bg-violet-600 text-white hover:bg-violet-700' %}
+                {% set ctaClass = 'theme-cta-primary shadow-lg' %}
               {% elif ctaStyle == 'secondary' %}
-                {% set ctaClass = 'border border-violet-600 text-violet-600 hover:bg-violet-50' %}
+                {% set ctaClass = 'theme-cta-secondary border-2' %}
               {% else %}
-                {% set ctaClass = 'text-violet-600 hover:text-violet-700' %}
+                {% set ctaClass = 'theme-link-secondary' %}
               {% endif %}
               {% set ctaHref = linkHref(header.cta.url or '#') %}
               <a href="{{ ctaHref }}" class="hidden md:inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaClass }}">
@@ -208,7 +272,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                   </svg>
                 </summary>
-                <div class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                <div class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border theme-border-accent py-2 z-50">
                   {% if hasCustomNav %}
                     {% for item in header.nav %}
                       {% set navUrl = linkHref(item.url or '#') %}
@@ -224,15 +288,15 @@
                       </a>
                     {% endcall %}
                   {% endif %}
-                  {% if header.cta and header.cta.text %}
-                    <div class="border-t border-slate-100 mt-2 pt-2 px-4">
-                      {% set ctaStyle = header.cta.style or 'primary' %}
+                {% if header.cta and header.cta.text %}
+                  <div class="border-t border-slate-100 mt-2 pt-2 px-4">
+                    {% set ctaStyle = header.cta.style or 'primary' %}
                       {% if ctaStyle == 'primary' %}
-                        {% set ctaMobileClass = 'bg-violet-600 text-white hover:bg-violet-700' %}
+                        {% set ctaMobileClass = 'theme-cta-primary shadow-lg' %}
                       {% elif ctaStyle == 'secondary' %}
-                        {% set ctaMobileClass = 'border border-violet-600 text-violet-600 hover:bg-violet-50' %}
+                        {% set ctaMobileClass = 'theme-cta-secondary border-2' %}
                       {% else %}
-                        {% set ctaMobileClass = 'text-violet-600 hover:text-violet-700' %}
+                        {% set ctaMobileClass = 'theme-link-secondary' %}
                       {% endif %}
                       <a href="{{ ctaHref }}" class="block w-full text-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaMobileClass }}">
                         {{ header.cta.text }}
@@ -250,7 +314,7 @@
       {% endif %}
     {% else %}
       {# Header par défaut si pas de config #}
-      <header class="bg-white shadow-sm border-b border-slate-100">
+      <header class="bg-white shadow-sm border-b theme-border-accent">
         <div class="max-w-5xl mx-auto px-6 py-8 space-y-2">
           <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Preview responsive</p>
           <h1 class="text-3xl font-bold">{{ site.title or 'Site' }}</h1>
@@ -258,10 +322,10 @@
         </div>
           {% if fallbackCount > 0 %}
             <nav class="mt-4" aria-label="Navigation principale">
-              <ul class="flex flex-wrap gap-4 text-sm font-semibold text-slate-600">
+              <ul class="flex flex-wrap gap-4 text-sm font-semibold">
                 {% call(item, navUrl, isCurrent) each_fallback_nav(allPagesList, currentSlug) %}
                   <li>
-                    <a href="{{ navUrl }}" class="hover:text-slate-900 {% if isCurrent %}text-slate-900{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
+                    <a href="{{ navUrl }}" class="transition-colors theme-link-secondary {% if isCurrent %}text-slate-900{% endif %}" {% if isCurrent %}aria-current="page"{% endif %}>
                       {{ item.name or item.title or navUrl }}
                     </a>
                   </li>
@@ -296,6 +360,13 @@
           {{- prefix ~ value -}}
         {%- endif -%}
       {% endmacro %}
+      {% macro borderClass(settings, fallback = 'border border-slate-100 theme-border-accent') -%}
+        {%- if settings and settings.border -%}
+          {{- settings.border -}}
+        {%- else -%}
+          {{- fallback -}}
+        {%- endif -%}
+      {% endmacro %}
 
       {# ═══════════════════════════════════════════════════════════════════ #}
       {# MACRO RENDER BLOCK - Rendu complet d'un bloc (réutilisable)         #}
@@ -318,16 +389,18 @@
           {% set height = settings.height or 'min-h-[50vh]' %}
           {% set overlay = settings.overlay or 'bg-black/0' %}
           {% set title_size = settings.titleSize or 'text-4xl' %}
-          {% set hero_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-gradient-to-br from-violet-50 to-white' %}
+          {% set hero_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-gradient-to-br from-violet-50 to-white' %}
           {% set hero_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-3xl' %}
           {% set hero_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-none' %}
+          {% set hero_border = borderClass(settings, 'border-none') %}
+          {% set hero_cta_classes = 'inline-flex w-fit items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-colors theme-cta-primary shadow-lg' %}
           
           {% if is_fullwidth %}
             {# Mode fullwidth avec image en background #}
             <section
               data-preview-block="{{ block.id }}"
               {{ animAttrs | safe }}
-              class="relative overflow-hidden {{ hero_radius }} {{ hero_shadow }} {{ height }} flex {{ content_align }} justify-center"
+              class="relative overflow-hidden {{ hero_border }} {{ hero_radius }} {{ hero_shadow }} {{ height }} flex {{ content_align }} justify-center"
               {% if has_image %}style="background-image: url('{{ settings.image }}'); background-size: cover; background-position: center;"{% else %}class="{{ hero_bg }}"{% endif %}
             >
               {# Overlay #}
@@ -337,20 +410,20 @@
               {# Contenu centré #}
               <div class="relative z-10 w-full max-w-4xl mx-auto px-8 py-16 flex flex-col gap-6 {{ horizontal_align }} {{ text_align }}">
                 {% if isPreview %}
-                <p class="text-xs uppercase tracking-[0.3em] {% if has_image %}text-white/80{% else %}text-violet-400{% endif %}">
+                <p class="text-xs uppercase tracking-[0.3em] {% if has_image %}text-white/80{% else %}text-[var(--color-secondary)]{% endif %}">
                   {{ block.status or 'Brouillon' }}
                 </p>
                 {% endif %}
                 <h2 class="{{ title_size }} font-bold leading-tight {% if has_image %}text-white drop-shadow-lg{% else %}text-slate-900{% endif %}">
                   {{ settings.title or block.label or 'Titre du hero' }}
                 </h2>
-                <div class="text-lg max-w-2xl {% if has_image %}text-white/90{% else %}text-slate-600{% endif %} [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:underline [&>strong]:font-semibold [&>em]:italic">
+                <div class="text-lg max-w-2xl {% if has_image %}text-white/90{% else %}text-slate-600{% endif %} [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:theme-link-secondary [&>a]:underline [&>strong]:font-semibold [&>em]:italic">
                   {{ (settings.subtitle or block.description or 'Ajoutez un sous-titre inspirant pour ce hero.') | safe }}
                 </div>
                 {% if settings.ctaLabel %}
                   <a
                     href="{{ linkHref(settings.ctaUrl or '#') }}"
-                    class="inline-flex w-fit items-center justify-center rounded-full {% if has_image %}bg-white text-slate-900 hover:bg-white/90{% else %}bg-violet-600 text-white hover:bg-violet-500{% endif %} px-6 py-3 text-sm font-semibold shadow-lg"
+                    class="{{ hero_cta_classes }}"
                   >
                     {{ settings.ctaLabel }}
                   </a>
@@ -367,7 +440,7 @@
             <section
               data-preview-block="{{ block.id }}"
               {{ animAttrs | safe }}
-              class="relative overflow-hidden {{ hero_bg }} {{ hero_radius }} {{ hero_shadow }} {{ height }} px-10 py-16"
+              class="relative overflow-hidden {{ hero_border }} {{ hero_bg }} {{ hero_radius }} {{ hero_shadow }} {{ height }} px-10 py-16"
             >
               {% if overlay != 'bg-black/0' %}
                 <div class="absolute inset-0 {{ overlay }}"></div>
@@ -375,20 +448,20 @@
               <div class="relative z-10 {{ grid_class }} {% if is_reverse %}lg:flex-row-reverse{% endif %}">
                 <div class="flex flex-col gap-4 {% if is_row %}{% else %}items-center text-center{% endif %}" {% if is_reverse %}style="order: 2"{% endif %}>
                   {% if isPreview %}
-                  <p class="text-xs uppercase tracking-[0.3em] text-violet-400">
+                  <p class="text-xs uppercase tracking-[0.3em] text-[var(--color-secondary)]">
                     {{ block.status or 'Brouillon' }}
                   </p>
                   {% endif %}
                   <h2 class="{{ title_size }} font-bold leading-tight">
                     {{ settings.title or block.label or 'Titre du hero' }}
                   </h2>
-                  <div class="text-lg text-slate-600 max-w-2xl [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic">
+                  <div class="text-lg text-slate-600 max-w-2xl [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:theme-link-secondary [&>a]:underline [&>strong]:font-semibold [&>em]:italic">
                     {{ (settings.subtitle or block.description or 'Ajoutez un sous-titre inspirant pour ce hero.') | safe }}
                   </div>
                   {% if settings.ctaLabel %}
                     <a
                       href="{{ linkHref(settings.ctaUrl or '#') }}"
-                      class="inline-flex w-fit items-center justify-center rounded-full bg-violet-600 px-5 py-2 text-white text-sm font-semibold hover:bg-violet-500"
+                      class="{{ hero_cta_classes }}"
                     >
                       {{ settings.ctaLabel }}
                     </a>
@@ -412,30 +485,32 @@
         
         {% elif type == 'paragraphe' or type == 'texte' %}
           {% set text_class = settings.align if settings.align and 'text-' in settings.align else 'text-left' %}
-          {% set para_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
+          {% set para_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-white' %}
           {% set para_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set para_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
+          {% set para_border = borderClass(settings) %}
           {% set title_size = settings.titleSize or 'text-2xl' %}
           {% set text_size = settings.textSize or 'text-base' %}
           {% set spacing = settings.spacing or 'space-y-4' %}
           <section
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
-            class="{{ para_bg }} {{ para_radius }} {{ para_shadow }} p-8 border border-slate-100 {{ text_class }} {{ spacing }}"
+            class="{{ para_bg }} {{ para_radius }} {{ para_shadow }} {{ para_border }} p-8 {{ text_class }} {{ spacing }}"
           >
             <h3 class="{{ title_size }} font-semibold mb-2">
               {{ settings.title or block.label or 'Titre du paragraphe' }}
             </h3>
-            <div class="{{ text_size }} text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-violet-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
+            <div class="{{ text_size }} text-slate-600 [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mb-3 [&>ol]:list-decimal [&>ol]:ml-5 [&>ol]:mb-3 [&>li]:mb-1 [&>a]:theme-link-secondary [&>a]:underline [&>strong]:font-semibold [&>em]:italic [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mb-2 [&>h3]:text-lg [&>h3]:font-medium [&>h3]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:theme-border-accent [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-slate-500">
               {{ (settings.content or block.description or 'Ajoutez votre texte éditorial ici.') | safe }}
             </div>
           </section>
         
         {% elif type == 'image' %}
           {% set src = settings.src or '' %}
-          {% set img_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
+          {% set img_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-white' %}
           {% set img_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set img_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
+          {% set img_border = borderClass(settings) %}
           {% set img_height = settings.height if settings.height else 'h-64' %}
           {% set img_object_fit = settings.objectFit if settings.objectFit else 'object-cover' %}
           {% set img_max_width = settings.maxWidth if settings.maxWidth else 'max-w-full' %}
@@ -449,7 +524,7 @@
           <figure
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
-            class="{{ img_bg }} {{ img_radius }} {{ img_shadow }} {{ img_max_width }} {{ img_align }} border border-slate-100 p-4 space-y-3"
+            class="{{ img_bg }} {{ img_radius }} {{ img_shadow }} {{ img_max_width }} {{ img_align }} {{ img_border }} p-4 space-y-3"
           >
             {% if src %}
               <img
@@ -476,9 +551,11 @@
           {% set desktop_class = settings.columnsDesktop if settings.columnsDesktop and 'grid-cols' in settings.columnsDesktop else 'md:grid-cols-3' %}
           {% set gap_class = settings.gap if settings.gap and 'gap-' in settings.gap else 'gap-4' %}
           {% set items_align = settings.itemsAlign if settings.itemsAlign and 'items-' in settings.itemsAlign else 'items-start' %}
-          {% set group_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
+          {% set group_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-white' %}
           {% set group_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set group_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
+          {% set group_border = borderClass(settings) %}
+          {% set group_border = borderClass(settings) %}
           {% set children = block.children or [] %}
           {% set group_mobile_layout = settings.mobileLayout if settings.mobileLayout else 'stack' %}
           {% set group_is_horizontal = group_mobile_layout == 'horizontal-scroll' %}
@@ -494,7 +571,7 @@
           <section
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
-            class="{{ group_bg }} {{ group_radius }} {{ group_shadow }} border border-slate-100 p-6 space-y-3"
+            class="{{ group_bg }} {{ group_radius }} {{ group_shadow }} {{ group_border }} p-6 space-y-3"
           >
             {% if children | length == 0 %}
               <div class="flex items-center justify-between">
@@ -527,9 +604,10 @@
                       {% set c_is_row = 'row' in c_layout %}
                       {% set c_height = c_settings.height or 'min-h-[30vh]' %}
                       {% set c_title_size = c_settings.titleSize or 'text-2xl' %}
-                      {% set c_hero_bg = c_settings.bg if c_settings.bg and 'bg-' in c_settings.bg else 'bg-gradient-to-br from-violet-50 to-white' %}
+                      {% set c_hero_bg = (c_settings.bg and themeBgMap[c_settings.bg]) or c_settings.bg or 'bg-gradient-to-br from-violet-50 to-white' %}
                       {% set c_hero_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-2xl' %}
-                      <div class="relative overflow-hidden {{ c_hero_bg }} {{ c_hero_radius }} {{ c_height }} px-6 py-8">
+                      {% set c_border = borderClass(c_settings) %}
+                      <div class="relative overflow-hidden {{ c_border }} {{ c_hero_bg }} {{ c_hero_radius }} {{ c_height }} px-6 py-8">
                         <div class="flex flex-col gap-3 {{ c_content_align }}">
                           <h3 class="{{ c_title_size }} font-bold leading-tight">
                             {{ c_settings.title or child.label or 'Titre' }}
@@ -537,11 +615,11 @@
                           <div class="text-sm text-slate-600">
                             {{ (c_settings.subtitle or child.description or '') | safe }}
                           </div>
-                          {% if c_settings.ctaLabel %}
-                            <a href="{{ linkHref(c_settings.ctaUrl or '#') }}" class="inline-flex rounded-full bg-violet-600 px-4 py-2 text-white text-sm font-semibold hover:bg-violet-500">
-                              {{ c_settings.ctaLabel }}
-                            </a>
-                          {% endif %}
+                            {% if c_settings.ctaLabel %}
+                              <a href="{{ linkHref(c_settings.ctaUrl or '#') }}" class="inline-flex rounded-full px-4 py-2 text-sm font-semibold transition-colors theme-cta-primary">
+                                {{ c_settings.ctaLabel }}
+                              </a>
+                            {% endif %}
                         </div>
                         {% if c_has_image %}
                           <div class="mt-4">
@@ -552,15 +630,16 @@
                     
                     {% elif c_type == 'paragraphe' or c_type == 'texte' %}
                       {% set c_text_class = c_settings.align if c_settings.align and 'text-' in c_settings.align else 'text-left' %}
-                      {% set c_para_bg = c_settings.bg if c_settings.bg and 'bg-' in c_settings.bg else 'bg-white' %}
+                      {% set c_para_bg = (c_settings.bg and themeBgMap[c_settings.bg]) or c_settings.bg or 'bg-white' %}
                       {% set c_para_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-xl' %}
                       {% set c_title_size = c_settings.titleSize or 'text-lg' %}
                       {% set c_text_size = c_settings.textSize or 'text-sm' %}
-                      <div class="{{ c_para_bg }} {{ c_para_radius }} p-4 border border-slate-100 {{ c_text_class }}">
+                      {% set c_border = borderClass(c_settings) %}
+                      <div class="{{ c_para_bg }} {{ c_para_radius }} {{ c_border }} p-4 {{ c_text_class }}">
                         {% if c_settings.title %}
                           <h4 class="{{ c_title_size }} font-semibold mb-2">{{ c_settings.title }}</h4>
                         {% endif %}
-                        <div class="{{ c_text_size }} text-slate-600 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">
+                        <div class="{{ c_text_size }} text-slate-600 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>a]:theme-link-secondary [&>a]:underline [&>strong]:font-semibold">
                           {{ (c_settings.content or child.description or 'Texte...') | safe }}
                         </div>
                       </div>
@@ -582,11 +661,17 @@
                       {% endif %}
                     
                     {% elif c_type == 'bouton' or c_type == 'button' or c_type == 'cta' %}
-                      {% set c_btn_bg = c_settings.bg if c_settings.bg and 'bg-' in c_settings.bg else 'bg-violet-600' %}
-                      {% set c_btn_text_color = c_settings.textColor if c_settings.textColor else 'text-white' %}
+                      {% set c_btn_theme_override = null %}
+                      {% if c_settings.bg == 'theme-primary' %}
+                        {% set c_btn_theme_override = 'theme-cta-primary' %}
+                      {% elif c_settings.bg == 'theme-secondary' %}
+                        {% set c_btn_theme_override = 'theme-cta-secondary' %}
+                      {% endif %}
+                      {% set c_btn_bg = c_btn_theme_override or (c_settings.bg and themeBgMap[c_settings.bg]) or c_settings.bg or 'bg-violet-600' %}
+                      {% set c_btn_text_color = c_settings.textColor if c_settings.textColor else 'text-[var(--color-background)]' %}
                       {% set c_btn_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-xl' %}
                       {% set c_btn_size = c_settings.size or 'px-5 py-2.5' %}
-                      <a href="{{ linkHref(c_settings.url or '#') }}" class="inline-flex items-center gap-2 {{ c_btn_radius }} {{ c_btn_bg }} {{ c_btn_size }} text-sm font-semibold {{ c_btn_text_color }} hover:opacity-90 transition-opacity">
+                      <a href="{{ linkHref(c_settings.url or '#') }}" class="inline-flex items-center gap-2 {{ c_btn_radius }} {{ c_btn_bg }} {{ c_btn_size }} text-sm font-semibold {{ c_btn_text_color }} transition-colors hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]">
                         {{ c_settings.text or child.label or 'Bouton' }}
                         {% if c_settings.icon %}
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -611,17 +696,18 @@
                       <div class="{{ c_spacer_height }}"></div>
                     
                     {% elif c_type == 'card' or c_type == 'carte' %}
-                      {% set c_card_bg = c_settings.bg if c_settings.bg and 'bg-' in c_settings.bg else 'bg-white' %}
+                      {% set c_card_bg = (c_settings.bg and themeBgMap[c_settings.bg]) or c_settings.bg or 'bg-white' %}
                       {% set c_card_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-xl' %}
                       {% set c_card_shadow = c_settings.shadow if c_settings.shadow and 'shadow' in c_settings.shadow else 'shadow-sm' %}
-                      <div class="{{ c_card_bg }} {{ c_card_radius }} {{ c_card_shadow }} border border-slate-100 p-4 space-y-2">
+                      {% set c_border = borderClass(c_settings) %}
+                      <div class="{{ c_card_bg }} {{ c_card_radius }} {{ c_card_shadow }} {{ c_border }} space-y-2 p-4">
                         {% if c_settings.image %}
                           <img src="{{ c_settings.image }}" alt="{{ c_settings.title or '' }}" class="w-full h-32 object-cover rounded-lg" />
                         {% endif %}
                         <h4 class="text-lg font-semibold">{{ c_settings.title or child.label or 'Carte' }}</h4>
                         <p class="text-sm text-slate-600">{{ c_settings.description or child.description or '' }}</p>
                         {% if c_settings.ctaText %}
-                          <a href="{{ linkHref(c_settings.ctaUrl or '#') }}" class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:text-violet-700">
+                          <a href="{{ linkHref(c_settings.ctaUrl or '#') }}" class="inline-flex items-center gap-1 text-sm font-medium theme-link-secondary">
                             {{ c_settings.ctaText }}
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -633,14 +719,14 @@
                     {% elif c_type == 'divider' or c_type == 'separateur' %}
                       {% set c_divider_color = c_settings.color or 'border-slate-200' %}
                       <div class="py-2">
-                        <hr class="w-full {{ c_divider_color }} border-t" />
+                        <hr class="w-full {{ c_divider_color }} theme-border-accent border-t" />
                       </div>
                     
                     {% elif c_type == 'video' %}
                       {% set c_video_src = c_settings.src or c_settings.url or '' %}
                       {% set c_video_embed = c_settings.embedCode or '' %}
                       {% set c_video_radius = c_settings.borderRadius if c_settings.borderRadius and 'rounded' in c_settings.borderRadius else 'rounded-xl' %}
-                      <div class="bg-slate-900 {{ c_video_radius }} overflow-hidden aspect-video">
+                      <div class="bg-slate-900 {{ c_video_radius }} border border-slate-200 theme-border-accent overflow-hidden aspect-video">
                         {% if c_video_embed %}
                           {{ c_video_embed | safe }}
                         {% elif c_video_src %}
@@ -677,9 +763,10 @@
           {% set coll_desktop = settings.columnsDesktop if settings.columnsDesktop and 'grid-cols' in settings.columnsDesktop else 'md:grid-cols-2' %}
           {% set coll_gap = settings.gap if settings.gap and 'gap-' in settings.gap else 'gap-3' %}
           {% set coll_card_rounded = settings.cardRounded if settings.cardRounded and 'rounded' in settings.cardRounded else 'rounded-2xl' %}
-          {% set coll_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
+          {% set coll_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-white' %}
           {% set coll_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set coll_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
+          {% set coll_border = borderClass(settings) %}
           {% set coll_mobile_layout = settings.mobileLayout if settings.mobileLayout else 'stack' %}
           {% set coll_is_horizontal = coll_mobile_layout == 'horizontal-scroll' %}
           {% if coll_is_horizontal %}
@@ -687,14 +774,14 @@
           {% else %}
             {% set coll_container_classes = 'grid ' ~ coll_gap ~ ' ' ~ coll_mobile ~ ' ' ~ coll_desktop %}
           {% endif %}
-          {% set coll_item_classes = coll_card_rounded ~ ' border border-slate-100 bg-slate-50 p-4 space-y-2' %}
+          {% set coll_item_classes = coll_card_rounded ~ ' border border-slate-100 theme-border-accent bg-slate-50 p-4 space-y-2' %}
           {% if coll_is_horizontal %}
             {% set coll_item_classes = coll_item_classes ~ ' snap-center snap-always flex-shrink-0 w-64 min-w-[16rem] md:w-auto md:min-w-0 md:snap-none' %}
           {% endif %}
           <section
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
-            class="{{ coll_bg }} {{ coll_radius }} {{ coll_shadow }} border border-slate-100 p-6 space-y-3"
+            class="{{ coll_bg }} {{ coll_radius }} {{ coll_shadow }} {{ coll_border }} p-6 space-y-3"
           >
             {% if isPreview %}
             <div class="flex items-center justify-between">
@@ -721,11 +808,11 @@
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-400">{{ item.status }}</p>
                     {% endif %}
                     <h4 class="text-lg font-semibold text-slate-900">{{ item.title or 'Item' }}</h4>
-                    <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:text-violet-600 [&>a]:underline [&>strong]:font-semibold">{{ (item.summary or item.excerpt or '') | safe }}</div>
+                    <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:theme-link-secondary [&>a]:underline [&>strong]:font-semibold">{{ (item.summary or item.excerpt or '') | safe }}</div>
                     {% if item.cta and item.cta.text %}
                     <a 
                       href="{{ linkHref(item.cta.url or '#') }}" 
-                      class="inline-flex items-center gap-1 mt-2 px-4 py-2 text-sm font-medium text-white bg-[#9C6BFF] hover:bg-[#8654f5] rounded-xl transition-colors"
+                      class="inline-flex items-center gap-1 mt-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors theme-cta-primary"
                     >
                       {{ item.cta.text }}
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -749,13 +836,14 @@
           {% set form_align = settings.align if settings.align and ('mx-' in settings.align or 'ml-' in settings.align) else 'mx-auto' %}
           {% set form_spacing = settings.spacing if settings.spacing and 'space-y-' in settings.spacing else 'space-y-4' %}
           {% set form_btn_rounded = settings.buttonRounded if settings.buttonRounded and 'rounded' in settings.buttonRounded else 'rounded-xl' %}
-          {% set form_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-gradient-to-br from-violet-50 to-white' %}
+          {% set form_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-gradient-to-br from-violet-50 to-white' %}
           {% set form_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set form_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-none' %}
+          {% set form_border = borderClass(settings) %}
           <section
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
-            class="{{ form_bg }} {{ form_radius }} {{ form_shadow }} {{ form_max_width }} {{ form_align }} border border-violet-100 p-8 space-y-6"
+            class="{{ form_bg }} {{ form_radius }} {{ form_shadow }} {{ form_max_width }} {{ form_align }} {{ form_border }} p-8 space-y-6"
           >
             <div>
               <h3 class="text-2xl font-bold text-slate-900">{{ formTitle }}</h3>
@@ -782,15 +870,15 @@
                   class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                   placeholder="Votre message..."></textarea>
               </label>
-              <div class="flex items-center justify-between">
-                <p class="text-xs text-slate-400">
-                  {% if settings.serviceName %}Service : {{ settings.serviceName }}{% endif %}
-                </p>
-                <button type="submit"
-                  class="{{ form_btn_rounded }} bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 focus:ring-2 focus:ring-violet-300">
-                  {{ submitLabel }}
-                </button>
-              </div>
+                <div class="flex items-center justify-between">
+                  <p class="text-xs text-slate-400">
+                    {% if settings.serviceName %}Service : {{ settings.serviceName }}{% endif %}
+                  </p>
+                  <button type="submit"
+                    class="{{ form_btn_rounded }} px-6 py-2.5 text-sm font-semibold transition-colors theme-cta-primary">
+                    {{ submitLabel }}
+                  </button>
+                </div>
             </form>
           </section>
         
@@ -800,13 +888,14 @@
           {% set nl_max_width = settings.maxWidth if settings.maxWidth and 'max-w-' in settings.maxWidth else 'max-w-lg' %}
           {% set nl_align = settings.align if settings.align and ('mx-' in settings.align or 'ml-' in settings.align) else 'mx-auto' %}
           {% set nl_padding = settings.padding if settings.padding and 'p-' in settings.padding else 'p-8' %}
-          {% set nl_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-gradient-to-br from-sky-50 to-white' %}
+          {% set nl_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-gradient-to-br from-sky-50 to-white' %}
           {% set nl_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set nl_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-none' %}
+          {% set nl_border = borderClass(settings) %}
           <section
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
-            class="{{ nl_bg }} {{ nl_radius }} {{ nl_shadow }} {{ nl_max_width }} {{ nl_align }} {{ nl_padding }} border border-sky-100 space-y-4"
+            class="{{ nl_bg }} {{ nl_radius }} {{ nl_shadow }} {{ nl_max_width }} {{ nl_align }} {{ nl_padding }} {{ nl_border }} space-y-4"
           >
             <div>
               <h3 class="text-2xl font-bold text-slate-900">{{ nlTitle }}</h3>
@@ -820,22 +909,29 @@
                 {{ embedCode | safe }}
               </div>
             {% else %}
-              <div class="rounded-xl border border-dashed border-sky-200 bg-sky-50/50 p-6 text-center text-sm text-slate-500">
+              <div class="rounded-xl border border-dashed theme-border-accent border-opacity-40 bg-sky-50/50 p-6 text-center text-sm text-slate-500">
                 Collez le code embed de votre service newsletter dans les paramètres du bloc.
               </div>
             {% endif %}
           </section>
         
         {% elif type == 'bouton' or type == 'button' or type == 'cta' %}
-          {% set btn_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-violet-600' %}
-          {% set btn_text_color = settings.textColor if settings.textColor else 'text-white' %}
+          {% set btn_theme_override = null %}
+          {% if settings.bg == 'theme-primary' %}
+            {% set btn_theme_override = 'theme-cta-primary' %}
+          {% elif settings.bg == 'theme-secondary' %}
+            {% set btn_theme_override = 'theme-cta-secondary' %}
+          {% endif %}
+          {% set btn_bg = btn_theme_override or (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-violet-600' %}
+          {% set btn_text_color = settings.textColor if settings.textColor else 'text-[var(--color-background)]' %}
           {% set btn_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-xl' %}
           {% set btn_size = settings.size or 'px-6 py-3' %}
           {% set btn_align = settings.align or 'text-left' %}
+          {% set btn_border = borderClass(settings, 'border-none') %}
           <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ btn_align }}">
             <a 
               href="{{ linkHref(settings.url or '#') }}" 
-              class="inline-flex items-center gap-2 {{ btn_radius }} {{ btn_bg }} {{ btn_size }} text-sm font-semibold {{ btn_text_color }} hover:opacity-90 transition-opacity"
+              class="inline-flex items-center gap-2 {{ btn_radius }} {{ btn_bg }} {{ btn_size }} {{ btn_border }} text-sm font-semibold {{ btn_text_color }} transition-colors hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
             >
               {{ settings.text or block.label or 'Bouton' }}
               {% if settings.icon %}
@@ -862,17 +958,18 @@
           <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ spacer_height }}"></div>
         
         {% elif type == 'card' or type == 'carte' %}
-          {% set card_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-white' %}
+          {% set card_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-white' %}
           {% set card_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set card_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
-          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ card_bg }} {{ card_radius }} {{ card_shadow }} border border-slate-100 p-6 space-y-3">
+          {% set card_border = borderClass(settings) %}
+          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ card_bg }} {{ card_radius }} {{ card_shadow }} {{ card_border }} p-6 space-y-3">
             {% if settings.image %}
               <img src="{{ settings.image }}" alt="{{ settings.title or '' }}" class="w-full h-40 object-cover rounded-xl" />
             {% endif %}
             <h3 class="text-xl font-semibold">{{ settings.title or block.label or 'Carte' }}</h3>
             <p class="text-sm text-slate-600">{{ settings.description or block.description or '' }}</p>
             {% if settings.ctaText %}
-              <a href="{{ linkHref(settings.ctaUrl or '#') }}" class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:text-violet-700">
+              <a href="{{ linkHref(settings.ctaUrl or '#') }}" class="inline-flex items-center gap-1 text-sm font-medium theme-link-secondary">
                 {{ settings.ctaText }}
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -882,7 +979,7 @@
           </div>
         
         {% elif type == 'divider' or type == 'separateur' %}
-          {% set divider_color = settings.color or 'border-slate-200' %}
+          {% set divider_color = (settings.color or 'border-slate-200') ~ ' theme-border-accent' %}
           {% set divider_width = settings.width or 'w-full' %}
           {% set divider_style = settings.style or 'border-solid' %}
           <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="py-4">
@@ -892,9 +989,10 @@
         {% elif type == 'video' %}
           {% set video_src = settings.src or settings.url or '' %}
           {% set video_embed = settings.embedCode or '' %}
-          {% set video_bg = settings.bg if settings.bg and 'bg-' in settings.bg else 'bg-slate-900' %}
+          {% set video_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-slate-900' %}
           {% set video_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
-          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ video_bg }} {{ video_radius }} overflow-hidden aspect-video">
+          {% set video_border = borderClass(settings) %}
+          <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ video_bg }} {{ video_radius }} {{ video_border }} overflow-hidden aspect-video">
             {% if video_embed %}
               {{ video_embed | safe }}
             {% elif video_src %}
@@ -913,7 +1011,7 @@
           <section
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
-            class="bg-white rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500"
+            class="bg-white rounded-2xl border border-dashed border-slate-300 theme-border-accent p-6 text-sm text-slate-500"
           >
             Ce type de bloc ("{{ block.type or 'Bloc' }}") n'a pas encore de preview dédiée.
           </section>
@@ -950,7 +1048,7 @@
                     <ul class="space-y-2">
                       {% for link in column.links %}
                         <li>
-                          <a href="{{ linkHref(link.url or '#') }}" class="text-sm opacity-70 hover:opacity-100 transition-opacity">
+                          <a href="{{ linkHref(link.url or '#') }}" class="text-sm opacity-70 transition-opacity theme-link-secondary hover:opacity-100">
                             {{ link.label or link.url }}
                           </a>
                         </li>
@@ -1007,10 +1105,10 @@
             {% if footer.legal %}
               <div class="flex items-center gap-4">
                 {% if footer.legal.url %}
-                  <a href="{{ linkHref(footer.legal.url) }}" class="hover:opacity-100 transition-opacity">Mentions légales</a>
+                  <a href="{{ linkHref(footer.legal.url) }}" class="text-sm opacity-70 transition-opacity theme-link-secondary hover:opacity-100">Mentions légales</a>
                 {% endif %}
                 {% if footer.legal.privacyUrl %}
-                  <a href="{{ linkHref(footer.legal.privacyUrl) }}" class="hover:opacity-100 transition-opacity">Confidentialité</a>
+                  <a href="{{ linkHref(footer.legal.privacyUrl) }}" class="text-sm opacity-70 transition-opacity theme-link-secondary hover:opacity-100">Confidentialité</a>
                 {% endif %}
               </div>
             {% endif %}
@@ -1037,11 +1135,21 @@
         
         // Mapping des settings vers les classes Tailwind
         const classUpdates = [];
+        const themeBgClassMap = {
+          'theme-primary': 'theme-bg-primary',
+          'theme-secondary': 'theme-bg-secondary',
+          'theme-accent': 'theme-bg-accent',
+          'theme-background': 'theme-bg-background',
+          'theme-text': 'theme-bg-text',
+        };
+        const themeBgClasses = Object.values(themeBgClassMap);
         
         // Background
         if (settings.bg) {
           block.className = block.className.replace(/\bbg-\S+/g, '');
-          classUpdates.push(settings.bg);
+          themeBgClasses.forEach((cls) => block.classList.remove(cls));
+          const resolvedBg = themeBgClassMap[settings.bg] || settings.bg;
+          classUpdates.push(resolvedBg);
         }
         
         // Border radius
@@ -1054,6 +1162,16 @@
         if (settings.shadow) {
           block.className = block.className.replace(/\bshadow-\S+/g, '');
           classUpdates.push(settings.shadow.startsWith('shadow') ? settings.shadow : 'shadow-' + settings.shadow);
+        }
+        
+        // Border
+        if (settings.border !== undefined) {
+          block.className = block.className.replace(/\bborder(-\S+)?\b/g, '');
+          block.className = block.className.replace(/\btheme-border-accent\b/g, '').trim();
+          const borderClasses = String(settings.border || '').split(/\s+/).filter(Boolean);
+          borderClasses.forEach((cls) => {
+            classUpdates.push(cls);
+          });
         }
         
         // Height (pour hero)
@@ -1120,8 +1238,11 @@
         }
         
         // Flash visuel pour confirmer la mise à jour
+        const accentColor = (
+          getComputedStyle(document.documentElement).getPropertyValue('--color-accent') || '#9C6BFF'
+        ).trim() || '#9C6BFF';
         block.style.transition = 'outline 0.2s';
-        block.style.outline = '2px solid #9C6BFF';
+        block.style.outline = '2px solid ' + accentColor;
         setTimeout(function() {
           block.style.outline = 'none';
         }, 300);

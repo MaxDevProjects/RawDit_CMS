@@ -916,6 +916,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeSlug = document.querySelector('[data-active-page-slug]');
     const previewTags = document.querySelector('[data-page-preview-tags]');
     const previewFrame = document.querySelector('[data-page-preview-frame]');
+    const previewFrameWrapper = document.querySelector('[data-page-preview-frame-wrapper]');
+    const previewShell = document.querySelector('[data-page-preview-shell]');
+    const previewViewButtons = document.querySelectorAll('[data-preview-view-button]');
+    const previewCurrentViewLabel = document.querySelector('[data-page-preview-current-view]');
     const previewOpenButton = document.querySelector('[data-preview-open]');
     const previewStatus = document.querySelector('[data-preview-status]');
     const previewHighlightOverlay = document.querySelector('[data-preview-highlight]');
@@ -976,6 +980,82 @@ document.addEventListener('DOMContentLoaded', () => {
     const blockEditorType = document.querySelector('[data-block-editor-block-type]');
     const blockEditorUnsupported = document.querySelector('[data-block-editor-unsupported]');
     const blockForm = document.querySelector('[data-block-form]');
+    const styleColorChip = (chip, color) => {
+      if (!chip) return;
+      if (color === 'transparent') {
+        chip.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+        chip.style.borderColor = '#cbd5f5';
+        chip.style.boxShadow = '';
+        return;
+      }
+      chip.style.background = color;
+      chip.style.borderColor = color;
+      chip.style.boxShadow = '0 0 0 1px rgba(15,23,42,0.15)';
+    };
+    const updateColorSelectPreview = (select) => {
+      if (!select) return;
+      const selectedOption = select.options[select.selectedIndex];
+      const color = selectedOption?.dataset?.color || '#ffffff';
+      const colorPreview = select.closest('.relative')?.querySelector('[data-color-preview]');
+      if (colorPreview) {
+        if (color === 'transparent') {
+          colorPreview.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+        } else {
+          colorPreview.style.backgroundColor = color;
+          colorPreview.style.background = '';
+        }
+      }
+      const colorChip = select.closest('.relative')?.querySelector('[data-theme-color-chip]');
+      styleColorChip(colorChip, color);
+    };
+
+    const themeColorSelects = blockForm
+      ? Array.from(blockForm.querySelectorAll('[data-theme-color-select]'))
+      : [];
+    const themeColorPresets = [
+      { label: 'Couleur primaire', value: 'theme-primary', cssVar: '--color-primary' },
+      { label: 'Couleur secondaire', value: 'theme-secondary', cssVar: '--color-secondary' },
+      { label: 'Couleur accent', value: 'theme-accent', cssVar: '--color-accent' },
+      { label: 'Fond', value: 'theme-background', cssVar: '--color-background' },
+      { label: 'Texte', value: 'theme-text', cssVar: '--color-text' },
+    ];
+    const getComputedThemeColorValue = (cssVar, fallback = '#ffffff') => {
+      if (!cssVar) return fallback;
+      const computed = getComputedStyle(document.documentElement).getPropertyValue(cssVar);
+      return computed ? computed.trim() : fallback;
+    };
+    const fillThemeColorSelect = (select) => {
+      if (!select) return;
+      select.innerHTML = '';
+      themeColorPresets.forEach(({ label, value, cssVar }) => {
+        const option = document.createElement('option');
+        option.value = value;
+        const colorValue = getComputedThemeColorValue(cssVar);
+        option.textContent = `▉ ${label}`;
+        option.dataset.color = colorValue;
+        option.style.color = colorValue;
+        select.appendChild(option);
+      });
+      select.value = themeColorPresets[0].value;
+      select.removeAttribute('disabled');
+      updateColorSelectPreview(select);
+    };
+      const ensureCustomThemeOption = (select, value) => {
+        if (!select || !value) return;
+        if (Array.from(select.options).some((opt) => opt.value === value)) {
+          return;
+        }
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = 'Couleur personnalisée';
+        option.dataset.color = value;
+        option.style.color = value === 'transparent' ? '#475569' : value;
+        select.appendChild(option);
+        styleSelectOptions(select);
+      };
+    const refreshThemeColorSelects = () => themeColorSelects.forEach(fillThemeColorSelect);
+    refreshThemeColorSelects();
+    document.addEventListener('ai-theme-updated', refreshThemeColorSelects);
     const blockFormSections = blockForm
       ? Array.from(blockForm.querySelectorAll('[data-editor-section]'))
       : [];
@@ -1107,6 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
           bg: 'hero-bg',
           borderRadius: 'hero-border-radius',
           shadow: 'hero-shadow',
+          border: 'hero-border',
         },
       },
       paragraphe: {
@@ -1125,6 +1206,7 @@ document.addEventListener('DOMContentLoaded', () => {
           bg: 'paragraph-bg',
           borderRadius: 'paragraph-border-radius',
           shadow: 'paragraph-shadow',
+          border: 'paragraph-border',
         },
       },
       image: {
@@ -1145,6 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Card style
           bg: 'image-bg',
           borderRadius: 'image-border-radius',
+          border: 'image-border',
         },
       },
       groupe: {
@@ -1160,6 +1243,7 @@ document.addEventListener('DOMContentLoaded', () => {
           bg: 'group-bg',
           borderRadius: 'group-border-radius',
           shadow: 'group-shadow',
+          border: 'group-border',
         },
       },
       collectiongrid: {
@@ -1178,6 +1262,7 @@ document.addEventListener('DOMContentLoaded', () => {
           bg: 'collection-bg',
           borderRadius: 'collection-border-radius',
           shadow: 'collection-shadow',
+          border: 'collection-border',
         },
       },
       form: {
@@ -1199,6 +1284,7 @@ document.addEventListener('DOMContentLoaded', () => {
           bg: 'form-bg',
           borderRadius: 'form-border-radius',
           shadow: 'form-shadow',
+          border: 'form-border',
         },
       },
       newsletterembed: {
@@ -1216,6 +1302,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Card style
           borderRadius: 'newsletter-border-radius',
           shadow: 'newsletter-shadow',
+          border: 'newsletter-border',
         },
       },
     };
@@ -1440,20 +1527,12 @@ document.addEventListener('DOMContentLoaded', () => {
           blockForm.querySelector('[name="collection-columns-desktop"]')?.value || '3';
         updateCollectionMiniPreview(mobileValue, desktopValue);
       }
-      // Mise à jour des previews de couleur
-      blockForm.querySelectorAll('[data-color-select]').forEach((select) => {
-        const selectedOption = select.options[select.selectedIndex];
-        const color = selectedOption?.dataset?.color || '#ffffff';
-        const colorPreview = select.closest('.relative')?.querySelector('[data-color-preview]');
-        if (colorPreview) {
-          if (color === 'transparent') {
-            colorPreview.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
-          } else {
-            colorPreview.style.backgroundColor = color;
-            colorPreview.style.background = '';
-          }
-        }
-      });
+      const bgFieldName = config.fields?.bg;
+      if (bgFieldName) {
+        const bgSelect = blockForm.querySelector(`[name="${bgFieldName}"]`);
+        ensureCustomThemeOption(bgSelect, block.settings?.bg);
+      }
+      blockForm.querySelectorAll('[data-color-select]').forEach(updateColorSelectPreview);
     };
     const collectFormValues = (config) => {
       if (!blockForm || !config) {
@@ -1470,6 +1549,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (input.type === 'number') {
           const parsed = Number(input.value);
           values[settingKey] = Number.isFinite(parsed) ? parsed : 0;
+        } else if (input.tagName === 'SELECT') {
+          const fallback = input.dataset.default ?? input.value ?? '';
+          values[settingKey] = input.value || fallback;
         } else if (input.tagName === 'TEXTAREA') {
           values[settingKey] = input.value || '';
         } else if (input.type === 'select-one') {
@@ -2008,6 +2090,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       populateBlockForm(block);
     };
+    const readAccentColor = () => {
+      const computed = getComputedStyle(document.documentElement).getPropertyValue('--color-accent');
+      return computed ? computed.trim() : '#9C6BFF';
+    };
     const applyPreviewHighlight = (blockId) => {
       if (!previewFrame) {
         return;
@@ -2028,7 +2114,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       if (previewHighlightOverlay) {
-        previewHighlightOverlay.style.borderColor = blockId ? 'rgba(156, 107, 255, 0.5)' : 'transparent';
+        const accent = readAccentColor();
+        previewHighlightOverlay.style.borderColor = blockId ? accent : 'transparent';
+        previewHighlightOverlay.style.opacity = blockId ? '0.5' : '0';
+      }
+    };
+    const previewViewPresets = {
+      desktop: { width: '100%', height: '640px', maxWidth: '', margin: '0' },
+      mobile: { width: '375px', height: '780px', maxWidth: '375px', margin: '0 auto' },
+    };
+    const setPreviewView = (view) => {
+      const target = previewViewPresets[view] ? view : 'desktop';
+      previewViewButtons.forEach((button) => {
+        const isActive = button.dataset.previewView === target;
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        if (isActive) {
+          button.classList.add('bg-slate-900', 'text-white');
+          button.classList.remove('bg-slate-200', 'text-slate-500');
+        } else {
+          button.classList.remove('bg-slate-900', 'text-white');
+          button.classList.add('bg-slate-200', 'text-slate-500');
+        }
+      });
+      const styles = previewViewPresets[target];
+      if (previewFrame) {
+        previewFrame.style.width = styles.width;
+        previewFrame.style.height = styles.height;
+        previewFrame.style.maxWidth = styles.maxWidth;
+        previewFrame.style.margin = styles.margin;
+      }
+      if (previewFrameWrapper) {
+        previewFrameWrapper.style.width = '100%';
+        previewFrameWrapper.style.minHeight = styles.height;
+        previewFrameWrapper.style.maxWidth = styles.maxWidth || '100%';
+      }
+      if (previewShell) {
+        previewShell.dataset.previewShellView = target;
+      }
+      if (previewCurrentViewLabel) {
+        previewCurrentViewLabel.textContent = target === 'mobile' ? 'Vue mobile' : 'Vue bureau';
       }
     };
     // Fonction pour créer un élément de bloc (utilisé pour les blocs et les enfants de groupe)
@@ -3538,6 +3662,15 @@ document.addEventListener('DOMContentLoaded', () => {
         populateBlockForm(block);
       }
     });
+    if (previewViewButtons.length > 0) {
+      previewViewButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const targetView = button.dataset.previewView || 'desktop';
+          setPreviewView(targetView);
+        });
+      });
+      setPreviewView('desktop');
+    }
     previewFrame?.addEventListener('load', () => {
       previewReady = true;
       updatePreviewStatus('À jour');
@@ -5597,22 +5730,89 @@ document.addEventListener('DOMContentLoaded', () => {
       const preview = themeForm.querySelector('[data-theme-preview]');
       const themeFeedback = themeForm.querySelector('[data-theme-feedback]');
       const applyButton = themeForm.querySelector('[data-theme-apply]');
+      const tailwindBaseMap = {
+        slate:'#e2e8f0',gray:'#d1d5db',zinc:'#d4d4d8',neutral:'#d4d4d4',stone:'#d6d3d1',
+        red:'#ef4444',orange:'#f97316',amber:'#f59e0b',yellow:'#eab308',lime:'#84cc16',
+        green:'#22c55e',emerald:'#10b981',teal:'#14b8a6',cyan:'#06b6d4',sky:'#0ea5e9',
+        blue:'#3b82f6',indigo:'#6366f1',violet:'#8b5cf6',purple:'#a855f7',fuchsia:'#d946ef',
+        pink:'#ec4899',rose:'#f43f5e'
+      };
+      const tailwindTokenToHex = (token) => {
+        if (!token) return null;
+        if (token === 'white') return '#ffffff';
+        if (token === 'black') return '#000000';
+        if (token === 'transparent') return 'transparent';
+        const [h,s] = token.split('-');
+        if (!h || !s) return null;
+        const base = tailwindBaseMap[h];
+        if (!base) return null;
+        const shadeNum = Number(s) || 500;
+        const factor = Math.min(Math.max((shadeNum - 50) / 900, 0), 1);
+        const toRgb = (hex) =>
+          hex
+            .replace('#', '')
+            .match(/[A-Fa-f0-9]{2}/g)
+            .map((v) => parseInt(v, 16));
+        const [r, g, b] = toRgb(base);
+        const mix = (v) => Math.round(255 - (255 - v) * factor);
+        return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+      };
       const tailwindHues = [
         'slate','gray','zinc','neutral','stone','red','orange','amber','yellow','lime','green','emerald','teal','cyan','sky','blue','indigo','violet','purple','fuchsia','pink','rose'
       ];
       const tailwindShades = ['50','100','200','300','400','500','600','700','800','900'];
       const tailwindTokens = tailwindHues.flatMap((h)=>tailwindShades.map((s)=>`${h}-${s}`));
 
-      const fillColorOptions = () => {
-        Object.values(colorSelects).forEach((sel)=>{
-          if (!sel || sel.options.length) return;
-          tailwindTokens.forEach((token)=>{
-            const option=document.createElement('option');
-            option.value=token;
-            const [h,s]=token.split('-');
-            option.textContent=`${h.charAt(0).toUpperCase()+h.slice(1)} ${s}`;
+      const neutralTokens = [
+        { value: 'white', label: 'Blanc', color: '#ffffff', emoji: '⬜' },
+        { value: 'transparent', label: 'Transparent', color: 'transparent', emoji: '⬜' },
+        { value: 'black', label: 'Noir', color: '#000000', emoji: '⬛' },
+      ];
+
+      const colorOptionDefinitions = (() => {
+        const options = [];
+        neutralTokens.forEach(({ value, label, color, emoji }) => {
+          options.push({
+            value,
+            label: `${emoji} ${label}`,
+            color,
+          });
+        });
+        tailwindTokens.forEach((token) => {
+          const [h, s] = token.split('-');
+          const colorValue = tailwindTokenToHex(token) || '#ffffff';
+          options.push({
+            value: token,
+            label: `${h.charAt(0).toUpperCase() + h.slice(1)} ${s}`,
+            color: colorValue,
+          });
+        });
+        return options;
+      })();
+
+      const normalizeSelectColor = (value) =>
+        typeof value === 'string' ? value.trim().toLowerCase() : '';
+
+      const fillColorOptions = (selectedColors = {}) => {
+        Object.entries(colorSelects).forEach(([key, sel]) => {
+          if (!sel) return;
+          const normalizedValue = normalizeSelectColor(selectedColors[key]);
+          sel.innerHTML = '';
+          colorOptionDefinitions.forEach(({ value, label, color }) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            option.dataset.color = color;
+            if (normalizedValue && normalizedValue === value) {
+              option.selected = true;
+            }
             sel.appendChild(option);
           });
+          sel.dataset.default = sel.dataset.default || sel.options[0]?.value || '';
+          if (!normalizedValue && sel.dataset.default) {
+            sel.value = sel.dataset.default;
+          }
+          styleSelectOptions(sel);
         });
       };
 
@@ -5657,11 +5857,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const mix=(v)=>Math.round(255 - (255 - v)*factor);
           return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
         };
-        preview.style.setProperty('--color-primary', tokenToHex(colorSelects.primary?.value) || '#9C6BFF');
-        preview.style.setProperty('--color-secondary', tokenToHex(colorSelects.secondary?.value) || '#0EA5E9');
-        preview.style.setProperty('--color-accent', tokenToHex(colorSelects.accent?.value) || '#F97316');
-        preview.style.setProperty('--color-background', tokenToHex(colorSelects.background?.value) || '#FFFFFF');
-        preview.style.setProperty('--color-text', tokenToHex(colorSelects.text?.value) || '#0F172A');
+        preview.style.setProperty('--color-primary', tailwindTokenToHex(colorSelects.primary?.value) || '#9C6BFF');
+        preview.style.setProperty('--color-secondary', tailwindTokenToHex(colorSelects.secondary?.value) || '#0EA5E9');
+        preview.style.setProperty('--color-accent', tailwindTokenToHex(colorSelects.accent?.value) || '#F97316');
+        preview.style.setProperty('--color-background', tailwindTokenToHex(colorSelects.background?.value) || '#FFFFFF');
+        preview.style.setProperty('--color-text', tailwindTokenToHex(colorSelects.text?.value) || '#0F172A');
         preview.style.setProperty('--font-headings', headingSelect?.value || 'Inter, sans-serif');
         preview.style.setProperty('--font-body', bodySelect?.value || 'Inter, sans-serif');
         preview.style.setProperty('--radius-small', radiusSmall?.value || '8px');
@@ -5670,12 +5870,33 @@ document.addEventListener('DOMContentLoaded', () => {
         preview.style.borderRadius = radiusMedium?.value || '16px';
       };
 
-      const setColorFields = (key, value) => {
-        if (colorSelects[key]) colorSelects[key].value = value;
+      // Initialiser les previews de couleur et ajouter les listeners
+      const styleSelectOptions = (select) => {
+        if (!select) return;
+        Array.from(select.options).forEach((option) => {
+          const optionColor = option.dataset?.color;
+          if (!optionColor) return;
+          if (optionColor === 'transparent') {
+            option.style.color = '#475569';
+          } else {
+            option.style.color = optionColor;
+          }
+        });
       };
-      
-      // Fonction pour mettre à jour le preview de couleur d'un select
-      const updateColorSelectPreview = (select) => {
+
+      const styleThemeColorChip = (chip, color) => {
+        if (!chip) return;
+        if (color === 'transparent') {
+          chip.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+          chip.style.borderColor = '#cbd5f5';
+          chip.style.boxShadow = '';
+          return;
+        }
+        chip.style.background = color;
+        chip.style.borderColor = color;
+        chip.style.boxShadow = '0 0 0 1px rgba(15,23,42,0.15)';
+      };
+      const updateThemeColorPreview = (select) => {
         if (!select) return;
         const selectedOption = select.options[select.selectedIndex];
         const color = selectedOption?.dataset?.color || '#ffffff';
@@ -5688,14 +5909,16 @@ document.addEventListener('DOMContentLoaded', () => {
             colorPreview.style.background = '';
           }
         }
+        const colorChip = select.closest('.relative')?.querySelector('[data-theme-color-chip]');
+        styleThemeColorChip(colorChip, color);
       };
-      
-      // Initialiser les previews de couleur et ajouter les listeners
+
       const initColorPreviews = () => {
         Object.values(colorSelects).forEach((select) => {
           if (!select) return;
-          updateColorSelectPreview(select);
-          select.addEventListener('change', () => updateColorSelectPreview(select));
+          styleSelectOptions(select);
+          updateThemeColorPreview(select);
+          select.addEventListener('change', () => updateThemeColorPreview(select));
         });
       };
 
@@ -5715,19 +5938,29 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           if (!response.ok) return;
           const payload = await response.json().catch(() => ({}));
-          setColorFields('primary', payload.colors?.primary || 'violet-500');
-          setColorFields('secondary', payload.colors?.secondary || 'indigo-400');
-          setColorFields('accent', payload.colors?.accent || 'emerald-500');
-          setColorFields('background', payload.colors?.background || 'slate-50');
-          setColorFields('text', payload.colors?.text || 'slate-900');
+          const themeColors = payload.colors || {};
+          fillColorOptions(themeColors);
+          Object.entries(colorSelects).forEach(([key, select]) => {
+            if (!select) return;
+            const value = themeColors[key];
+            const normalizedValue = normalizeSelectColor(value);
+            if (normalizedValue) {
+              ensureCustomThemeOption(select, normalizedValue);
+              select.value = normalizedValue;
+            } else if (value) {
+              ensureCustomThemeOption(select, value);
+              select.value = value;
+            } else if (select.dataset.default) {
+              select.value = select.dataset.default;
+            }
+            updateThemeColorPreview(select);
+          });
           if (headingSelect) headingSelect.value = payload.typography?.headings || 'Inter, sans-serif';
           if (bodySelect) bodySelect.value = payload.typography?.body || 'Inter, sans-serif';
           if (radiusSmall) radiusSmall.value = payload.radius?.small || '8px';
           if (radiusMedium) radiusMedium.value = payload.radius?.medium || '16px';
           if (radiusLarge) radiusLarge.value = payload.radius?.large || '24px';
           syncPreview();
-          // Mettre à jour les previews de couleur après chargement
-          Object.values(colorSelects).forEach(updateColorSelectPreview);
         } catch (err) {
           console.error('[settings] load theme failed', err);
         }

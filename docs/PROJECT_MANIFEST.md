@@ -1,8 +1,8 @@
- # ClowerEdit – Manifeste du projet
+ # RAWDIT – Manifeste du projet
 
-Ce document regroupe les User Stories (US) qui définissent le comportement attendu de ClowerEdit V1.
+Ce document regroupe les User Stories (US) qui définissent le comportement attendu de RAWDIT V1.
 
-ClowerEdit = CMS statique éco-conçu pour créer des sites :
+RAWDIT = CMS statique éco-conçu pour créer des sites :
 - basés sur des fichiers JSON,
 - rendus via Nunjucks + Tailwind,
 - administrables via une interface HTML/JS/Tailwind,
@@ -410,9 +410,9 @@ ClowerEdit = CMS statique éco-conçu pour créer des sites :
 
 ## EPIC 11 – Clower.studio comme preuve V1
 
-### US11.1 – Construire clower.studio avec ClowerEdit
+### US11.1 – Construire clower.studio avec RAWDIT
 
-- Le site clower.studio est intégralement construit via l’admin ClowerEdit :
+- Le site clower.studio est intégralement construit via l’admin RAWDIT :
   - pages : Accueil, Services, Portfolio, À propos, Contact, pages projet…
 - Il est généré dans le dossier public/build standard.
 - Il est déployé via l’onglet Déploiement.
@@ -449,5 +449,5 @@ ClowerEdit = CMS statique éco-conçu pour créer des sites :
 
 ---
 
-Fin du manifeste pour la V1 de ClowerEdit.  
+Fin du manifeste pour la V1 de RAWDIT.  
 Toute nouvelle fonctionnalité devra être ajoutée ici sous forme d’US avant d’être développée.

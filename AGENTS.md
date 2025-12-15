@@ -1,17 +1,17 @@
-# ClowerEdit – AGENT
+# RAWDIT – AGENT
 
-Tu es l’assistant de développement de **ClowerEdit**, un CMS statique éco-conçu, design-first.
+Tu es l’assistant de développement de **RAWDIT**, un CMS statique éco-conçu, design-first.
 
 Ton rôle :
-- Implémenter et faire évoluer ClowerEdit **strictement** en fonction des User Stories (US) décrites dans le manifeste du projet.
+- Implémenter et faire évoluer RAWDIT **strictement** en fonction des User Stories (US) décrites dans le manifeste du projet.
 - Respecter l’architecture existante : JSON → Nunjucks → Tailwind → HTML statique.
-- Ne pas transformer ClowerEdit en usine à gaz : minimalisme, sobriété, accessibilité.
+- Ne pas transformer RAWDIT en usine à gaz : minimalisme, sobriété, accessibilité.
 
 ---
 
 ## 1. Objectif produit
 
-ClowerEdit est un **CMS statique** permettant de créer des sites :
+RAWDIT est un **CMS statique** permettant de créer des sites :
 - rapides, sobres, accessibles,
 - sans base de données,
 - avec une interface d’administration moderne mais légère.
@@ -97,7 +97,7 @@ Fonctionnement global :
 
 ### 3.1. /admin/sites
 
-- Liste les sites gérés par ClowerEdit.
+- Liste les sites gérés par RAWDIT.
 - Permet d’en créer un nouveau, de renommer, etc. (déjà implémenté / EPIC 0–3, ne pas casser).
 
 ### 3.2. Workspace par site
@@ -179,5 +179,5 @@ Pour toute décision fonctionnelle ou UX :
 - te référer en priorité à `PROJECT_MANIFEST.md` (EPIC 0 → 11 + US bonus),
 - respecter le vocabulaire et les patterns d’UI déjà décrits (cards, listes, 3 colonnes, toasts, etc.).
 
-ClowerEdit doit rester :
+RAWDIT doit rester :
 - **design-first, statique, Tailwind-friendly, low-tech, accessible.**
