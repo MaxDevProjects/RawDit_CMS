@@ -184,6 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
     mobilePanelLayerPlaceholder = document.createComment('mobile-panels-layer-placeholder');
     mobilePanelLayer.parentElement.insertBefore(mobilePanelLayerPlaceholder, mobilePanelLayer);
   }
+  let rightPanelPlaceholder = null;
+  if (mobilePanels.right?.parentElement) {
+    rightPanelPlaceholder = document.createComment('mobile-panel-right-placeholder');
+    mobilePanels.right.parentElement.insertBefore(rightPanelPlaceholder, mobilePanels.right);
+  }
   const mobilePanelToggles = document.querySelectorAll('[data-mobile-panel-toggle]');
   const mobilePanelCloseButtons = document.querySelectorAll('[data-mobile-panel-close]');
   const mobilePanelTriggers = { left: null, right: null };
@@ -211,7 +216,44 @@ document.addEventListener('DOMContentLoaded', () => {
       mobilePanelLayer.dataset.mobilePanelPlacement = 'overlay';
     }
   };
-  ensureMobilePanelLayerPlacement();
+  const ensureRightPanelPlacement = () => {
+    const panel = mobilePanels.right;
+    if (!panel || !rightPanelPlaceholder) {
+      return;
+    }
+    if (isDesktopViewport()) {
+      const targetParent = rightPanelPlaceholder.parentElement;
+      if (!targetParent) {
+        return;
+      }
+      if (panel.parentElement !== targetParent) {
+        targetParent.insertBefore(panel, rightPanelPlaceholder.nextSibling);
+      } else if (rightPanelPlaceholder.nextSibling !== panel) {
+        targetParent.insertBefore(panel, rightPanelPlaceholder.nextSibling);
+      }
+      panel.dataset.mobilePanelPlacement = 'sidebar';
+      return;
+    }
+    if (mobilePanelLayer) {
+      const leftPanel = mobilePanels.left;
+      if (leftPanel && leftPanel.parentElement === mobilePanelLayer) {
+        if (panel.parentElement !== mobilePanelLayer || panel.previousSibling !== leftPanel) {
+          mobilePanelLayer.insertBefore(panel, leftPanel.nextSibling);
+        }
+      } else if (panel.parentElement !== mobilePanelLayer) {
+        mobilePanelLayer.appendChild(panel);
+      }
+      panel.dataset.mobilePanelPlacement = 'overlay';
+    } else if (panel.parentElement !== document.body) {
+      document.body.appendChild(panel);
+      panel.dataset.mobilePanelPlacement = 'overlay';
+    }
+  };
+  const ensureMobilePanelPlacement = () => {
+    ensureMobilePanelLayerPlacement();
+    ensureRightPanelPlacement();
+  };
+  ensureMobilePanelPlacement();
   const applyPanelClasses = (panel, classes, method) => {
     if (!panel || !classes) {
       return;
@@ -297,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 0);
   };
   const syncMobilePanelsWithViewport = () => {
-    ensureMobilePanelLayerPlacement();
+    ensureMobilePanelPlacement();
     if (isDesktopViewport()) {
       mobilePanelOverlay?.classList.add('hidden');
       mobilePanelLayer?.classList.add('pointer-events-none');
