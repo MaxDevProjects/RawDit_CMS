@@ -2402,10 +2402,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return dropZone;
     };
 
-    const renderBlockList = (page) => {
-      if (!blockList) {
-        return;
-      }
+	    const renderBlockList = (page) => {
+	      if (!blockList) {
+	        return;
+	      }
       blockList.innerHTML = '';
       const blocks = page?.blocks || [];
       if (blockCountBadge) {
@@ -2435,37 +2435,104 @@ document.addEventListener('DOMContentLoaded', () => {
           blockList.appendChild(dropZone);
         }
       });
-    };
-    
-    // Fonctions pour gérer les enfants des groupes
-    const moveBlockToGroup = (blockId, groupId) => {
-      if (!currentPage) return;
-      const blockIndex = currentPage.blocks.findIndex((b) => b.id === blockId);
-      const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
-      if (blockIndex === -1 || !groupBlock) return;
-      
-      // Ne pas permettre de déplacer un groupe dans un groupe
-      const block = currentPage.blocks[blockIndex];
-      const blockType = (block.type || '').toLowerCase();
-      if (blockType === 'groupe' || blockType === 'group') {
-        showToast('Impossible d\'imbriquer des groupes', 'error');
-        return;
-      }
-      
-      // Retirer le bloc de la liste principale
-      const [movedBlock] = currentPage.blocks.splice(blockIndex, 1);
-      
-      // Ajouter au groupe
-      if (!groupBlock.children) groupBlock.children = [];
-      groupBlock.children.push(movedBlock);
-      
-      renderBlockList(currentPage);
-      savePageBlocks();
-      showToast(`Bloc ajouté au groupe`);
-    };
-    
-    const removeChildFromGroup = (groupId, childId) => {
-      if (!currentPage) return;
+	    };
+	    
+	    // Fonctions pour gérer les enfants des groupes
+	    const findChildLocation = (childId) => {
+	      if (!currentPage || !childId) return null;
+	      for (let groupIndex = 0; groupIndex < currentPage.blocks.length; groupIndex++) {
+	        const groupBlock = currentPage.blocks[groupIndex];
+	        const groupType = (groupBlock?.type || '').toLowerCase();
+	        const isGroup =
+	          groupType === 'groupe' || groupType === 'group' || groupType === 'sections' || groupType === 'grid';
+	        if (!isGroup || !Array.isArray(groupBlock.children)) continue;
+	        const childIndex = groupBlock.children.findIndex((child) => child.id === childId);
+	        if (childIndex !== -1) {
+	          return { groupId: groupBlock.id, groupIndex, childIndex };
+	        }
+	      }
+	      return null;
+	    };
+	    const extractBlockById = (blockId) => {
+	      if (!currentPage || !blockId) return null;
+	      const rootIndex = currentPage.blocks.findIndex((b) => b.id === blockId);
+	      if (rootIndex !== -1) {
+	        const [block] = currentPage.blocks.splice(rootIndex, 1);
+	        return { block, from: { type: 'root', index: rootIndex } };
+	      }
+	      const childLoc = findChildLocation(blockId);
+	      if (!childLoc) return null;
+	      const groupBlock = currentPage.blocks.find((b) => b.id === childLoc.groupId);
+	      if (!groupBlock || !Array.isArray(groupBlock.children)) return null;
+	      const [block] = groupBlock.children.splice(childLoc.childIndex, 1);
+	      return { block, from: { type: 'group', groupId: childLoc.groupId, index: childLoc.childIndex } };
+	    };
+	    const insertBlockIntoRoot = (block, index) => {
+	      if (!currentPage || !block) return;
+	      const safeIndex = Math.min(Math.max(0, index ?? currentPage.blocks.length), currentPage.blocks.length);
+	      currentPage.blocks.splice(safeIndex, 0, block);
+	    };
+	    const insertBlockIntoGroup = (block, groupId, index) => {
+	      if (!currentPage || !block || !groupId) return false;
+	      const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
+	      if (!groupBlock) return false;
+	      if (!Array.isArray(groupBlock.children)) groupBlock.children = [];
+	      const safeIndex = Math.min(
+	        Math.max(0, index ?? groupBlock.children.length),
+	        groupBlock.children.length,
+	      );
+	      groupBlock.children.splice(safeIndex, 0, block);
+	      return true;
+	    };
+	    const getInsertIndexFromPosition = (baseIndex, position, offsetWhenAfter = 1) => {
+	      if (typeof baseIndex !== 'number' || baseIndex < 0) return null;
+	      return position === 'before' ? baseIndex : baseIndex + offsetWhenAfter;
+	    };
+	    const commitBlocksChange = (activeId = null, activeParentId = null, toastMessage = null) => {
+	      renderBlockList(currentPage);
+	      savePageBlocks();
+	      if (activeId) {
+	        setActiveBlock(activeId, activeParentId);
+	      }
+	      if (toastMessage) {
+	        showToast(toastMessage);
+	      }
+	    };
+
+	    const moveBlockToGroup = (blockId, groupId) => {
+	      if (!currentPage) return;
+	      if (!blockId || !groupId || blockId === groupId) return;
+	      const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
+	      if (!groupBlock) return;
+	      
+	      // Ne pas permettre de déplacer un groupe dans un groupe
+	      const extracted = extractBlockById(blockId);
+	      if (!extracted?.block) return;
+	      const blockType = (extracted.block.type || '').toLowerCase();
+	      if (blockType === 'groupe' || blockType === 'group') {
+	        showToast('Impossible d\'imbriquer des groupes', 'error');
+	        // Remettre le bloc à sa place d'origine
+	        if (extracted.from?.type === 'root') {
+	          insertBlockIntoRoot(extracted.block, extracted.from.index);
+	        } else if (extracted.from?.type === 'group') {
+	          insertBlockIntoGroup(extracted.block, extracted.from.groupId, extracted.from.index);
+	        }
+	        return;
+	      }
+	      
+	      // Déjà dans ce groupe → no-op
+	      if (extracted.from?.type === 'group' && extracted.from.groupId === groupId) {
+	        insertBlockIntoGroup(extracted.block, extracted.from.groupId, extracted.from.index);
+	        return;
+	      }
+
+	      if (!Array.isArray(groupBlock.children)) groupBlock.children = [];
+	      groupBlock.children.push(extracted.block);
+	      commitBlocksChange(extracted.block.id, groupId, `Bloc ajouté au groupe`);
+	    };
+	    
+	    const removeChildFromGroup = (groupId, childId) => {
+	      if (!currentPage) return;
       const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
       if (!groupBlock || !groupBlock.children) return;
       
@@ -2477,10 +2544,72 @@ document.addEventListener('DOMContentLoaded', () => {
       const groupIndex = currentPage.blocks.findIndex((b) => b.id === groupId);
       currentPage.blocks.splice(groupIndex + 1, 0, child);
       
-      renderBlockList(currentPage);
-      savePageBlocks();
-      showToast(`Bloc sorti du groupe`);
-    };
+	      renderBlockList(currentPage);
+	      savePageBlocks();
+	      showToast(`Bloc sorti du groupe`);
+	    };
+
+	    const moveChildFromGroupToRootAt = (groupId, childId, insertIndex) => {
+	      if (!currentPage) return;
+	      const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
+	      if (!groupBlock || !Array.isArray(groupBlock.children)) return;
+	      const childIndex = groupBlock.children.findIndex((c) => c.id === childId);
+	      if (childIndex === -1) return;
+	      const [child] = groupBlock.children.splice(childIndex, 1);
+	      insertBlockIntoRoot(child, insertIndex);
+	      commitBlocksChange(child.id, null, 'Bloc sorti du groupe');
+	    };
+
+	    const moveChildWithinGroup = (groupId, childId, targetChildId, position) => {
+	      if (!currentPage) return;
+	      const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
+	      if (!groupBlock || !Array.isArray(groupBlock.children)) return;
+	      const fromIndex = groupBlock.children.findIndex((c) => c.id === childId);
+	      const toIndexBase = groupBlock.children.findIndex((c) => c.id === targetChildId);
+	      if (fromIndex === -1 || toIndexBase === -1 || childId === targetChildId) return;
+	      const [moved] = groupBlock.children.splice(fromIndex, 1);
+	      const adjustedToIndexBase = fromIndex < toIndexBase ? toIndexBase - 1 : toIndexBase;
+	      const insertIndex =
+	        position === 'before' ? adjustedToIndexBase : adjustedToIndexBase + 1;
+	      groupBlock.children.splice(insertIndex, 0, moved);
+	      commitBlocksChange(moved.id, groupId, null);
+	    };
+
+	    const moveAnyBlockToGroupAt = (blockId, groupId, targetChildId, position) => {
+	      if (!currentPage) return;
+	      if (!blockId || !groupId) return;
+	      const extracted = extractBlockById(blockId);
+	      if (!extracted?.block) return;
+	      const blockType = (extracted.block.type || '').toLowerCase();
+	      if (blockType === 'groupe' || blockType === 'group') {
+	        showToast("Impossible d'imbriquer des groupes", 'error');
+	        if (extracted.from?.type === 'root') {
+	          insertBlockIntoRoot(extracted.block, extracted.from.index);
+	        } else if (extracted.from?.type === 'group') {
+	          insertBlockIntoGroup(extracted.block, extracted.from.groupId, extracted.from.index);
+	        }
+	        return;
+	      }
+	      const groupBlock = currentPage.blocks.find((b) => b.id === groupId);
+	      if (!groupBlock) {
+	        // Remettre le bloc
+	        if (extracted.from?.type === 'root') {
+	          insertBlockIntoRoot(extracted.block, extracted.from.index);
+	        } else if (extracted.from?.type === 'group') {
+	          insertBlockIntoGroup(extracted.block, extracted.from.groupId, extracted.from.index);
+	        }
+	        return;
+	      }
+	      if (!Array.isArray(groupBlock.children)) groupBlock.children = [];
+	      let insertIndex = groupBlock.children.length;
+	      if (targetChildId) {
+	        const targetIndex = groupBlock.children.findIndex((c) => c.id === targetChildId);
+	        const resolved = getInsertIndexFromPosition(targetIndex, position, 1);
+	        if (resolved !== null) insertIndex = resolved;
+	      }
+	      groupBlock.children.splice(insertIndex, 0, extracted.block);
+	      commitBlocksChange(extracted.block.id, groupId, 'Bloc ajouté au groupe');
+	    };
     
     const moveChildBlockByOffset = (groupId, childId, offset) => {
       if (!currentPage) return;
@@ -3978,24 +4107,26 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    const handleBlockDragStart = (event) => {
-      const item = event.target.closest('[data-block-item]');
-      if (!item || !isDesktopReorder()) {
-        event.preventDefault();
-        return;
-      }
-      dragSourceId = item.dataset.blockId || null;
-      if (!dragSourceId) {
-        event.preventDefault();
-        return;
-      }
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', dragSourceId);
-      // Style du bloc en cours de drag
-      requestAnimationFrame(() => {
-        item.classList.add('opacity-50', 'scale-[0.98]', 'shadow-lg', 'ring-2', 'ring-[#9C6BFF]');
-      });
-    };
+	    const handleBlockDragStart = (event) => {
+	      const item = event.target.closest('[data-block-item]');
+	      if (!item || !isDesktopReorder()) {
+	        event.preventDefault();
+	        return;
+	      }
+	      dragSourceId = item.dataset.blockId || null;
+	      dragSourceParentId = item.dataset.parentBlockId || null;
+	      if (!dragSourceId) {
+	        event.preventDefault();
+	        return;
+	      }
+	      event.dataTransfer.effectAllowed = 'move';
+	      event.dataTransfer.setData('text/plain', dragSourceId);
+	      event.dataTransfer.setData('application/x-rawdit-parent', dragSourceParentId || '');
+	      // Style du bloc en cours de drag
+	      requestAnimationFrame(() => {
+	        item.classList.add('opacity-50', 'scale-[0.98]', 'shadow-lg', 'ring-2', 'ring-[#9C6BFF]');
+	      });
+	    };
     const clearDragIndicators = () => {
       blockList
         ?.querySelectorAll('[data-block-item]')
@@ -4007,10 +4138,11 @@ document.addEventListener('DOMContentLoaded', () => {
           );
         });
     };
-    const handleBlockDragEnd = () => {
-      dragSourceId = null;
-      clearDragIndicators();
-    };
+	    const handleBlockDragEnd = () => {
+	      dragSourceId = null;
+	      dragSourceParentId = null;
+	      clearDragIndicators();
+	    };
     const handleBlockDragOver = (event) => {
       if (!dragSourceId || !isDesktopReorder()) {
         return;
@@ -4053,23 +4185,64 @@ document.addEventListener('DOMContentLoaded', () => {
       target.classList.remove('border-t-4', 'border-b-4', 'border-t-[#9C6BFF]', 'border-b-[#9C6BFF]', 'pt-6', 'pb-6');
       delete target.dataset.dropPosition;
     };
-    const handleBlockDrop = (event) => {
-      if (!dragSourceId || !isDesktopReorder()) {
-        return;
-      }
-      event.preventDefault();
-      const target = event.target.closest('[data-block-item]');
-      const source = dragSourceId;
-      const dropPosition = target?.dataset.dropPosition || 'after';
-      dragSourceId = null;
-      clearDragIndicators();
-      const targetId = target?.dataset.blockId || null;
-      if (!targetId || source === targetId) {
-        return;
-      }
-      reorderBlocksWithPosition(source, targetId, dropPosition);
-    };
-    let dragSourceId = null;
+	    const handleBlockDrop = (event) => {
+	      if (!dragSourceId || !isDesktopReorder()) {
+	        return;
+	      }
+	      event.preventDefault();
+	      const target = event.target.closest('[data-block-item]');
+	      const source = dragSourceId;
+	      const sourceParent = dragSourceParentId;
+	      const dropPosition = target?.dataset.dropPosition || 'after';
+	      dragSourceId = null;
+	      dragSourceParentId = null;
+	      clearDragIndicators();
+	      const targetId = target?.dataset.blockId || null;
+	      if (!currentPage || !source) return;
+	      if (!targetId) {
+	        if (sourceParent) {
+	          moveChildFromGroupToRootAt(sourceParent, source, currentPage.blocks.length);
+	        }
+	        return;
+	      }
+	      if (source === targetId) return;
+
+	      const targetParent = target?.dataset.parentBlockId || null;
+
+	      // Déplacer depuis un groupe
+	      if (sourceParent) {
+	        if (targetParent) {
+	          // Vers un enfant d'un groupe (même groupe → reorder, autre groupe → move)
+	          if (targetParent === sourceParent) {
+	            moveChildWithinGroup(sourceParent, source, targetId, dropPosition);
+	            return;
+	          }
+	          moveAnyBlockToGroupAt(source, targetParent, targetId, dropPosition);
+	          return;
+	        }
+
+	        // Drop sur un bloc racine → sortir du groupe à une position
+	        const targetRootIndex = currentPage.blocks.findIndex((b) => b.id === targetId);
+	        if (targetRootIndex === -1) {
+	          moveChildFromGroupToRootAt(sourceParent, source, currentPage.blocks.length);
+	          return;
+	        }
+	        const insertIndex = getInsertIndexFromPosition(targetRootIndex, dropPosition, 1);
+	        moveChildFromGroupToRootAt(sourceParent, source, insertIndex ?? currentPage.blocks.length);
+	        return;
+	      }
+
+	      // Déplacer depuis la liste racine vers l'intérieur d'un groupe (drop sur enfant)
+	      if (targetParent) {
+	        moveAnyBlockToGroupAt(source, targetParent, targetId, dropPosition);
+	        return;
+	      }
+
+	      // Par défaut: reorder des blocs racine
+	      reorderBlocksWithPosition(source, targetId, dropPosition);
+	    };
+	    let dragSourceId = null;
+	    let dragSourceParentId = null;
     blockList?.addEventListener('dragstart', handleBlockDragStart);
     blockList?.addEventListener('dragend', handleBlockDragEnd);
     blockList?.addEventListener('dragover', handleBlockDragOver);

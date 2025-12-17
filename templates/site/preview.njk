@@ -603,11 +603,12 @@
               </div>
             {% else %}
               <div class="{{ group_container_classes }}" {% if group_is_horizontal %}role="list" aria-label="{{ (block.label or 'Bloc groupe') }} – défilement horizontal"{% endif %}>
-                {% for child in children %}
-                  {% set c_type = (child.type or '') | lower %}
-                  {% set c_settings = child.settings or {} %}
-                  <div class="{{ group_item_wrapper_classes }}" data-preview-block="{{ child.id }}" {{ animationAttrs(c_settings) | safe }}>
-                    {# ─── Rendu complet des enfants (inline, pas de récursion) ─── #}
+	                {% for child in children %}
+	                  {% set c_type = (child.type or '') | lower %}
+	                  {% set c_settings = child.settings or {} %}
+	                  <div class="{{ group_item_wrapper_classes }}" {% if group_is_horizontal %}role="listitem"{% endif %}>
+	                    {{ renderBlock(child, true, collectionMap) }}
+	                    {% if false %}{# legacy inline render #}
 	                    {% if c_type == 'hero' %}
 	                      {% set c_content_align = c_settings.contentAlign or 'items-center' %}
 	                      {% set c_has_image = c_settings.image %}
@@ -761,8 +762,9 @@
                         <p class="text-sm font-medium">{{ child.label or 'Bloc' }}</p>
                       </div>
                     {% endif %}
-                  </div>
-                {% endfor %}
+	                    {% endif %}
+	                  </div>
+	                {% endfor %}
               </div>
             {% endif %}
           </section>
