@@ -44,6 +44,15 @@ previewEnv.addFilter('date', (str, format) => {
   return date.toLocaleDateString('fr-FR');
 });
 
+// Utilitaire : Nunjucks n'inclut pas toujours `split` selon la config.
+// On l'ajoute pour garder les templates simples et éviter des erreurs runtime.
+previewEnv.addFilter('split', (value, separator = ' ') => {
+  if (typeof value !== 'string') {
+    return [];
+  }
+  return value.split(separator);
+});
+
 const SITES_DATA_ROOT = path.join(paths.data, 'sites');
 const PUBLIC_SITES_ROOT = path.join(paths.public, 'sites');
 const DEPLOY_CONFIG_FILENAME = 'deploy.json';
@@ -772,6 +781,12 @@ async function buildSitePages(siteSlug) {
 
   const loader = new nunjucks.FileSystemLoader(paths.templatesSite, { noCache: true });
   const env = new nunjucks.Environment(loader, { autoescape: true });
+  env.addFilter('split', (value, separator = ' ') => {
+    if (typeof value !== 'string') {
+      return [];
+    }
+    return value.split(separator);
+  });
 
   // copier les assets globaux dans le dossier du site
   const globalAssets = path.join(paths.public, 'assets');
