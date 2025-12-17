@@ -991,6 +991,47 @@
                   <option value="fullwidth-bg">🖼️ Image en fond (fullwidth)</option>
                 </select>
               </label>
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3">
+                <p class="text-[11px] font-semibold text-slate-600 uppercase tracking-tight">
+                  Image (taille &amp; recadrage)
+                </p>
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Largeur (gauche/droite)</span>
+                    <select name="hero-image-width" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                      <option value="max-w-xs">XS</option>
+                      <option value="max-w-sm">S (défaut)</option>
+                      <option value="max-w-md">M</option>
+                      <option value="max-w-lg">L</option>
+                      <option value="max-w-xl">XL</option>
+                      <option value="w-full">Plein (w-full)</option>
+                    </select>
+                  </label>
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Hauteur (gauche/droite)</span>
+                    <select name="hero-image-height" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                      <option value="h-48">Petite (48)</option>
+                      <option value="h-64">Moyenne (64, défaut)</option>
+                      <option value="h-72">Grande (72)</option>
+                      <option value="h-80">Très grande (80)</option>
+                      <option value="h-96">XL (96)</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="space-y-1 block">
+                  <span class="text-xs font-medium text-slate-600">Ajustement (object-fit)</span>
+                  <select name="hero-image-object-fit" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                    <option value="object-cover">Couvrir (cover)</option>
+                    <option value="object-contain">Contenir (contain)</option>
+                    <option value="object-fill">Remplir (fill)</option>
+                    <option value="object-scale-down">Réduire si nécessaire</option>
+                    <option value="object-none">Aucun (taille réelle)</option>
+                  </select>
+                </label>
+                <p class="text-[11px] text-slate-500">
+                  En mode <span class="font-semibold">fullwidth</span>, la hauteur est pilotée par “Hauteur de section”.
+                </p>
+              </div>
               <label class="space-y-1 block">
                 <span class="text-xs font-medium text-slate-600">Hauteur de section</span>
                 <select name="hero-height" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">

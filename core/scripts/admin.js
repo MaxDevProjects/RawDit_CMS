@@ -885,6 +885,56 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '/admin/sites';
   });
 
+  const TRANSPARENT_PATTERN =
+    'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+  const parseCssColorToRgb = (value) => {
+    if (!value || typeof value !== 'string') return null;
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'transparent') return null;
+    const rgbMatch = normalized.match(
+      /^rgb\\(\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*\\)$/,
+    );
+    if (rgbMatch) {
+      return [
+        Math.min(255, Math.max(0, Number(rgbMatch[1]))),
+        Math.min(255, Math.max(0, Number(rgbMatch[2]))),
+        Math.min(255, Math.max(0, Number(rgbMatch[3]))),
+      ];
+    }
+    const hexMatch = normalized.match(/^#([a-f0-9]{3}|[a-f0-9]{6})$/);
+    if (hexMatch) {
+      const hex = hexMatch[1];
+      const normalizedHex =
+        hex.length === 3 ? hex.split('').map((c) => `${c}${c}`).join('') : hex;
+      const r = parseInt(normalizedHex.slice(0, 2), 16);
+      const g = parseInt(normalizedHex.slice(2, 4), 16);
+      const b = parseInt(normalizedHex.slice(4, 6), 16);
+      return [r, g, b];
+    }
+    return null;
+  };
+  const getReadableTextColor = (backgroundColor) => {
+    const rgb = parseCssColorToRgb(backgroundColor);
+    if (!rgb) return '#0f172a';
+    const [r, g, b] = rgb;
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    return luminance > 0.62 ? '#0f172a' : '#ffffff';
+  };
+  const styleSelectOptions = (select) => {
+    if (!select) return;
+    Array.from(select.options).forEach((option) => {
+      const optionColor = option.dataset?.color;
+      if (!optionColor) return;
+      if (optionColor === 'transparent') {
+        option.style.background = TRANSPARENT_PATTERN;
+        option.style.color = '#475569';
+        return;
+      }
+      option.style.background = optionColor;
+      option.style.color = getReadableTextColor(optionColor);
+    });
+  };
+
   const activeSection = workspaceContext?.section || detectWorkspaceSection();
 
   if (activeSection === 'design') {
@@ -983,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const styleColorChip = (chip, color) => {
       if (!chip) return;
       if (color === 'transparent') {
-        chip.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+        chip.style.background = TRANSPARENT_PATTERN;
         chip.style.borderColor = '#cbd5f5';
         chip.style.boxShadow = '';
         return;
@@ -992,6 +1042,25 @@ document.addEventListener('DOMContentLoaded', () => {
       chip.style.borderColor = color;
       chip.style.boxShadow = '0 0 0 1px rgba(15,23,42,0.15)';
     };
+    const ensureCustomThemeOption = (select, value) => {
+      if (!select || !value) return;
+      if (Array.from(select.options).some((opt) => opt.value === value)) {
+        return;
+      }
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = 'Couleur personnalisée';
+      option.dataset.color = value;
+      if (value === 'transparent') {
+        option.style.background = TRANSPARENT_PATTERN;
+        option.style.color = '#475569';
+      } else {
+        option.style.background = value;
+        option.style.color = getReadableTextColor(value);
+      }
+      select.appendChild(option);
+      styleSelectOptions(select);
+    };
     const updateColorSelectPreview = (select) => {
       if (!select) return;
       const selectedOption = select.options[select.selectedIndex];
@@ -999,10 +1068,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const colorPreview = select.closest('.relative')?.querySelector('[data-color-preview]');
       if (colorPreview) {
         if (color === 'transparent') {
-          colorPreview.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+          colorPreview.style.background = TRANSPARENT_PATTERN;
         } else {
-          colorPreview.style.backgroundColor = color;
-          colorPreview.style.background = '';
+          colorPreview.style.background = color;
         }
       }
       const colorChip = select.closest('.relative')?.querySelector('[data-theme-color-chip]');
@@ -1012,6 +1080,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeColorSelects = blockForm
       ? Array.from(blockForm.querySelectorAll('[data-theme-color-select]'))
       : [];
+    const isBackgroundThemeSelect = (select) => {
+      const name = select?.getAttribute?.('name') || '';
+      return name.endsWith('-bg');
+    };
     const themeColorPresets = [
       { label: 'Couleur primaire', value: 'theme-primary', cssVar: '--color-primary' },
       { label: 'Couleur secondaire', value: 'theme-secondary', cssVar: '--color-secondary' },
@@ -1031,31 +1103,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const option = document.createElement('option');
         option.value = value;
         const colorValue = getComputedThemeColorValue(cssVar);
-        option.textContent = `▉ ${label}`;
+        option.textContent = label;
         option.dataset.color = colorValue;
-        option.style.color = colorValue;
-        select.appendChild(option);
-      });
-      select.value = themeColorPresets[0].value;
-      select.removeAttribute('disabled');
-      updateColorSelectPreview(select);
-    };
-      const ensureCustomThemeOption = (select, value) => {
-        if (!select || !value) return;
-        if (Array.from(select.options).some((opt) => opt.value === value)) {
-          return;
+        if (colorValue === 'transparent') {
+          option.style.background = TRANSPARENT_PATTERN;
+          option.style.color = '#475569';
+        } else {
+            option.style.background = colorValue;
+            option.style.color = getReadableTextColor(colorValue);
+          }
+          select.appendChild(option);
+        });
+        select.value = themeColorPresets[0].value;
+        select.removeAttribute('disabled');
+        if (isBackgroundThemeSelect(select)) {
+          styleSelectOptions(select);
         }
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = 'Couleur personnalisée';
-        option.dataset.color = value;
-        option.style.color = value === 'transparent' ? '#475569' : value;
-        select.appendChild(option);
-        styleSelectOptions(select);
+        updateColorSelectPreview(select);
       };
-    const refreshThemeColorSelects = () => themeColorSelects.forEach(fillThemeColorSelect);
-    refreshThemeColorSelects();
-    document.addEventListener('ai-theme-updated', refreshThemeColorSelects);
+      const refreshThemeColorSelects = () => themeColorSelects.forEach(fillThemeColorSelect);
+      refreshThemeColorSelects();
+      document.addEventListener('ai-theme-updated', refreshThemeColorSelects);
     const blockFormSections = blockForm
       ? Array.from(blockForm.querySelectorAll('[data-editor-section]'))
       : [];
@@ -1177,6 +1245,9 @@ document.addEventListener('DOMContentLoaded', () => {
           // Apparence
           image: 'hero-image',
           layout: 'hero-layout',
+          imageWidth: 'hero-image-width',
+          imageHeight: 'hero-image-height',
+          imageObjectFit: 'hero-image-object-fit',
           height: 'hero-height',
           contentAlign: 'hero-content-align',
           horizontalAlign: 'hero-horizontal-align',
@@ -3633,10 +3704,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const colorPreview = target.closest('.relative')?.querySelector('[data-color-preview]');
         if (colorPreview) {
           if (color === 'transparent') {
-            colorPreview.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+            colorPreview.style.background = TRANSPARENT_PATTERN;
           } else {
-            colorPreview.style.backgroundColor = color;
-            colorPreview.style.background = '';
+            colorPreview.style.background = color;
           }
         }
       }
@@ -5871,19 +5941,6 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       // Initialiser les previews de couleur et ajouter les listeners
-      const styleSelectOptions = (select) => {
-        if (!select) return;
-        Array.from(select.options).forEach((option) => {
-          const optionColor = option.dataset?.color;
-          if (!optionColor) return;
-          if (optionColor === 'transparent') {
-            option.style.color = '#475569';
-          } else {
-            option.style.color = optionColor;
-          }
-        });
-      };
-
       const styleThemeColorChip = (chip, color) => {
         if (!chip) return;
         if (color === 'transparent') {
@@ -5903,10 +5960,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const colorPreview = select.closest('.relative')?.querySelector('[data-color-preview]');
         if (colorPreview) {
           if (color === 'transparent') {
-            colorPreview.style.background = 'repeating-conic-gradient(#ccc 0% 25%, white 0% 50%) 50% / 8px 8px';
+            colorPreview.style.background = TRANSPARENT_PATTERN;
           } else {
-            colorPreview.style.backgroundColor = color;
-            colorPreview.style.background = '';
+            colorPreview.style.background = color;
           }
         }
         const colorChip = select.closest('.relative')?.querySelector('[data-theme-color-chip]');
@@ -5945,10 +6001,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const value = themeColors[key];
             const normalizedValue = normalizeSelectColor(value);
             if (normalizedValue) {
-              ensureCustomThemeOption(select, normalizedValue);
               select.value = normalizedValue;
             } else if (value) {
-              ensureCustomThemeOption(select, value);
               select.value = value;
             } else if (select.dataset.default) {
               select.value = select.dataset.default;
