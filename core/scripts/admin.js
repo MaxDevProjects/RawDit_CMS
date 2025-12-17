@@ -4548,8 +4548,7 @@ document.addEventListener('DOMContentLoaded', () => {
       position: document.querySelector('[name="header-position"]'),
       bg: document.querySelector('[name="header-bg"]'),
     };
-    const headerNavList = document.querySelector('[data-header-nav-list]');
-    const headerNavAddBtn = document.querySelector('[data-header-nav-add]');
+    const headerNavOrderList = document.querySelector('[data-header-nav-order-list]');
     const headerSaveBtn = document.querySelector('[data-header-save]');
     const headerNavItemTemplate = document.querySelector('[data-template-header-nav-item]');
     const headerPagesList = document.querySelector('[data-header-pages-list]');
@@ -4678,7 +4677,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-    sitePages.forEach(page => {
+    sitePages.forEach((page) => {
       const pageSlug = page.slug || page.id || '';
       // Use page.name (short name) if available, fallback to title
       const pageDisplayName = page.name || page.title || pageSlug;
@@ -4701,28 +4700,124 @@ document.addEventListener('DOMContentLoaded', () => {
         const checkbox = label.querySelector('input');
         checkbox.addEventListener('change', () => {
           if (checkbox.checked) {
-            // Ajouter à la liste
-            if (!selectedNavPages.some(nav => nav.url === pageUrl)) {
+            const existingIndex = selectedNavPages.findIndex((nav) => nav.url === pageUrl);
+            if (existingIndex === -1) {
               selectedNavPages.push({ label: pageDisplayName, url: pageUrl });
+            } else {
+              selectedNavPages[existingIndex] = { ...selectedNavPages[existingIndex], label: pageDisplayName };
             }
           } else {
-            // Retirer de la liste
-            selectedNavPages = selectedNavPages.filter(nav => nav.url !== pageUrl);
+            selectedNavPages = selectedNavPages.filter((nav) => nav.url !== pageUrl);
           }
+          renderHeaderNavOrder();
         });
         
         headerPagesList.appendChild(label);
       });
+
+      renderHeaderNavOrder();
+    };
+
+    const renderHeaderNavOrder = () => {
+      if (!headerNavOrderList) {
+        return;
+      }
+      headerNavOrderList.innerHTML = '';
+
+      if (!selectedNavPages || selectedNavPages.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'text-xs text-slate-400 italic';
+        empty.textContent = 'Aucun lien de menu sélectionné.';
+        headerNavOrderList.appendChild(empty);
+        return;
+      }
+
+      selectedNavPages.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className =
+          'flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2';
+        row.dataset.navUrl = item.url;
+
+        const meta = document.createElement('div');
+        meta.className = 'flex-1 min-w-0';
+        const label = document.createElement('p');
+        label.className = 'text-sm font-medium text-slate-800 truncate';
+        label.textContent = item.label || item.url;
+        const url = document.createElement('p');
+        url.className = 'text-[11px] text-slate-400 truncate';
+        url.textContent = item.url;
+        meta.appendChild(label);
+        meta.appendChild(url);
+
+        const controls = document.createElement('div');
+        controls.className = 'flex items-center gap-1';
+
+        const up = document.createElement('button');
+        up.type = 'button';
+        up.className =
+          'rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent';
+        up.textContent = '↑';
+        up.setAttribute('aria-label', `Monter ${item.label || item.url}`);
+        up.disabled = index === 0;
+        up.addEventListener('click', () => {
+          if (index <= 0) return;
+          const next = [...selectedNavPages];
+          const tmp = next[index - 1];
+          next[index - 1] = next[index];
+          next[index] = tmp;
+          selectedNavPages = next;
+          renderHeaderNavOrder();
+        });
+
+        const down = document.createElement('button');
+        down.type = 'button';
+        down.className =
+          'rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent';
+        down.textContent = '↓';
+        down.setAttribute('aria-label', `Descendre ${item.label || item.url}`);
+        down.disabled = index === selectedNavPages.length - 1;
+        down.addEventListener('click', () => {
+          if (index >= selectedNavPages.length - 1) return;
+          const next = [...selectedNavPages];
+          const tmp = next[index + 1];
+          next[index + 1] = next[index];
+          next[index] = tmp;
+          selectedNavPages = next;
+          renderHeaderNavOrder();
+        });
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className =
+          'rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50';
+        remove.textContent = '✕';
+        remove.setAttribute('aria-label', `Retirer ${item.label || item.url}`);
+        remove.addEventListener('click', () => {
+          selectedNavPages = selectedNavPages.filter((nav) => nav.url !== item.url);
+          const checkbox = headerPagesList?.querySelector(
+            `input[name=\"nav-page\"][value=\"${CSS.escape(item.url)}\"]`,
+          );
+          if (checkbox) checkbox.checked = false;
+          renderHeaderNavOrder();
+        });
+
+        controls.appendChild(up);
+        controls.appendChild(down);
+        controls.appendChild(remove);
+
+        row.appendChild(meta);
+        row.appendChild(controls);
+        headerNavOrderList.appendChild(row);
+      });
     };
     
     const collectHeaderData = () => {
-      // Collecter les pages cochées dans l'ordre actuel
-      const nav = [];
-      headerPagesList?.querySelectorAll('input[name="nav-page"]:checked').forEach(checkbox => {
-        const url = normalizeNavPageUrl(checkbox.value);
-        const label = checkbox.dataset.pageTitle || url;
-        nav.push({ label, url });
-      });
+      const nav = (selectedNavPages || [])
+        .map((item) => ({
+          label: (item.label || item.url || '').toString().trim(),
+          url: normalizeNavPageUrl(item.url),
+        }))
+        .filter((item) => item.url);
       
       return {
         logo: {
