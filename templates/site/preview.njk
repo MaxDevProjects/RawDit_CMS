@@ -148,7 +148,11 @@
             {{- raw -}}
           {% else %}
             {% set internalPart = raw | slice(2) %}
-            {% set cleanedPath = internalPart | trim('/') %}
+            {% set cleanedPath = internalPart | trim %}
+            {# `trim('/')` ne retire pas les "/" dans Nunjucks : on retire manuellement le préfixe/suffixe #}
+            {% if cleanedPath and cleanedPath[0] == '/' %}
+              {% set cleanedPath = cleanedPath | replace('/', '', 1) %}
+            {% endif %}
             {% if cleanedPath %}
               {% set normalizedPath = '/' ~ cleanedPath %}
             {% else %}
@@ -165,7 +169,8 @@
         {%- elif lower | slice(0, 7) == 'mailto:' or lower | slice(0, 4) == 'tel:' -%}
           {{- raw -}}
         {%- elif firstChar == '/' -%}
-          {% set cleanedPath = raw | trim('/') %}
+          {# Retire uniquement le "/" de tête, conserve les "/" internes #}
+          {% set cleanedPath = raw | replace('/', '', 1) | trim %}
           {% if cleanedPath %}
             {% set normalizedPath = '/' ~ cleanedPath %}
           {% else %}
@@ -177,7 +182,10 @@
             {{- normalizedPath -}}
           {% endif %}
         {%- else -%}
-          {% set cleanedPath = raw | trim('/') %}
+          {% set cleanedPath = raw | trim %}
+          {% if cleanedPath and cleanedPath[0] == '/' %}
+            {% set cleanedPath = cleanedPath | replace('/', '', 1) %}
+          {% endif %}
           {% if cleanedPath %}
             {% set normalizedPath = '/' ~ cleanedPath %}
           {% else %}
