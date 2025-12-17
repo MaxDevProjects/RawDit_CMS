@@ -838,7 +838,7 @@
                 <textarea name="paragraph-content" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
               </label>
             </div>
-            <div data-block-panel="appearance" class="hidden space-y-3">
+	            <div data-block-panel="appearance" class="hidden space-y-3">
               <label class="space-y-1 block">
                 <span class="text-xs font-medium text-slate-600">Alignement texte</span>
                 <select name="paragraph-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
@@ -1078,16 +1078,25 @@
                   <option value="bg-gradient-to-t from-black/70 to-transparent">Dégradé bas → haut</option>
                 </select>
               </label>
-              <label class="space-y-1 block">
-                <span class="text-xs font-medium text-slate-600">Taille du titre</span>
-                <select name="hero-title-size" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-                  <option value="text-3xl">Moyen (3xl)</option>
-                  <option value="text-4xl">Grand (4xl)</option>
-                  <option value="text-5xl">Très grand (5xl)</option>
-                  <option value="text-6xl">Énorme (6xl)</option>
-                </select>
-              </label>
-              
+	              <label class="space-y-1 block">
+	                <span class="text-xs font-medium text-slate-600">Taille du titre</span>
+	                <select name="hero-title-size" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+	                  <option value="text-3xl">Moyen (3xl)</option>
+	                  <option value="text-4xl">Grand (4xl)</option>
+	                  <option value="text-5xl">Très grand (5xl)</option>
+	                  <option value="text-6xl">Énorme (6xl)</option>
+	                </select>
+	              </label>
+	              <label class="space-y-1 block">
+	                <span class="text-xs font-medium text-slate-600">Couleur du texte CTA</span>
+	                <select name="hero-cta-text-color" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+	                  <option value="theme-text">Texte du thème</option>
+	                  <option value="theme-background">Fond du thème</option>
+	                  <option value="white">Blanc</option>
+	                  <option value="black">Noir</option>
+	                </select>
+	              </label>
+	              
   <div class="pt-3 mt-3 border-t border-slate-100">
     <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Style de la card</p>
     <div class="space-y-3">
@@ -1138,7 +1147,7 @@
     </div>
   </div>
 
-              
+	              
   <div class="pt-3 mt-3 border-t border-slate-100">
     <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Animation (sobre)</p>
     <div class="space-y-3">
@@ -1169,8 +1178,8 @@
     </div>
   </div>
 
-            </div>
-          </div>
+	            </div>
+	          </div>
 
           <div data-editor-section="image" class="hidden space-y-4">
             <div data-block-panel="content" class="space-y-2">
@@ -2408,6 +2417,10 @@ Règles pages :
 Blocs recommandés : Hero, Paragraphe, Image, Groupe, CollectionGrid, Form, NewsletterEmbed, Bouton, Card, Video.
 Imbrication : pour "Groupe", ajoute "children": [ {bloc}, {bloc} ].
 
+CTA (Hero) :
+- hero.settings.ctaLabel / ctaUrl (texte + lien)
+- hero.settings.ctaTextColor (optionnel) : "theme-text" | "theme-background" | "white" | "black"
+
 Thème (optionnel) :
 - "theme": { "colors": { "primary": "violet-500", "secondary": "sky-500", "accent": "emerald-500", "background": "white", "text": "slate-900" } }.
 - Dans les blocs, utilise de préférence les tokens : "theme-primary", "theme-secondary", "theme-accent", "theme-background", "theme-text" (ex: settings.bg = "theme-background").
@@ -2452,6 +2465,7 @@ Génère maintenant : (décris ici ton besoin en 1 phrase).</code></pre>
         "subtitle": "Sous-titre ou accroche",
         "ctaLabel": "Texte du bouton",
         "ctaUrl": "/lien-cible",
+        "ctaTextColor": "theme-background",
         "image": "/chemin/vers/image.jpg",
         "align": "center",
         "layout": "flex-row",

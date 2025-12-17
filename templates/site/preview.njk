@@ -49,7 +49,7 @@
       }
       .theme-cta-primary {
         background: var(--color-primary);
-        color: var(--color-text);
+        color: var(--cta-text-color, var(--color-text));
         border-color: transparent;
       }
       .theme-cta-primary:hover {
@@ -57,7 +57,7 @@
       }
       .theme-cta-secondary {
         background: transparent;
-        color: var(--color-secondary);
+        color: var(--cta-text-color, var(--color-secondary));
         border-color: var(--color-accent);
       }
       .theme-cta-secondary:hover {
@@ -367,6 +367,20 @@
           {{- fallback -}}
         {%- endif -%}
       {% endmacro %}
+      {% macro tokenToCssColor(token) -%}
+        {%- set t = (token or '') | lower -%}
+        {%- if not t -%}{%- else -%}
+          {%- if t == 'theme-primary' -%}{{- 'var(--color-primary)' -}}
+          {%- elif t == 'theme-secondary' -%}{{- 'var(--color-secondary)' -}}
+          {%- elif t == 'theme-accent' -%}{{- 'var(--color-accent)' -}}
+          {%- elif t == 'theme-background' -%}{{- 'var(--color-background)' -}}
+          {%- elif t == 'theme-text' -%}{{- 'var(--color-text)' -}}
+          {%- elif t == 'white' -%}{{- '#ffffff' -}}
+          {%- elif t == 'black' -%}{{- '#000000' -}}
+          {%- else -%}{{- '' -}}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endmacro %}
 
       {# ═══════════════════════════════════════════════════════════════════ #}
       {# MACRO RENDER BLOCK - Rendu complet d'un bloc (réutilisable)         #}
@@ -392,6 +406,7 @@
           {% set hero_image_width = settings.imageWidth or 'max-w-sm' %}
           {% set hero_image_height = settings.imageHeight or 'h-64' %}
           {% set hero_image_object_fit = settings.imageObjectFit or 'object-cover' %}
+          {% set hero_cta_text_color = tokenToCssColor(settings.ctaTextColor or '') %}
           {% set hero_bg = (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-gradient-to-br from-violet-50 to-white' %}
           {% set hero_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-3xl' %}
           {% set hero_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-none' %}
@@ -434,6 +449,7 @@
                   <a
                     href="{{ linkHref(settings.ctaUrl or '#') }}"
                     class="{{ hero_cta_classes }}"
+                    {% if hero_cta_text_color %}style="--cta-text-color: {{ hero_cta_text_color }}"{% endif %}
                   >
                     {{ settings.ctaLabel }}
                   </a>
@@ -472,6 +488,7 @@
                     <a
                       href="{{ linkHref(settings.ctaUrl or '#') }}"
                       class="{{ hero_cta_classes }}"
+                      {% if hero_cta_text_color %}style="--cta-text-color: {{ hero_cta_text_color }}"{% endif %}
                     >
                       {{ settings.ctaLabel }}
                     </a>

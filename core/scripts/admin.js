@@ -1242,6 +1242,7 @@ document.addEventListener('DOMContentLoaded', () => {
           subtitle: 'hero-subtitle',
           ctaLabel: 'hero-cta-label',
           ctaUrl: 'hero-cta-url',
+          ctaTextColor: 'hero-cta-text-color',
           // Apparence
           image: 'hero-image',
           layout: 'hero-layout',
