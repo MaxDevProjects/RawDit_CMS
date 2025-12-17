@@ -2984,6 +2984,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       blockLibrary.classList.add('hidden');
       blockLibraryOpen = false;
+      pendingGroupIdForNewBlock = null;
     }
     function openBlockLibrary() {
       if (!blockLibrary) {
@@ -3830,6 +3831,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     blockLibraryToggle?.addEventListener('click', (event) => {
       event.stopPropagation();
+      // Si un groupe est sélectionné, l'ajout via la bibliothèque doit cibler ce groupe.
+      // (La dropzone de groupe utilise déjà `pendingGroupIdForNewBlock`.)
+      if (!blockLibraryOpen) {
+        const active = getActiveBlock();
+        const type = (active?.type || '').toLowerCase();
+        if (type === 'groupe' || type === 'group') {
+          pendingGroupIdForNewBlock = active.id;
+        } else {
+          pendingGroupIdForNewBlock = null;
+        }
+      }
       toggleBlockLibrary();
     });
     document.addEventListener('click', (event) => {
