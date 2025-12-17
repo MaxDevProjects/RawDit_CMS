@@ -2406,28 +2406,269 @@
 
 Contraintes de réponse :
 - Réponds uniquement avec du JSON valide (aucun commentaire, aucun markdown, aucun texte autour).
+- N'invente PAS de clés/valeurs : utilise UNIQUEMENT les schémas et listes ci-dessous.
 - Fournis soit : (1) une page { ... }, (2) un tableau de pages [ ... ], ou (3) un site complet { "pages": [...], "collections": {...}, "theme": {...} }.
 
-Règles pages :
-- "title" obligatoire.
-- "slug" doit commencer par "/" (ex: "/a-propos").
-- "blocks" est un tableau d'objets { "id", "type", "label", "settings" }.
-- "id" doit être unique et stable (ex: "hero-1", "paragraph-2", "group-1").
+══════════════════════════════════════════════════════════════════════
+MODÈLES JSON AUTORISÉS
+══════════════════════════════════════════════════════════════════════
 
-Blocs recommandés : Hero, Paragraphe, Image, Groupe, CollectionGrid, Form, NewsletterEmbed, Bouton, Card, Video.
-Imbrication : pour "Groupe", ajoute "children": [ {bloc}, {bloc} ].
+1) Page (objet)
+Champs autorisés :
+{
+  "id": "string (optionnel)",
+  "name": "string (optionnel, nom court)",
+  "title": "string (obligatoire)",
+  "slug": "string (obligatoire, commence par '/', ex: '/a-propos')",
+  "description": "string (optionnel)",
+  "badges": ["string"] (optionnel),
+  "seo": {
+    "title": "string (optionnel)",
+    "description": "string (optionnel)",
+    "indexed": true | false | null (optionnel)
+  } (optionnel),
+  "accessibility": {
+    "showInMainNav": true | false (optionnel),
+    "mainLabel": "string (optionnel, aria-label du &lt;main&gt;)"
+  } (optionnel),
+  "blocks": [ Bloc ] (optionnel)
+}
 
-CTA (Hero) :
-- hero.settings.ctaLabel / ctaUrl (texte + lien)
-- hero.settings.ctaTextColor (optionnel) : "theme-text" | "theme-background" | "white" | "black"
+2) Blocs (objet)
+Champs autorisés :
+{
+  "id": "string (obligatoire, unique et stable, ex: 'hero-1')",
+  "type": "string (obligatoire, voir TYPES ci-dessous)",
+  "label": "string (optionnel)",
+  "status": "string (optionnel, ex: 'Brouillon')",
+  "description": "string (optionnel)",
+  "props": [ { "label": "string", "value": "string" } ] (optionnel),
+  "settings": { ... } (optionnel, dépend du type),
+  "collectionId": "string (optionnel, uniquement CollectionGrid)",
+  "children": [ Bloc ] (optionnel, uniquement Groupe)
+}
 
-Thème (optionnel) :
-- "theme": { "colors": { "primary": "violet-500", "secondary": "sky-500", "accent": "emerald-500", "background": "white", "text": "slate-900" } }.
-- Dans les blocs, utilise de préférence les tokens : "theme-primary", "theme-secondary", "theme-accent", "theme-background", "theme-text" (ex: settings.bg = "theme-background").
+Règles globales :
+- Ne crée pas de classes Tailwind “au hasard”. Utilise UNIQUEMENT les valeurs listées (sinon le CSS peut ne pas exister).
+- Pour un Groupe : évite d'imbriquer un Groupe dans un Groupe (non supporté dans l'éditeur).
 
-Collections (optionnel) :
-- "collections": { "projets": { "name": "Projets", "items": [ { "title": "...", "slug": "/projets/..." } ] } }.
-- Un bloc CollectionGrid peut référencer : settings.collectionId = "projets".
+══════════════════════════════════════════════════════════════════════
+TOKENS THÈME (UTILISABLES DANS settings.bg)
+══════════════════════════════════════════════════════════════════════
+Tokens préférés (valeurs exactes) :
+- "theme-primary" | "theme-secondary" | "theme-accent" | "theme-background" | "theme-text"
+
+Autres backgrounds “sûrs” (valeurs exactes) :
+- "bg-white" | "bg-transparent" | "bg-slate-50" | "bg-slate-100" | "bg-slate-900"
+- "bg-gradient-to-br from-violet-50 to-white"
+- "bg-gradient-to-br from-sky-50 to-white"
+
+Style de card (valeurs exactes) :
+- borderRadius: "rounded-none" | "rounded-lg" | "rounded-xl" | "rounded-2xl" | "rounded-3xl"
+- shadow: "shadow-none" | "shadow-sm" | "shadow-md" | "shadow-lg" | "shadow-xl" | "shadow-2xl"
+- border: "border-none" | "border border-slate-100 theme-border-accent" | "border-2 border border-slate-200 theme-border-accent" | "border-4 border border-slate-200 theme-border-accent"
+
+Animation (dans settings, pour tous les blocs) :
+- animation: "" | "fade-in" | "fade-up" | "fade-down" | "slide-left" | "slide-right" | "zoom-in" | "blur-in"
+- animationDelay: nombre (ms) >= 0 (ex: 0, 150, 300)
+- animationDuration: nombre (ms) >= 100 (ex: 450, 600)
+
+══════════════════════════════════════════════════════════════════════
+TYPES DE BLOCS + SETTINGS AUTORISÉS
+══════════════════════════════════════════════════════════════════════
+
+A) Hero (type = "Hero" ou "hero")
+settings autorisés :
+{
+  "title": "string",
+  "subtitle": "string (HTML autorisé)",
+  "ctaLabel": "string",
+  "ctaUrl": "string",
+  "ctaTextColor": "theme-text" | "theme-background" | "white" | "black",
+  "image": "string (URL)",
+  "layout": "flex-row" | "flex-row-reverse" | "fullwidth-bg",
+  "imageWidth": "max-w-xs" | "max-w-sm" | "max-w-md" | "max-w-lg" | "max-w-xl" | "w-full",
+  "imageHeight": "h-48" | "h-64" | "h-72" | "h-80" | "h-96",
+  "imageObjectFit": "object-cover" | "object-contain" | "object-fill" | "object-scale-down" | "object-none",
+  "height": "min-h-[40vh]" | "min-h-[50vh]" | "min-h-[60vh]" | "min-h-[75vh]" | "min-h-[85vh]" | "min-h-screen",
+  "textAlign": "text-left" | "text-center" | "text-right",
+  "horizontalAlign": "items-start" | "items-center" | "items-end",
+  "contentAlign": "items-start" | "items-center" | "items-end",
+  "overlay": "bg-black/0" | "bg-black/30" | "bg-black/50" | "bg-black/70" | "bg-slate-900/60" | "bg-gradient-to-t from-black/70 to-transparent",
+  "titleSize": "text-3xl" | "text-4xl" | "text-5xl" | "text-6xl",
+  "bg": (tokens thème OU backgrounds sûrs ci-dessus),
+  "borderRadius": (voir Style de card),
+  "shadow": (voir Style de card),
+  "border": (voir Style de card),
+  "animation": (voir Animation),
+  "animationDelay": (voir Animation),
+  "animationDuration": (voir Animation)
+}
+
+B) Paragraphe (type = "Paragraphe" ou "Texte")
+settings autorisés :
+{
+  "title": "string",
+  "content": "string (HTML autorisé)",
+  "align": "text-left" | "text-center" | "text-right",
+  "titleSize": "text-lg" | "text-xl" | "text-2xl" | "text-3xl",
+  "textSize": "text-sm" | "text-base" | "text-lg",
+  "spacing": "space-y-2" | "space-y-4" | "space-y-6",
+  "bg": (tokens thème OU backgrounds sûrs ci-dessus),
+  "borderRadius": (voir Style de card),
+  "shadow": (voir Style de card),
+  "border": (voir Style de card),
+  "animation": (voir Animation),
+  "animationDelay": (voir Animation),
+  "animationDuration": (voir Animation)
+}
+
+C) Image (type = "Image")
+settings autorisés :
+{
+  "src": "string (URL)",
+  "alt": "string",
+  "showCaption": true | false,
+  "caption": "string",
+  "rounded": "rounded-none" | "rounded-lg" | "rounded-xl" | "rounded-2xl" | "rounded-full",
+  "shadow": "shadow-none" | "shadow-md" | "shadow-lg" | "shadow-xl",
+  "maxWidth": "max-w-sm" | "max-w-md" | "max-w-lg" | "max-w-xl" | "max-w-full",
+  "height": "h-auto" | "h-32" | "h-48" | "h-64" | "h-80" | "h-96" | "h-[50vh]" | "h-[75vh]" | "h-screen",
+  "objectFit": "object-cover" | "object-contain" | "object-fill" | "object-scale-down" | "object-none",
+  "align": "mx-auto" | "ml-0 mr-auto" | "ml-auto mr-0",
+  "bg": (tokens thème OU backgrounds sûrs ci-dessus),
+  "borderRadius": (voir Style de card),
+  "border": (voir Style de card),
+  "animation": (voir Animation),
+  "animationDelay": (voir Animation),
+  "animationDuration": (voir Animation)
+}
+
+D) Groupe (type = "Groupe")
+children autorisé : [ Bloc, Bloc, ... ]
+settings autorisés :
+{
+  "columnsMobile": "grid-cols-1" | "grid-cols-2",
+  "columnsDesktop": "md:grid-cols-1" | "md:grid-cols-2" | "md:grid-cols-3" | "md:grid-cols-4",
+  "gap": "gap-2" | "gap-4" | "gap-6" | "gap-8",
+  "itemsAlign": "items-start" | "items-center" | "items-stretch",
+  "mobileLayout": "stack" | "horizontal-scroll",
+  "bg": (tokens thème OU backgrounds sûrs ci-dessus),
+  "borderRadius": (voir Style de card),
+  "shadow": (voir Style de card),
+  "border": (voir Style de card),
+  "animation": (voir Animation),
+  "animationDelay": (voir Animation),
+  "animationDuration": (voir Animation)
+}
+
+E) CollectionGrid (type = "CollectionGrid")
+settings autorisés :
+{
+  "collectionId": "string (obligatoire, id de collection existante)",
+  "limit": nombre entier >= 1,
+  "columnsMobile": "grid-cols-1" | "grid-cols-2",
+  "columnsDesktop": "md:grid-cols-2" | "md:grid-cols-3" | "md:grid-cols-4",
+  "gap": "gap-4" | "gap-6" | "gap-8",
+  "itemsAlign": "items-start" | "items-center" | "items-stretch",
+  "cardRounded": "rounded-none" | "rounded-lg" | "rounded-xl" | "rounded-2xl",
+  "mobileLayout": "stack" | "horizontal-scroll",
+  "bg": (tokens thème OU backgrounds sûrs ci-dessus),
+  "borderRadius": (voir Style de card),
+  "shadow": (voir Style de card),
+  "border": (voir Style de card),
+  "animation": (voir Animation),
+  "animationDelay": (voir Animation),
+  "animationDuration": (voir Animation)
+}
+Note : RAWDIT accepte aussi "collectionId" au niveau racine du bloc (en plus de settings.collectionId).
+
+F) Form (type = "Form")
+settings autorisés :
+{
+  "formTitle": "string",
+  "actionUrl": "string (URL)",
+  "method": "POST" | "GET",
+  "serviceName": "string",
+  "submitLabel": "string",
+  "successMessage": "string",
+  "maxWidth": "max-w-sm" | "max-w-md" | "max-w-lg",
+  "align": "mx-auto" | "ml-0 mr-auto" | "ml-auto mr-0",
+  "buttonRounded": "rounded" | "rounded-lg" | "rounded-full",
+  "spacing": "space-y-3" | "space-y-4" | "space-y-6",
+  "bg": (tokens thème OU backgrounds sûrs ci-dessus),
+  "borderRadius": (voir Style de card),
+  "shadow": (voir Style de card),
+  "border": (voir Style de card),
+  "animation": (voir Animation),
+  "animationDelay": (voir Animation),
+  "animationDuration": (voir Animation)
+}
+
+G) NewsletterEmbed (type = "NewsletterEmbed")
+settings autorisés :
+{
+  "title": "string",
+  "serviceName": "string",
+  "embedCode": "string (HTML/iframe)",
+  "maxWidth": "max-w-md" | "max-w-lg" | "max-w-xl",
+  "align": "mx-auto" | "ml-0 mr-auto" | "ml-auto mr-0",
+  "padding": "p-4" | "p-6" | "p-8",
+  "bg": "bg-transparent" | "bg-slate-50" | "bg-slate-100",
+  "borderRadius": (voir Style de card),
+  "shadow": (voir Style de card),
+  "border": (voir Style de card),
+  "animation": (voir Animation),
+  "animationDelay": (voir Animation),
+  "animationDuration": (voir Animation)
+}
+
+H) Blocs PREVIEW uniquement (importables mais pas forcément éditables dans l'admin)
+- Bouton (type = "Bouton" | "Button" | "CTA")
+  settings: { "text": "string", "url": "string", "icon": "string (optionnel)", "align": "text-left|text-center|text-right", "size": "px-6 py-3", "textColor": "text-[var(--color-background)]|text-white|text-slate-900", "bg": "theme-primary|theme-secondary|theme-accent|bg-violet-600", "borderRadius": (Style de card), "border": (Style de card) }
+- Titre (type = "Titre" | "Heading")
+  settings: { "text": "string", "level": "h1|h2|h3|h4", "size": "text-3xl|text-4xl|text-5xl|text-6xl", "align": "text-left|text-center|text-right", "color": "text-slate-900|text-white|text-slate-600" }
+- Espaceur (type = "Espaceur" | "Spacer")
+  settings: { "height": "h-4|h-8|h-12|h-16|h-24" }
+- Card (type = "Card" | "Carte")
+  settings: { "title": "string", "description": "string", "image": "string (URL)", "ctaText": "string", "ctaUrl": "string", "bg": (tokens thème OU backgrounds sûrs ci-dessus), "borderRadius": (Style de card), "shadow": (Style de card), "border": (Style de card) }
+- Divider (type = "Divider" | "Separateur")
+  settings: { "width": "w-full|w-1/2|w-1/3", "color": "border-slate-200|border-slate-300", "style": "border-solid|border-dashed" }
+- Video (type = "Video")
+  settings: { "src": "string (URL mp4)", "url": "string (URL mp4)", "embedCode": "string (HTML)", "bg": "bg-slate-900|bg-black", "borderRadius": (Style de card), "border": (Style de card) }
+
+══════════════════════════════════════════════════════════════════════
+SITE / THEME / COLLECTIONS (OPTIONNEL)
+══════════════════════════════════════════════════════════════════════
+Format “site complet” :
+{
+  "pages": [ Page ],
+  "theme": {
+    "colors": {
+      "primary": "string (ex: 'violet-500')",
+      "secondary": "string (ex: 'green-500')",
+      "accent": "string (ex: 'violet-600')",
+      "background": "string (ex: 'white' ou 'transparent')",
+      "text": "string (ex: 'black' ou 'slate-900')"
+    }
+  },
+  "collections": {
+    "id-collection": {
+      "items": [
+        {
+          "id": "string",
+          "title": "string",
+          "status": "string (optionnel)",
+          "summary": "string (optionnel, HTML autorisé)",
+          "excerpt": "string (optionnel, HTML autorisé)",
+          "slug": "string (optionnel)",
+          "image": "string (optionnel, URL)",
+          "cta": { "text": "string", "url": "string" } (optionnel)
+        }
+      ]
+    }
+  }
+}
 
 Génère maintenant : (décris ici ton besoin en 1 phrase).</code></pre>
         <div class="rounded-lg bg-white/70 p-3 text-xs text-slate-700">
