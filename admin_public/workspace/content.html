@@ -232,27 +232,37 @@
         <p class="text-[11px] text-slate-400">💡 L'ordre des pages dans le menu correspond à l'ordre de sélection.</p>
       </fieldset>
       
-      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
-        <legend class="px-2 text-sm font-semibold text-slate-700">Bouton CTA (optionnel)</legend>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Texte du bouton</span>
-            <input type="text" name="header-cta-text" placeholder="Contactez-nous" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
-          </label>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Lien du bouton</span>
-            <input type="text" name="header-cta-url" placeholder="/contact" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
-          </label>
-        </div>
-        <label class="space-y-1 block">
-          <span class="text-xs font-medium text-slate-600">Style du bouton</span>
-          <select name="header-cta-style" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
-            <option value="primary">Principal (violet)</option>
-            <option value="secondary">Secondaire (bordure)</option>
-            <option value="ghost">Ghost (transparent)</option>
-          </select>
-        </label>
-      </fieldset>
+	      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+	        <legend class="px-2 text-sm font-semibold text-slate-700">Bouton CTA (optionnel)</legend>
+	        <div class="grid gap-4 sm:grid-cols-2">
+	          <label class="space-y-1 block">
+	            <span class="text-xs font-medium text-slate-600">Texte du bouton</span>
+	            <input type="text" name="header-cta-text" placeholder="Contactez-nous" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+	          </label>
+	          <label class="space-y-1 block">
+	            <span class="text-xs font-medium text-slate-600">Lien du bouton</span>
+	            <input type="text" name="header-cta-url" placeholder="/contact" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+	          </label>
+	        </div>
+	        <label class="space-y-1 block">
+	          <span class="text-xs font-medium text-slate-600">Style du bouton</span>
+	          <select name="header-cta-style" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+	            <option value="primary">Principal (violet)</option>
+	            <option value="secondary">Secondaire (bordure)</option>
+	            <option value="ghost">Ghost (transparent)</option>
+	          </select>
+	        </label>
+	        <label class="space-y-1 block">
+	          <span class="text-xs font-medium text-slate-600">Couleur du texte CTA</span>
+	          <select name="header-cta-text-color" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+	            <option value="">Auto</option>
+	            <option value="theme-text">Texte du thème</option>
+	            <option value="theme-background">Fond du thème</option>
+	            <option value="white">Blanc</option>
+	            <option value="black">Noir</option>
+	          </select>
+	        </label>
+	      </fieldset>
       
       <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
         <legend class="px-2 text-sm font-semibold text-slate-700">Style du header</legend>

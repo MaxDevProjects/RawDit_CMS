@@ -251,20 +251,31 @@
                 {% endcall %}
               </ul>
             {% endif %}
-            {% if header.cta and header.cta.text %}
-              {% set ctaStyle = header.cta.style or 'primary' %}
-              {% if ctaStyle == 'primary' %}
-                {% set ctaClass = 'theme-cta-primary shadow-lg' %}
-              {% elif ctaStyle == 'secondary' %}
-                {% set ctaClass = 'theme-cta-secondary border-2' %}
-              {% else %}
-                {% set ctaClass = 'theme-link-secondary' %}
-              {% endif %}
-              {% set ctaHref = linkHref(header.cta.url or '#') %}
-              <a href="{{ ctaHref }}" class="hidden md:inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaClass }}">
-                {{ header.cta.text }}
-              </a>
-            {% endif %}
+	    {% if header.cta and header.cta.text %}
+	              {% set ctaStyle = header.cta.style or 'primary' %}
+	              {% set ctaTextColorToken = (header.cta.textColor or '') | lower %}
+	              {% set ctaTextColorCss = '' %}
+	              {% if ctaTextColorToken == 'theme-text' %}
+	                {% set ctaTextColorCss = 'var(--color-text)' %}
+	              {% elif ctaTextColorToken == 'theme-background' %}
+	                {% set ctaTextColorCss = 'var(--color-background)' %}
+	              {% elif ctaTextColorToken == 'white' %}
+	                {% set ctaTextColorCss = '#ffffff' %}
+	              {% elif ctaTextColorToken == 'black' %}
+	                {% set ctaTextColorCss = '#000000' %}
+	              {% endif %}
+	              {% if ctaStyle == 'primary' %}
+	                {% set ctaClass = 'theme-cta-primary shadow-lg' %}
+	              {% elif ctaStyle == 'secondary' %}
+	                {% set ctaClass = 'theme-cta-secondary border-2' %}
+	              {% else %}
+	                {% set ctaClass = 'theme-link-secondary' %}
+	              {% endif %}
+	              {% set ctaHref = linkHref(header.cta.url or '#') %}
+	              <a href="{{ ctaHref }}" class="hidden md:inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaClass }}" {% if ctaTextColorCss %}style="--cta-text-color: {{ ctaTextColorCss }}"{% endif %}>
+	                {{ header.cta.text }}
+	              </a>
+	            {% endif %}
             {% if hasCustomNav or hasFallbackNav or (header.cta and header.cta.text) %}
               <details class="md:hidden relative">
                 <summary class="list-none cursor-pointer p-2 -m-2 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Menu">
@@ -298,11 +309,11 @@
                       {% else %}
                         {% set ctaMobileClass = 'theme-link-secondary' %}
                       {% endif %}
-                      <a href="{{ ctaHref }}" class="block w-full text-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaMobileClass }}">
-                        {{ header.cta.text }}
-                      </a>
-                    </div>
-                  {% endif %}
+	                      <a href="{{ ctaHref }}" class="block w-full text-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ ctaMobileClass }}" {% if ctaTextColorCss %}style="--cta-text-color: {{ ctaTextColorCss }}"{% endif %}>
+	                        {{ header.cta.text }}
+	                      </a>
+	                    </div>
+	                  {% endif %}
                 </div>
               </details>
             {% endif %}

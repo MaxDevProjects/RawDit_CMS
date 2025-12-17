@@ -4463,6 +4463,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ctaText: document.querySelector('[name="header-cta-text"]'),
       ctaUrl: document.querySelector('[name="header-cta-url"]'),
       ctaStyle: document.querySelector('[name="header-cta-style"]'),
+      ctaTextColor: document.querySelector('[name="header-cta-text-color"]'),
       position: document.querySelector('[name="header-position"]'),
       bg: document.querySelector('[name="header-bg"]'),
     };
@@ -4653,6 +4654,7 @@ document.addEventListener('DOMContentLoaded', () => {
           text: headerFields.ctaText?.value?.trim() || '',
           url: normalizeOptionalNavUrl(headerFields.ctaUrl?.value, ''),
           style: headerFields.ctaStyle?.value || 'primary',
+          textColor: headerFields.ctaTextColor?.value || '',
         },
         style: {
           position: headerFields.position?.value || 'static',
@@ -4669,6 +4671,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (headerFields.ctaText) headerFields.ctaText.value = data.cta?.text || '';
       if (headerFields.ctaUrl) headerFields.ctaUrl.value = normalizeOptionalNavUrl(data.cta?.url, '');
       if (headerFields.ctaStyle) headerFields.ctaStyle.value = data.cta?.style || 'primary';
+      if (headerFields.ctaTextColor) headerFields.ctaTextColor.value = data.cta?.textColor || '';
       if (headerFields.position) headerFields.position.value = data.style?.position || 'static';
       if (headerFields.bg) headerFields.bg.value = data.style?.bg || 'bg-white';
       
