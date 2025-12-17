@@ -1821,11 +1821,16 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(payload),
         signal: controller.signal,
       })
-        .then((response) => {
+        .then(async (response) => {
+          const data = await response.json().catch(() => ({}));
           if (!response.ok) {
-            throw new Error('Preview error');
+            const msg = data?.error || data?.message || `Preview error (${response.status})`;
+            const err = new Error(msg);
+            err.payload = data;
+            err.status = response.status;
+            throw err;
           }
-          return response.json();
+          return data;
         })
         .then((data) => {
           if (controller.signal.aborted) {
@@ -1843,7 +1848,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (controller.signal.aborted) {
             return;
           }
-          console.error('[preview] Impossible de rendre la page', error);
+          console.error('[preview] Impossible de rendre la page', error?.message || error, error?.payload || '');
           updatePreviewStatus('Erreur preview');
           previewFrame.srcdoc =
             '<!DOCTYPE html><html><body style="font-family:Inter,sans-serif;padding:40px;color:#be123c;background:#fff;">Erreur lors du rendu de la prévisualisation.</body></html>';
