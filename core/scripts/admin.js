@@ -1127,6 +1127,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const blockFormSections = blockForm
       ? Array.from(blockForm.querySelectorAll('[data-editor-section]'))
       : [];
+    const getBlockEditorSectionElement = (config) => {
+      if (!blockForm || !config?.section) return null;
+      return blockForm.querySelector(`[data-editor-section="${config.section}"]`);
+    };
     // Onglets Contenu / Apparence
     const blockTabs = document.querySelectorAll('[data-block-tab]');
     let activeBlockTab = 'content';
@@ -1538,6 +1542,7 @@ document.addEventListener('DOMContentLoaded', () => {
         block.settings = {};
       }
       const config = getBlockFormConfig(block);
+      const sectionRoot = getBlockEditorSectionElement(config) || blockForm;
       if (blockEditorTitle) {
         blockEditorTitle.textContent = block?.label || 'Bloc';
       }
@@ -1569,7 +1574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCollectionSelectOptions(desiredValue);
       }
       Object.entries(config.fields).forEach(([settingKey, fieldName]) => {
-        const input = blockForm.querySelector(`[name="${fieldName}"]`);
+        const input = sectionRoot.querySelector(`[name="${fieldName}"]`);
         if (!input) {
           return;
         }
@@ -1601,7 +1606,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const bgFieldName = config.fields?.bg;
       if (bgFieldName) {
-        const bgSelect = blockForm.querySelector(`[name="${bgFieldName}"]`);
+        const bgSelect = sectionRoot.querySelector(`[name="${bgFieldName}"]`);
         ensureCustomThemeOption(bgSelect, block.settings?.bg);
       }
       blockForm.querySelectorAll('[data-color-select]').forEach(updateColorSelectPreview);
@@ -1610,9 +1615,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!blockForm || !config) {
         return {};
       }
+      const sectionRoot = getBlockEditorSectionElement(config) || blockForm;
       const values = {};
       Object.entries(config.fields).forEach(([settingKey, fieldName]) => {
-        const input = blockForm.querySelector(`[name="${fieldName}"]`);
+        const input = sectionRoot.querySelector(`[name="${fieldName}"]`);
         if (!input) {
           return;
         }
