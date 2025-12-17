@@ -1900,8 +1900,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const importSubmit = document.querySelector('[data-import-submit]');
     const importTabs = document.querySelectorAll('[data-import-tab]');
     const importPanels = document.querySelectorAll('[data-import-panel]');
+    const copyPromptBtn = document.querySelector('[data-copy-prompt]');
     const copyTemplateBtn = document.querySelector('[data-copy-template]');
     const templateJson = document.querySelector('[data-template-json]');
+    const importAiPrompt = document.querySelector('[data-import-ai-prompt]');
     // Paste JSON elements
     const importPasteInput = document.querySelector('[data-import-paste-json]');
     const pasteFormatBtn = document.querySelector('[data-format-json]');
@@ -3739,6 +3741,18 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Template copié !');
       } catch (err) {
         console.error('[import] copy failed', err);
+        showToast('Erreur copie');
+      }
+    });
+
+    copyPromptBtn?.addEventListener('click', async () => {
+      if (!importAiPrompt) return;
+      const text = importAiPrompt.textContent || '';
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Prompt copié !');
+      } catch (err) {
+        console.error('[import] copy prompt failed', err);
         showToast('Erreur copie');
       }
     });

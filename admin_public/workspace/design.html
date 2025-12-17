@@ -2380,91 +2380,50 @@
     <div data-import-panel="template" class="hidden">
       <div class="flex items-center justify-between mb-2">
         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Guide & Template JSON</p>
-        <button type="button" data-copy-template class="text-xs font-semibold text-[#9C6BFF] hover:underline">📋 Copier le template</button>
+        <div class="flex items-center gap-3">
+          <button type="button" data-copy-prompt class="text-xs font-semibold text-[#9C6BFF] hover:underline">🧠 Copier le prompt</button>
+          <button type="button" data-copy-template class="text-xs font-semibold text-[#9C6BFF] hover:underline">📋 Copier le template</button>
+        </div>
       </div>
       
       <!-- Instructions pour IA / Utilisateur -->
       <div class="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl p-4 mb-4 space-y-3 border border-violet-100">
-        <h4 class="text-sm font-bold text-slate-800">📋 Instructions RawDit (import & palette)</h4>
-        <div class="text-xs text-slate-700 space-y-3">
-          <div class="bg-white/70 rounded-lg p-3 space-y-1">
-            <p class="font-semibold text-slate-800">📄 Formats JSON autorisés :</p>
-            <ul class="list-disc list-inside space-y-0.5 text-slate-600">
-              <li>Une page : <code class="bg-white px-1 rounded">{"title": "...", "slug": "/...", "blocks": [...]}</code></li>
-              <li>Plusieurs pages : <code class="bg-white px-1 rounded">[{...}, {...}]</code></li>
-              <li>Site complet : <code class="bg-white px-1 rounded">{"pages": [...], "collections": {...}, "theme": {...}}</code></li>
-            </ul>
-            <p class="text-[10px] text-slate-500 mt-1">À l’import, chaque page est créée ou mise à jour (reconnaissance par <code>id</code> ou <code>slug</code>) puis rebuildée ; les collections déclarées sont créées si elles n’existent pas.</p>
-          </div>
-          <div class="bg-white/70 rounded-lg p-3 space-y-1">
-            <p class="font-semibold text-slate-800">🎨 Palette & sémantique des couleurs :</p>
-            <p class="text-slate-600">
-              Définis ta palette dans <code>"theme": {"colors": {"primary": "...", "secondary": "...", "accent": "...", "background": "...", "text": "..."}}</code>.
-              Les couleurs sont exposées via <code>--color-primary</code> (CTA), <code>--color-secondary</code> (liens) et <code>--color-accent</code> (bords) : le reste du rendu s’appuie sur <code>theme-primary</code>, <code>theme-secondary</code>, <code>theme-accent</code>, <code>theme-background</code> et <code>theme-text</code> dans les <code>settings.bg</code>.
-            </p>
-            <p class="text-[10px] text-slate-500">
-              Les boutons (CTA) héritent automatiquement de <strong>primary</strong>, les liens de <strong>secondary</strong> et les bordures de <strong>accent</strong>, les textes du token <strong>text</strong> et les fonds du token <strong>background</strong>.
-              Si ta page ne précise pas de token, les sélecteurs restent sur une valeur par défaut jusqu’à ce que tu choisisses une couleur de thème dans le panneau Apparence.
-            </p>
-          </div>
-          <div class="bg-white/70 rounded-lg p-3 space-y-1">
-            <p class="font-semibold text-slate-800">🔑 Structure d'une page & d'un bloc :</p>
-            <ul class="list-disc list-inside space-y-0.5 text-slate-600">
-              <li><code>title</code> : requis (string), <code>slug</code> optionnel (normalisé en kebab-case, généré depuis <code>title</code> si absent)</li>
-              <li><code>blocks</code> : liste de blocs ; chaque bloc doit contenir un <code>type</code>, un <code>id</code> unique et des <code>settings</code> libres</li>
-              <li>Tu peux préciser un <code>description</code>, des <code>badges</code>, du <code>seo</code> ou des <code>accessibility</code> (nav/main/animations)</li>
-            </ul>
-            <p class="text-[10px] text-slate-500 mt-1">Les blocs inconnus sont importés mais ne bénéficient pas encore de formulaires d’édition.</p>
-          </div>
-          <div class="bg-white/70 rounded-lg p-3 space-y-1">
-            <p class="font-semibold text-slate-800">🧱 Détails par bloc et imbrication :</p>
-            <p class="text-[10px] text-slate-500">
-              - <code>Hero</code> : <code>settings.title</code>, <code>subtitle</code>, <code>ctaLabel</code>, <code>ctaUrl</code>, <code>image</code>, <code>bg</code>, <code>border</code>, <code>shadow</code>, <code>overlay</code>.<br />
-              - <code>Paragraphe</code> : texte dans <code>settings.content</code>, alignement, tailles, espacement, plus les options de bordure/ombre.<br />
-              - <code>Image</code> : <code>settings.src</code>, <code>alt</code>, légende, ajustement, fond/bordure/shadow.<br />
-              - <code>Group</code> & <code>CollectionGrid</code> : ajoute un tableau <code>children</code> (chaque enfant est un bloc complet) et/ou <code>collectionId</code> + <code>items</code>, avec colonnes et gap. Les enfants héritent des mêmes options BG/border/shadow.
-            </p>
-            <p class="text-[10px] text-slate-500">
-              Tu peux imbriquer n’importe quelle combinaison (ex: <code>Group</code> contenant un <code>Hero</code> et un <code>CollectionGrid</code>) en créant les <code>children</code>. Les <code>CollectionGrid</code> récupèrent leurs éléments via <code>collections/{id}.json</code> ou directement dans <code>items</code>.
-            </p>
-          </div>
-          <div class="bg-emerald-50 rounded-lg p-3 space-y-1 border border-emerald-200">
-            <p class="font-semibold text-emerald-800">📦 Collections (& boutons) :</p>
-            <p class="text-emerald-700">Les <code>CollectionGrid</code> référencent des collections de <code>data/sites/{slug}/collections/*.json</code>; si la collection est absente, elle est créée à l’import.</p>
-            <p class="text-emerald-700 mt-1">Tu peux fournir les items directement dans le JSON, avec les champs suivants ou des champs libres :</p>
-            <pre class="bg-white/80 rounded p-2 mt-1 text-[10px] overflow-x-auto"><code>"collections": {
-  "projets": {
-    "name": "Projets",
-    "description": "Nos réalisations",
-    "items": [
-      {
-        "title": "Projet 1",
-        "summary": "Description...",
-        "image": "/assets/img.jpg",
-        "slug": "/projets/projet-1",
-        "cta": {"text": "Découvrir", "url": "/projet-1"}
-      },
-      {"title": "Projet 2", "summary": "Description..."}
-    ]
-  }
-}</code></pre>
-            <p class="text-emerald-600 text-[10px] mt-1">💡 Items supportés : <code>id</code>, <code>title</code>, <code>status</code>, <code>summary</code>, <code>slug</code>, <code>content</code>, <code>image</code>, <code>cta</code>, etc.</p>
-          </div>
-        </div>
-        <div class="bg-white/70 rounded-lg p-3">
-          <p class="font-semibold text-slate-800 text-xs mb-2">🎨 Types de blocs éditables :</p>
-          <div class="flex flex-wrap gap-1.5">
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Hero</span>
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Paragraphe</span>
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Image</span>
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Groupe</span>
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">CollectionGrid</span>
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Form</span>
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">NewsletterEmbed</span>
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Bouton</span>
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Card</span>
-            <span class="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">Video</span>
-          </div>
+        <h4 class="text-sm font-bold text-slate-800">🧠 Prompt IA (copier-coller)</h4>
+        <p class="text-xs text-slate-700">
+          Utilise ce prompt dans ton assistant IA pour générer un JSON importable dans RAWDIT.
+          Réponse attendue : <strong>uniquement du JSON valide</strong> (pas de Markdown).
+        </p>
+        <pre data-import-ai-prompt class="bg-slate-900 text-slate-100 text-xs rounded-xl p-4 overflow-x-auto max-h-[28vh] overflow-y-auto"><code>Tu es RAWDIT (CMS statique). Génère un JSON IMPORTABLE pour l'onglet “Importer JSON”.
+
+Contraintes de réponse :
+- Réponds uniquement avec du JSON valide (aucun commentaire, aucun markdown, aucun texte autour).
+- Fournis soit : (1) une page { ... }, (2) un tableau de pages [ ... ], ou (3) un site complet { "pages": [...], "collections": {...}, "theme": {...} }.
+
+Règles pages :
+- "title" obligatoire.
+- "slug" doit commencer par "/" (ex: "/a-propos").
+- "blocks" est un tableau d'objets { "id", "type", "label", "settings" }.
+- "id" doit être unique et stable (ex: "hero-1", "paragraph-2", "group-1").
+
+Blocs recommandés : Hero, Paragraphe, Image, Groupe, CollectionGrid, Form, NewsletterEmbed, Bouton, Card, Video.
+Imbrication : pour "Groupe", ajoute "children": [ {bloc}, {bloc} ].
+
+Thème (optionnel) :
+- "theme": { "colors": { "primary": "violet-500", "secondary": "sky-500", "accent": "emerald-500", "background": "white", "text": "slate-900" } }.
+- Dans les blocs, utilise de préférence les tokens : "theme-primary", "theme-secondary", "theme-accent", "theme-background", "theme-text" (ex: settings.bg = "theme-background").
+
+Collections (optionnel) :
+- "collections": { "projets": { "name": "Projets", "items": [ { "title": "...", "slug": "/projets/..." } ] } }.
+- Un bloc CollectionGrid peut référencer : settings.collectionId = "projets".
+
+Génère maintenant : (décris ici ton besoin en 1 phrase).</code></pre>
+        <div class="rounded-lg bg-white/70 p-3 text-xs text-slate-700">
+          <p class="font-semibold text-slate-800">Rappel rapide</p>
+          <ul class="mt-1 list-disc list-inside space-y-0.5 text-slate-600">
+            <li>Formats acceptés : page seule, liste de pages, ou site complet (pages + collections + theme).</li>
+            <li>À l’import : création ou mise à jour par <code>id</code> ou <code>slug</code>.</li>
+            <li>Les blocs inconnus sont importés mais peuvent ne pas être éditables dans l’admin.</li>
+          </ul>
         </div>
       </div>
       
