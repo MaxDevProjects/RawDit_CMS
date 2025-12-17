@@ -1698,13 +1698,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const values = collectFormValues(config);
-      const updatedBlocks = (currentPage.blocks || []).map((entry) => {
-        if (entry.id !== block.id) {
-          return entry;
-        }
-        const updatedSettings = { ...(entry.settings || {}), ...values };
-        return { ...entry, settings: updatedSettings };
-      });
+      const { blocks: updatedBlocks, didUpdate, foundParentId } = updateBlocksDeep(
+        currentPage.blocks || [],
+        block.id,
+        (entry) => {
+          const updatedSettings = { ...(entry.settings || {}), ...values };
+          return { ...entry, settings: updatedSettings };
+        },
+        activeBlockParentId,
+      );
+      if (!didUpdate) {
+        return;
+      }
+      activeBlockParentId = foundParentId;
       // Mise à jour silencieuse (sans toast ni refresh complet)
       const nextPage = { ...currentPage, blocks: updatedBlocks };
       currentPage = nextPage;
@@ -1850,28 +1856,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         values.limit = Math.max(1, Number(values.limit) || 1);
       }
-      const updatedBlocks = (currentPage.blocks || []).map((entry) => {
-        if (entry.id !== block.id) {
-          return entry;
-        }
-        const updatedSettings = { ...(entry.settings || {}), ...values };
-        const updatedBlock = {
-          ...entry,
-          settings: updatedSettings,
-        };
-        if (config.labelField && values[config.labelField]) {
-          updatedBlock.label = values[config.labelField];
-        }
-        if (config.descriptionField && values[config.descriptionField]) {
-          updatedBlock.description = values[config.descriptionField];
-        }
-        if (config.section === 'collection') {
-          updatedBlock.collectionId = values.collectionId;
-          updatedBlock.settings.collectionId = values.collectionId;
-          updatedBlock.settings.limit = values.limit;
-        }
-        return updatedBlock;
-      });
+      const { blocks: updatedBlocks, didUpdate, foundParentId } = updateBlocksDeep(
+        currentPage.blocks || [],
+        block.id,
+        (entry) => {
+          const updatedSettings = { ...(entry.settings || {}), ...values };
+          const updatedBlock = {
+            ...entry,
+            settings: updatedSettings,
+          };
+          if (config.labelField && values[config.labelField]) {
+            updatedBlock.label = values[config.labelField];
+          }
+          if (config.descriptionField && values[config.descriptionField]) {
+            updatedBlock.description = values[config.descriptionField];
+          }
+          if (config.section === 'collection') {
+            updatedBlock.collectionId = values.collectionId;
+            updatedBlock.settings.collectionId = values.collectionId;
+            updatedBlock.settings.limit = values.limit;
+          }
+          return updatedBlock;
+        },
+        activeBlockParentId,
+      );
+      if (!didUpdate) {
+        return;
+      }
+      activeBlockParentId = foundParentId;
       updateCurrentPageBlocks(updatedBlocks);
       showToast('Bloc mis à jour');
       setActivePage(currentPage.id, { preserveBlock: true });
@@ -2786,6 +2798,56 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return block || null;
     };
+
+    const pageHasBlockId = (page, blockId) => {
+      if (!page || !blockId) return false;
+      const walk = (nodes) => {
+        for (const node of nodes || []) {
+          if (!node) continue;
+          if (node.id === blockId) return true;
+          if (Array.isArray(node.children) && walk(node.children)) return true;
+        }
+        return false;
+      };
+      return walk(page.blocks || []);
+    };
+
+    const updateBlocksDeep = (blocks, blockId, updater, parentHint = null) => {
+      let didUpdate = false;
+      let foundParentId = null;
+
+      const walk = (nodes, currentParentId = null) => {
+        let changed = false;
+        const nextNodes = (nodes || []).map((node) => {
+          if (!node || !node.id) return node;
+
+          if (node.id === blockId && (!parentHint || parentHint === currentParentId)) {
+            didUpdate = true;
+            foundParentId = currentParentId;
+            changed = true;
+            return updater(node);
+          }
+
+          if (Array.isArray(node.children) && node.children.length > 0) {
+            const { nodes: nextChildren, changed: childrenChanged } = walk(node.children, node.id);
+            if (childrenChanged) {
+              changed = true;
+              return { ...node, children: nextChildren };
+            }
+          }
+
+          return node;
+        });
+        return { nodes: nextNodes, changed };
+      };
+
+      const result = walk(blocks, null);
+      return {
+        blocks: result.nodes,
+        didUpdate,
+        foundParentId,
+      };
+    };
     
     // Variable pour stocker le parent du bloc actif (si c'est un enfant de groupe)
     let activeBlockParentId = null;
@@ -3034,8 +3096,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const normalizedTarget = target ? normalizePageData(target) : null;
       currentPage = normalizedTarget;
       activePageId = target?.id || null;
-      if (!options.preserveBlock || !currentPage || !currentPage.blocks.some((block) => block.id === activeBlockId)) {
+      if (!options.preserveBlock || !currentPage || !pageHasBlockId(currentPage, activeBlockId)) {
         activeBlockId = currentPage?.blocks?.[0]?.id || null;
+        activeBlockParentId = null;
       }
       if (activePageId) {
         persistActivePage(activePageId);
