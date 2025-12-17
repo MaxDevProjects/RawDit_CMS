@@ -1702,6 +1702,118 @@
           </div>
         </div>
 
+        <div data-editor-section="card" class="hidden space-y-4">
+          <div data-block-panel="content" class="space-y-3">
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Titre</span>
+              <input type="text" name="card-title" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Description</span>
+              <textarea name="card-description" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
+              <p class="text-[10px] text-slate-400">Texte court recommandé (1–3 phrases).</p>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Image (URL)</span>
+              <input type="text" name="card-image" placeholder="https://..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+            </label>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Texte du lien</span>
+                <input type="text" name="card-cta-text" placeholder="Découvrir" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">URL du lien</span>
+                <input type="text" name="card-cta-url" placeholder="/contact" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+              </label>
+            </div>
+          </div>
+          <div data-block-panel="appearance" class="hidden space-y-3">
+            
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Style de la card</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Fond</span>
+        <div class="relative flex items-center gap-2">
+          <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+          <select name="card-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select data-theme-color-select disabled>
+            <option value="" disabled>Chargement...</option>
+          </select>
+          <span data-theme-color-chip class="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+        </div>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+        <select name="card-border-radius" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="rounded-none">Aucun</option>
+          <option value="rounded-lg">Léger (lg)</option>
+          <option value="rounded-xl">Moyen (xl)</option>
+          <option value="rounded-2xl">Fort (2xl)</option>
+          <option value="rounded-3xl">Très fort (3xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Ombre</span>
+        <select name="card-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="shadow-none">Aucune</option>
+          <option value="shadow-sm">Légère (sm)</option>
+          <option value="shadow-md">Moyenne (md)</option>
+          <option value="shadow-lg">Forte (lg)</option>
+          <option value="shadow-xl">Très forte (xl)</option>
+          <option value="shadow-2xl">Maximale (2xl)</option>
+        </select>
+      </label>
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Bordure</span>
+        <select
+          name="card-border"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+          data-default="border border-slate-100 theme-border-accent"
+        >
+          <option value="border-none">Aucune</option>
+          <option value="border border-slate-100 theme-border-accent">Fine (1px)</option>
+          <option value="border-2 border border-slate-200 theme-border-accent">Moyenne (2px)</option>
+          <option value="border-4 border border-slate-200 theme-border-accent">Épaisse (4px)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+            
+  <div class="pt-3 mt-3 border-t border-slate-100">
+    <p class="text-xs uppercase tracking-tight text-slate-500 mb-2">Animation (sobre)</p>
+    <div class="space-y-3">
+      <label class="space-y-1 block">
+        <span class="text-xs font-medium text-slate-600">Type d'animation</span>
+        <select name="anim-type" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+          <option value="">Aucune</option>
+          <option value="fade-in">Fondu</option>
+          <option value="fade-up">Fondu + montée</option>
+          <option value="fade-down">Fondu + descente</option>
+          <option value="slide-left">Glissement gauche</option>
+          <option value="slide-right">Glissement droite</option>
+          <option value="zoom-in">Zoom doux</option>
+          <option value="blur-in">Désfloutage</option>
+        </select>
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="space-y-1 block">
+          <span class="text-xs font-medium text-slate-600">Délai (ms)</span>
+          <input type="number" name="anim-delay" min="0" step="50" data-default="0" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" placeholder="0" />
+        </label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-medium text-slate-600">Durée (ms)</span>
+          <input type="number" name="anim-duration" min="100" step="50" data-default="450" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" placeholder="450" />
+        </label>
+      </div>
+      <p class="text-[11px] text-slate-500">Les animations sont discrètes, déclenchées uniquement lorsque le bloc entre dans le viewport.</p>
+    </div>
+  </div>
+
+          </div>
+        </div>
+
         <!-- Section Form (Formulaire de contact) -->
         <div data-editor-section="form" class="hidden space-y-4">
           <div data-block-panel="content" class="space-y-3">
@@ -2623,15 +2735,30 @@ settings autorisés :
   "animationDuration": (voir Animation)
 }
 
-H) Blocs PREVIEW uniquement (importables mais pas forcément éditables dans l'admin)
+H) Card (type = "Card" | "Carte")
+settings autorisés :
+{
+  "title": "string",
+  "description": "string",
+  "image": "string (URL)",
+  "ctaText": "string",
+  "ctaUrl": "string",
+  "bg": (tokens thème OU backgrounds sûrs ci-dessus),
+  "borderRadius": (voir Style de card),
+  "shadow": (voir Style de card),
+  "border": (voir Style de card),
+  "animation": (voir Animation),
+  "animationDelay": (voir Animation),
+  "animationDuration": (voir Animation)
+}
+
+I) Blocs PREVIEW uniquement (importables mais pas forcément éditables dans l'admin)
 - Bouton (type = "Bouton" | "Button" | "CTA")
   settings: { "text": "string", "url": "string", "icon": "string (optionnel)", "align": "text-left|text-center|text-right", "size": "px-6 py-3", "textColor": "text-[var(--color-background)]|text-white|text-slate-900", "bg": "theme-primary|theme-secondary|theme-accent|bg-violet-600", "borderRadius": (Style de card), "border": (Style de card) }
 - Titre (type = "Titre" | "Heading")
   settings: { "text": "string", "level": "h1|h2|h3|h4", "size": "text-3xl|text-4xl|text-5xl|text-6xl", "align": "text-left|text-center|text-right", "color": "text-slate-900|text-white|text-slate-600" }
 - Espaceur (type = "Espaceur" | "Spacer")
   settings: { "height": "h-4|h-8|h-12|h-16|h-24" }
-- Card (type = "Card" | "Carte")
-  settings: { "title": "string", "description": "string", "image": "string (URL)", "ctaText": "string", "ctaUrl": "string", "bg": (tokens thème OU backgrounds sûrs ci-dessus), "borderRadius": (Style de card), "shadow": (Style de card), "border": (Style de card) }
 - Divider (type = "Divider" | "Separateur")
   settings: { "width": "w-full|w-1/2|w-1/3", "color": "border-slate-200|border-slate-300", "style": "border-solid|border-dashed" }
 - Video (type = "Video")

@@ -1381,6 +1381,23 @@ document.addEventListener('DOMContentLoaded', () => {
           border: 'newsletter-border',
         },
       },
+      card: {
+        section: 'card',
+        labelField: 'title',
+        descriptionField: 'description',
+        fields: {
+          title: 'card-title',
+          description: 'card-description',
+          image: 'card-image',
+          ctaText: 'card-cta-text',
+          ctaUrl: 'card-cta-url',
+          // Card style
+          bg: 'card-bg',
+          borderRadius: 'card-border-radius',
+          shadow: 'card-shadow',
+          border: 'card-border',
+        },
+      },
     };
     const blockTypeAliases = {
       texte: 'paragraphe',
@@ -1392,6 +1409,8 @@ document.addEventListener('DOMContentLoaded', () => {
       image: 'image',
       groupe: 'groupe',
       group: 'groupe',
+      card: 'card',
+      carte: 'card',
       collection: 'collectiongrid',
       collectiongrid: 'collectiongrid',
       'collection-grid': 'collectiongrid',
@@ -2057,6 +2076,23 @@ document.addEventListener('DOMContentLoaded', () => {
           title: 'Restez informé',
           serviceName: '',
           embedCode: '',
+        },
+      },
+      card: {
+        type: 'Card',
+        label: 'Carte',
+        description: 'Carte avec image, texte et lien.',
+        status: 'Brouillon',
+        settings: {
+          title: 'Titre de la carte',
+          description: '',
+          image: '',
+          ctaText: 'Découvrir',
+          ctaUrl: '#',
+          bg: 'bg-slate-50',
+          borderRadius: 'rounded-2xl',
+          shadow: 'shadow-sm',
+          border: 'border border-slate-100 theme-border-accent',
         },
       },
     };

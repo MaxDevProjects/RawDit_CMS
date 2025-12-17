@@ -1013,9 +1013,21 @@
           {% set card_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-2xl' %}
           {% set card_shadow = settings.shadow if settings.shadow and 'shadow' in settings.shadow else 'shadow-sm' %}
           {% set card_border = borderClass(settings) %}
+          {% set card_image = settings.image or '' %}
+          {# Tolérance : certaines IA mettent une URL en markdown [texte](url) -> on récupère l'URL #}
+          {% if card_image and '](' in card_image and ')' in card_image %}
+            {% set mdParts = card_image | split('](') %}
+            {% if mdParts | length > 1 %}
+              {% set after = mdParts[1] %}
+              {% set endParts = after | split(')') %}
+              {% if endParts | length > 0 %}
+                {% set card_image = endParts[0] %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
           <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ card_bg }} {{ card_radius }} {{ card_shadow }} {{ card_border }} p-6 space-y-3">
-            {% if settings.image %}
-              <img src="{{ settings.image }}" alt="{{ settings.title or '' }}" class="w-full h-40 object-cover rounded-xl" />
+            {% if card_image %}
+              <img src="{{ card_image }}" alt="{{ settings.title or '' }}" class="w-full h-40 object-cover rounded-xl" />
             {% endif %}
             <h3 class="text-xl font-semibold">{{ settings.title or block.label or 'Carte' }}</h3>
             <p class="text-sm text-slate-600">{{ settings.description or block.description or '' }}</p>

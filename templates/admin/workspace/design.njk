@@ -1271,6 +1271,38 @@
           </div>
         </div>
 
+        <div data-editor-section="card" class="hidden space-y-4">
+          <div data-block-panel="content" class="space-y-3">
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Titre</span>
+              <input type="text" name="card-title" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Description</span>
+              <textarea name="card-description" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea>
+              <p class="text-[10px] text-slate-400">Texte court recommandé (1–3 phrases).</p>
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Image (URL)</span>
+              <input type="text" name="card-image" placeholder="https://..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+            </label>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Texte du lien</span>
+                <input type="text" name="card-cta-text" placeholder="Découvrir" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">URL du lien</span>
+                <input type="text" name="card-cta-url" placeholder="/contact" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+              </label>
+            </div>
+          </div>
+          <div data-block-panel="appearance" class="hidden space-y-3">
+            {{ cardStyleFields('card') }}
+            {{ animationFields() }}
+          </div>
+        </div>
+
         <!-- Section Form (Formulaire de contact) -->
         <div data-editor-section="form" class="hidden space-y-4">
           <div data-block-panel="content" class="space-y-3">
@@ -1829,15 +1861,30 @@ settings autorisés :
   "animationDuration": (voir Animation)
 }
 
-H) Blocs PREVIEW uniquement (importables mais pas forcément éditables dans l'admin)
+H) Card (type = "Card" | "Carte")
+settings autorisés :
+{
+  "title": "string",
+  "description": "string",
+  "image": "string (URL)",
+  "ctaText": "string",
+  "ctaUrl": "string",
+  "bg": (tokens thème OU backgrounds sûrs ci-dessus),
+  "borderRadius": (voir Style de card),
+  "shadow": (voir Style de card),
+  "border": (voir Style de card),
+  "animation": (voir Animation),
+  "animationDelay": (voir Animation),
+  "animationDuration": (voir Animation)
+}
+
+I) Blocs PREVIEW uniquement (importables mais pas forcément éditables dans l'admin)
 - Bouton (type = "Bouton" | "Button" | "CTA")
   settings: { "text": "string", "url": "string", "icon": "string (optionnel)", "align": "text-left|text-center|text-right", "size": "px-6 py-3", "textColor": "text-[var(--color-background)]|text-white|text-slate-900", "bg": "theme-primary|theme-secondary|theme-accent|bg-violet-600", "borderRadius": (Style de card), "border": (Style de card) }
 - Titre (type = "Titre" | "Heading")
   settings: { "text": "string", "level": "h1|h2|h3|h4", "size": "text-3xl|text-4xl|text-5xl|text-6xl", "align": "text-left|text-center|text-right", "color": "text-slate-900|text-white|text-slate-600" }
 - Espaceur (type = "Espaceur" | "Spacer")
   settings: { "height": "h-4|h-8|h-12|h-16|h-24" }
-- Card (type = "Card" | "Carte")
-  settings: { "title": "string", "description": "string", "image": "string (URL)", "ctaText": "string", "ctaUrl": "string", "bg": (tokens thème OU backgrounds sûrs ci-dessus), "borderRadius": (Style de card), "shadow": (Style de card), "border": (Style de card) }
 - Divider (type = "Divider" | "Separateur")
   settings: { "width": "w-full|w-1/2|w-1/3", "color": "border-slate-200|border-slate-300", "style": "border-solid|border-dashed" }
 - Video (type = "Video")
