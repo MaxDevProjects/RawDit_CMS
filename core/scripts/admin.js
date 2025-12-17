@@ -3884,11 +3884,65 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       setPreviewView('desktop');
     }
-    previewFrame?.addEventListener('load', () => {
-      previewReady = true;
-      updatePreviewStatus('À jour');
-      applyPreviewHighlight(activeBlockId);
-    });
+	    previewFrame?.addEventListener('load', () => {
+	      previewReady = true;
+	      updatePreviewStatus('À jour');
+	      applyPreviewHighlight(activeBlockId);
+
+	      const doc = previewFrame?.contentDocument;
+	      if (!doc || !currentPage) {
+	        return;
+	      }
+	      if (doc.documentElement.dataset.rawditPreviewSelectBound === 'true') {
+	        return;
+	      }
+	      doc.documentElement.dataset.rawditPreviewSelectBound = 'true';
+
+	      // Styles légers pour rendre l'interaction évidente (hover + curseur)
+	      if (!doc.getElementById('rawdit-preview-select-style')) {
+	        const style = doc.createElement('style');
+	        style.id = 'rawdit-preview-select-style';
+	        style.textContent = `
+	          [data-preview-block]{ cursor:pointer; }
+	          [data-preview-block]:hover{ outline:2px solid var(--color-accent, #9C6BFF); outline-offset:2px; }
+	        `;
+	        doc.head?.appendChild(style);
+	      }
+
+	      const isGroupType = (block) => {
+	        const t = (block?.type || '').toLowerCase();
+	        return t === 'groupe' || t === 'group' || t === 'sections' || t === 'grid';
+	      };
+	      const getParentIdForBlock = (blockId) => {
+	        if (!currentPage || !blockId) return null;
+	        if ((currentPage.blocks || []).some((b) => b.id === blockId)) {
+	          return null;
+	        }
+	        for (const b of currentPage.blocks || []) {
+	          if (!isGroupType(b) || !Array.isArray(b.children)) continue;
+	          if (b.children.some((child) => child.id === blockId)) {
+	            return b.id;
+	          }
+	        }
+	        return null;
+	      };
+
+	      doc.addEventListener(
+	        'click',
+	        (event) => {
+	          const target = event.target;
+	          const el = target?.closest?.('[data-preview-block]');
+	          const blockId = el?.getAttribute?.('data-preview-block') || '';
+	          if (!blockId) return;
+	          event.preventDefault();
+	          event.stopPropagation();
+	          event.stopImmediatePropagation?.();
+	          const parentId = getParentIdForBlock(blockId);
+	          setActiveBlock(blockId, parentId);
+	        },
+	        true,
+	      );
+	    });
     previewOpenButton?.addEventListener('click', () => {
       const previewWindow = window.open('', '_blank');
       if (!previewWindow) {
