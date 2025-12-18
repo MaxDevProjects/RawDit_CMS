@@ -143,6 +143,21 @@ RAWDIT = CMS statique éco-conçu pour créer des sites :
 
 - V1 : pas de redirections automatiques si un slug change (le créateur gère l’impact SEO).
 
+### US4.9 – Bloc “Bouton” (CTA simple)
+
+> Objectif : ajouter un bloc CTA minimal, design-first, sans JS lourd.
+
+**Critères fonctionnels :**
+
+- Un bloc de type `Bouton` rend un lien sous forme de bouton (`<a>`), accessible et focus-visible.
+- Propriétés (JSON `settings`) :
+  - `text` (label du bouton),
+  - `url` (lien interne/externe),
+  - `align` (ex : `text-left`, `text-center`, `text-right`),
+  - styles optionnels : `bg`, `textColor`, `borderRadius`, `size`, `border`, `shadow`,
+  - animation optionnelle (mêmes champs que les autres blocs).
+- L’admin permet d’ajouter le bloc depuis la bibliothèque et d’éditer ses propriétés (texte + URL + styles).
+
 ---
 
 ## EPIC 5 – Onglet Contenus (collections)

@@ -243,6 +243,17 @@
           </button>
           <button
             type="button"
+            data-block-add="button"
+            class="w-full flex items-start gap-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
+          >
+            <span class="text-lg">▣</span>
+            <span>
+              Bouton
+              <span class="block text-xs font-normal text-slate-500">CTA simple (lien stylé)</span>
+            </span>
+          </button>
+          <button
+            type="button"
             data-block-add="form"
             class="w-full flex items-start gap-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:border-[#9C6BFF] hover:text-[#9C6BFF]"
           >
@@ -1499,6 +1510,72 @@
               </select>
             </label>
             {{ cardStyleFields('newsletter') }}
+            {{ animationFields() }}
+          </div>
+        </div>
+
+        <!-- Section Bouton -->
+        <div data-editor-section="button" class="hidden space-y-4">
+          <div data-block-panel="content" class="space-y-3">
+            <p class="text-xs uppercase tracking-tight text-slate-500">Bouton</p>
+            <p class="text-[11px] text-slate-500">CTA simple (lien stylé) — accessible, sans JS lourd.</p>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Texte</span>
+              <input
+                type="text"
+                name="button-text"
+                placeholder="Découvrir"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              />
+            </label>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Lien (URL)</span>
+              <input
+                type="text"
+                name="button-url"
+                placeholder="/contact ou https://..."
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+              />
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name="button-icon"
+                value="on"
+                class="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+              />
+              Afficher une icône (flèche)
+            </label>
+          </div>
+          <div data-block-panel="appearance" class="hidden space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Alignement</span>
+                <select name="button-align" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="text-left">Gauche</option>
+                  <option value="text-center">Centre</option>
+                  <option value="text-right">Droite</option>
+                </select>
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-xs font-medium text-slate-600">Taille</span>
+                <select name="button-size" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                  <option value="px-4 py-2">Compact</option>
+                  <option value="px-6 py-3">Standard</option>
+                  <option value="px-8 py-4">Large</option>
+                </select>
+              </label>
+            </div>
+            <label class="space-y-1 block">
+              <span class="text-xs font-medium text-slate-600">Couleur du texte</span>
+              <select name="button-text-color" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                <option value="text-[var(--color-background)]">Auto (fond)</option>
+                <option value="text-[var(--color-text)]">Texte du thème</option>
+                <option value="text-white">Blanc</option>
+                <option value="text-black">Noir</option>
+              </select>
+            </label>
+            {{ cardStyleFields('button') }}
             {{ animationFields() }}
           </div>
         </div>

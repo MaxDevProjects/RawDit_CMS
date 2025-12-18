@@ -1400,6 +1400,24 @@ document.addEventListener('DOMContentLoaded', () => {
           border: 'card-border',
         },
       },
+      bouton: {
+        section: 'button',
+        labelField: 'text',
+        fields: {
+          text: 'button-text',
+          url: 'button-url',
+          icon: 'button-icon',
+          // Apparence
+          align: 'button-align',
+          size: 'button-size',
+          textColor: 'button-text-color',
+          // Card style
+          bg: 'button-bg',
+          borderRadius: 'button-border-radius',
+          shadow: 'button-shadow',
+          border: 'button-border',
+        },
+      },
     };
     const blockTypeAliases = {
       texte: 'paragraphe',
@@ -1422,6 +1440,9 @@ document.addEventListener('DOMContentLoaded', () => {
       newsletterembed: 'newsletterembed',
       newsletter: 'newsletterembed',
       embed: 'newsletterembed',
+      bouton: 'bouton',
+      button: 'bouton',
+      cta: 'bouton',
     };
     const animationFieldMap = {
       animation: 'anim-type',
@@ -2058,6 +2079,24 @@ document.addEventListener('DOMContentLoaded', () => {
           collectionId: '',
           limit: 6,
           mobileLayout: 'stack',
+        },
+      },
+      button: {
+        type: 'Bouton',
+        label: 'Bouton',
+        description: 'CTA simple (lien stylé).',
+        status: 'Brouillon',
+        settings: {
+          text: 'Découvrir',
+          url: '#',
+          icon: false,
+          align: 'text-left',
+          size: 'px-6 py-3',
+          textColor: 'text-[var(--color-background)]',
+          bg: 'theme-primary',
+          borderRadius: 'rounded-xl',
+          shadow: 'shadow-none',
+          border: 'border-none',
         },
       },
       form: {

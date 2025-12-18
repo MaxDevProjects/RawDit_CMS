@@ -975,16 +975,31 @@
           {% endif %}
           {% set btn_bg = btn_theme_override or (settings.bg and themeBgMap[settings.bg]) or settings.bg or 'bg-violet-600' %}
           {% set btn_text_color = settings.textColor if settings.textColor else 'text-[var(--color-background)]' %}
+          {% set btn_text_css_var = null %}
+          {% if btn_text_color == 'text-white' %}
+            {% set btn_text_css_var = '#ffffff' %}
+          {% elif btn_text_color == 'text-black' %}
+            {% set btn_text_css_var = '#000000' %}
+          {% elif btn_text_color == 'text-[var(--color-text)]' %}
+            {% set btn_text_css_var = 'var(--color-text)' %}
+          {% elif btn_text_color == 'text-[var(--color-background)]' %}
+            {% set btn_text_css_var = 'var(--color-background)' %}
+          {% endif %}
           {% set btn_radius = settings.borderRadius if settings.borderRadius and 'rounded' in settings.borderRadius else 'rounded-xl' %}
           {% set btn_size = settings.size or 'px-6 py-3' %}
           {% set btn_align = settings.align or 'text-left' %}
           {% set btn_border = borderClass(settings, 'border-none') %}
+          {% set btn_href = settings.url or settings.ctaUrl or '#' %}
+          {% set btn_label = settings.text or settings.ctaLabel or block.label or 'Bouton' %}
           <div data-preview-block="{{ block.id }}" {{ animAttrs | safe }} class="{{ btn_align }}">
             <a 
-              href="{{ linkHref(settings.url or '#') }}" 
-              class="inline-flex items-center gap-2 {{ btn_radius }} {{ btn_bg }} {{ btn_size }} {{ btn_border }} text-sm font-semibold {{ btn_text_color }} transition-colors hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+              href="{{ linkHref(btn_href) }}" 
+              {% if btn_text_css_var %}
+              style="--cta-text-color: {{ btn_text_css_var }};"
+              {% endif %}
+              class="inline-flex items-center gap-2 {{ btn_radius }} {{ btn_bg }} {{ btn_size }} {{ btn_border }} text-sm font-semibold {% if not btn_text_css_var %}{{ btn_text_color }}{% endif %} transition-colors hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
             >
-              {{ settings.text or block.label or 'Bouton' }}
+              {{ btn_label }}
               {% if settings.icon %}
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
