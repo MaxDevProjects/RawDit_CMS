@@ -1010,6 +1010,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const pagePropsForm = document.querySelector('[data-page-props-form]');
     const pageNameInput = document.querySelector('[data-page-name]');
     const pageTitleInput = document.querySelector('[data-page-title-input]');
+    const pageParentSelect = document.querySelector('[data-page-parent-select]');
+    const pageSlugSegmentInput = document.querySelector('[data-page-slug-segment-input]');
     const pageSlugInput = document.querySelector('[data-page-slug-input]');
     const pageDescriptionInput = document.querySelector('[data-page-description]');
     const pagePropsFeedback = document.querySelector('[data-page-props-feedback]');
@@ -2126,11 +2128,26 @@ document.addEventListener('DOMContentLoaded', () => {
       return count === 1 ? '1 bloc' : `${count} blocs`;
     };
     const normalizePageSlug = (value) => {
-      if (!value || value === '/') {
+      const raw = (value || '').trim();
+      if (!raw || raw === '/') {
         return '/';
       }
-      const base = workspaceSlugify(value.replace(/^\//, ''));
-      return base ? `/${base}` : '/';
+      if (/^[a-z]+:\/\//i.test(raw)) {
+        return '/';
+      }
+      const normalizedSeparators = raw.replace(/\\/g, '/');
+      const trimmed = normalizedSeparators.replace(/^\/+|\/+$/g, '');
+      if (!trimmed) {
+        return '/';
+      }
+      const parts = trimmed
+        .split('/')
+        .map((part) => workspaceSlugify(part || ''))
+        .filter(Boolean);
+      if (parts.length === 0) {
+        return '/';
+      }
+      return `/${parts.join('/')}`;
     };
     const generateBlockId = (pageId = 'page', key = 'block') =>
       `${pageId}-${key}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1000)}`;
@@ -2764,9 +2781,63 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderPageLists = (pages, activeId) => {
+      const pageList = Array.isArray(pages) ? pages : [];
+      const pagesById = new Map(pageList.map((page) => [page.id, page]));
+      const childrenByParentId = new Map();
+      const resolveParentBucket = (page) => {
+        const rawParentId = page?.parentId;
+        if (typeof rawParentId !== 'string' || !rawParentId.trim()) {
+          return null;
+        }
+        const parentId = rawParentId.trim();
+        return pagesById.has(parentId) ? parentId : null;
+      };
+
+      pageList.forEach((page) => {
+        const bucket = resolveParentBucket(page);
+        if (!childrenByParentId.has(bucket)) {
+          childrenByParentId.set(bucket, []);
+        }
+        childrenByParentId.get(bucket).push(page);
+      });
+
+      const comparePages = (a, b) => {
+        const slugA = a?.slug || '';
+        const slugB = b?.slug || '';
+        if (slugA === '/' && slugB !== '/') return -1;
+        if (slugB === '/' && slugA !== '/') return 1;
+        return slugA.localeCompare(slugB);
+      };
+      Array.from(childrenByParentId.values()).forEach((list) => list.sort(comparePages));
+
+      const ordered = [];
+      const visited = new Set();
+      const walk = (parentId, depth) => {
+        const children = childrenByParentId.get(parentId) || [];
+        children.forEach((child) => {
+          if (!child?.id || visited.has(child.id)) {
+            return;
+          }
+          visited.add(child.id);
+          const hasMissingParent = !!(child.parentId && !pagesById.has(child.parentId));
+          ordered.push({ page: child, depth, hasMissingParent });
+          walk(child.id, depth + 1);
+        });
+      };
+
+      walk(null, 0);
+      pageList.forEach((page) => {
+        if (!page?.id || visited.has(page.id)) {
+          return;
+        }
+        visited.add(page.id);
+        ordered.push({ page, depth: 0, hasMissingParent: true });
+        walk(page.id, 1);
+      });
+
       pageLists.forEach((list) => {
         list.innerHTML = '';
-        pages.forEach((page) => {
+        ordered.forEach(({ page, depth, hasMissingParent }) => {
           const item = document.createElement('li');
           item.className = 'flex items-center gap-1';
           const button = document.createElement('button');
@@ -2783,12 +2854,15 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             button.removeAttribute('aria-current');
           }
-          // Use page.name (short name) if available, fallback to title
           const displayName = page.name || page.title;
           const isHiddenFromNav = page.accessibility?.showInMainNav === false;
           const navBadge = isHiddenFromNav
             ? '<span class="text-[10px] font-semibold text-amber-600">Masqué du menu</span>'
             : '';
+          const hierarchyBadge = hasMissingParent
+            ? '<span class="text-[10px] font-semibold text-rose-600">Parent manquant</span>'
+            : '';
+          const indent = Math.min(32, Math.max(0, Number(depth) || 0) * 14);
           button.innerHTML = `
             <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -2796,10 +2870,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <path d="M13.5 4.5v4a1 1 0 0 0 1 1h3" stroke="currentColor" stroke-width="1.4"/>
               </svg>
             </span>
-            <div class="flex flex-col">
+            <div class="flex flex-col" style="margin-left:${indent}px">
               <span class="text-sm font-semibold">${displayName}</span>
               <span class="text-xs text-slate-500">${page.slug}</span>
               ${navBadge}
+              ${hierarchyBadge}
             </div>
           `;
           button.addEventListener('click', () => {
@@ -2809,10 +2884,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
           item.appendChild(button);
-          // Bouton de suppression
+
           const deleteBtn = document.createElement('button');
           deleteBtn.type = 'button';
-          deleteBtn.className = 'flex-shrink-0 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition';
+          deleteBtn.className =
+            'flex-shrink-0 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition';
           deleteBtn.title = 'Supprimer cette page';
           deleteBtn.setAttribute('aria-label', `Supprimer ${displayName}`);
           deleteBtn.innerHTML = `
@@ -3262,6 +3338,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const normalizePageData = (page) => ({
       ...page,
+      parentId:
+        typeof page.parentId === 'string' && page.parentId.trim() ? page.parentId.trim() : null,
       blocks: (page.blocks || []).map((block) => normalizeBlockData(block)),
       seo: {
         title: (page.seo?.title || '').trim(),
@@ -4219,15 +4297,113 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Page properties panel logic
+    const getPageSlugSegment = (slugValue) => {
+      const raw = typeof slugValue === 'string' ? slugValue.trim() : '';
+      if (!raw || raw === '/') {
+        return '';
+      }
+      const normalizedSeparators = raw.replace(/\\/g, '/');
+      const trimmed = normalizedSeparators.replace(/^\/+|\/+$/g, '');
+      if (!trimmed) {
+        return '';
+      }
+      const parts = trimmed.split('/').filter(Boolean);
+      return parts[parts.length - 1] || '';
+    };
+    const buildSlugFromParentAndSegment = (parentSlugValue, segmentValue) => {
+      const normalizedSegment = workspaceSlugify((segmentValue || '').trim());
+      if (!normalizedSegment) {
+        return '';
+      }
+      const parentSlug = normalizePageSlug(parentSlugValue || '/');
+      if (!parentSlug || parentSlug === '/') {
+        return `/${normalizedSegment}`;
+      }
+      return normalizePageSlug(`${parentSlug}/${normalizedSegment}`);
+    };
+    const getDescendantIds = (pagesList, rootId) => {
+      const childrenByParent = new Map();
+      (pagesList || []).forEach((page) => {
+        const parentId =
+          page?.parentId && typeof page.parentId === 'string' && page.parentId.trim()
+            ? page.parentId.trim()
+            : null;
+        if (!childrenByParent.has(parentId)) {
+          childrenByParent.set(parentId, []);
+        }
+        childrenByParent.get(parentId).push(page.id);
+      });
+      const visited = new Set();
+      const stack = [rootId];
+      while (stack.length > 0) {
+        const current = stack.pop();
+        const children = childrenByParent.get(current) || [];
+        children.forEach((childId) => {
+          if (!childId || visited.has(childId)) {
+            return;
+          }
+          visited.add(childId);
+          stack.push(childId);
+        });
+      }
+      return visited;
+    };
+    const renderParentSelectOptions = ({ pagesList, current }) => {
+      if (!pageParentSelect) {
+        return;
+      }
+      const currentId = current?.id || '';
+      const forbidden = currentId ? getDescendantIds(pagesList, currentId) : new Set();
+      pageParentSelect.innerHTML = '<option value="">Aucune (niveau racine)</option>';
+      const options = (pagesList || [])
+        .filter((page) => page?.id && page.id !== currentId && !forbidden.has(page.id))
+        .slice()
+        .sort((a, b) => (a.slug || '').localeCompare(b.slug || ''));
+      options.forEach((page) => {
+        const option = document.createElement('option');
+        option.value = page.id;
+        option.textContent = `${page.name || page.title || page.id} — ${page.slug || '/'}`;
+        pageParentSelect.appendChild(option);
+      });
+    };
+    const syncSlugFields = () => {
+      if (!currentPage) {
+        return;
+      }
+      const currentSlug = currentPage.slug || '/';
+      const isHome = currentSlug === '/';
+
+      if (isHome) {
+        pageParentSelect && (pageParentSelect.value = '');
+        pageSlugSegmentInput && (pageSlugSegmentInput.value = '');
+        pageSlugInput && (pageSlugInput.value = '/');
+        pageParentSelect && (pageParentSelect.disabled = true);
+        pageSlugSegmentInput && (pageSlugSegmentInput.disabled = true);
+        return;
+      }
+
+      pageParentSelect && (pageParentSelect.disabled = false);
+      pageSlugSegmentInput && (pageSlugSegmentInput.disabled = false);
+
+      const pagesById = new Map((pages || []).map((page) => [page.id, page]));
+      const selectedParentId = (pageParentSelect?.value || '').trim();
+      const parentSlug = selectedParentId ? pagesById.get(selectedParentId)?.slug || '/' : '/';
+      const segment = (pageSlugSegmentInput?.value || '').trim();
+      const computed = buildSlugFromParentAndSegment(parentSlug, segment);
+      pageSlugInput && (pageSlugInput.value = computed || '');
+    };
     const togglePagePropsPanel = (show) => {
       if (!pagePropsPanel) return;
       if (show) {
         pagePropsPanel.classList.remove('hidden');
-        // Populate fields with current page data
         if (currentPage) {
           pageNameInput && (pageNameInput.value = currentPage.name || '');
           pageTitleInput && (pageTitleInput.value = currentPage.title || '');
-          pageSlugInput && (pageSlugInput.value = currentPage.slug || '');
+          renderParentSelectOptions({ pagesList: pages, current: currentPage });
+          pageParentSelect && (pageParentSelect.value = currentPage.parentId || '');
+          pageSlugSegmentInput &&
+            (pageSlugSegmentInput.value = getPageSlugSegment(currentPage.slug || ''));
+          syncSlugFields();
           pageDescriptionInput && (pageDescriptionInput.value = currentPage.description || '');
         }
       } else {
@@ -4245,6 +4421,12 @@ document.addEventListener('DOMContentLoaded', () => {
       togglePagePropsPanel(!isVisible);
     });
     pagePropsCloseButton?.addEventListener('click', () => togglePagePropsPanel(false));
+    pageParentSelect?.addEventListener('change', () => {
+      syncSlugFields();
+    });
+    pageSlugSegmentInput?.addEventListener('input', () => {
+      syncSlugFields();
+    });
     pagePropsForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!currentPage) {
@@ -4256,8 +4438,19 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const newName = (pageNameInput?.value || '').trim();
         const newTitle = (pageTitleInput?.value || '').trim();
-        const newSlug = (pageSlugInput?.value || '').trim();
         const newDescription = (pageDescriptionInput?.value || '').trim();
+        const requestedParentId = (pageParentSelect?.value || '').trim();
+        const newParentId = requestedParentId ? requestedParentId : null;
+        const newSegment = (pageSlugSegmentInput?.value || '').trim();
+        const currentSlug = currentPage.slug || '/';
+        const computedSlug =
+          currentSlug === '/'
+            ? '/'
+            : (pageSlugInput?.value || '').trim() ||
+              buildSlugFromParentAndSegment(
+                newParentId ? (pages.find((p) => p.id === newParentId)?.slug || '/') : '/',
+                newSegment,
+              );
         
         // Validation basique
         if (!newTitle) {
@@ -4265,8 +4458,23 @@ document.addEventListener('DOMContentLoaded', () => {
           pagePropsSaveButton && (pagePropsSaveButton.disabled = false);
           return;
         }
-        if (!newSlug || !newSlug.startsWith('/')) {
-          setPagePropsFeedback('Le slug doit commencer par /.', 'error');
+        if (currentSlug !== '/' && !workspaceSlugify(newSegment)) {
+          setPagePropsFeedback('Le segment est requis.', 'error');
+          pagePropsSaveButton && (pagePropsSaveButton.disabled = false);
+          return;
+        }
+        if (!computedSlug || !computedSlug.startsWith('/')) {
+          setPagePropsFeedback('URL invalide.', 'error');
+          pagePropsSaveButton && (pagePropsSaveButton.disabled = false);
+          return;
+        }
+        if (currentSlug === '/' && newParentId) {
+          setPagePropsFeedback('La page d’accueil ne peut pas avoir de parent.', 'error');
+          pagePropsSaveButton && (pagePropsSaveButton.disabled = false);
+          return;
+        }
+        if (pages.some((page) => page.slug === computedSlug && page.id !== currentPage.id)) {
+          setPagePropsFeedback('Cette URL est déjà utilisée par une autre page.', 'error');
           pagePropsSaveButton && (pagePropsSaveButton.disabled = false);
           return;
         }
@@ -4275,7 +4483,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ...currentPage,
           name: newName || newTitle, // Fallback to title if name is empty
           title: newTitle,
-          slug: newSlug,
+          parentId: newParentId,
+          slug: computedSlug,
           description: newDescription,
         };
         const saved = await savePageToServer(updatedPage);

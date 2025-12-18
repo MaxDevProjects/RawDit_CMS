@@ -121,6 +121,28 @@ RAWDIT = CMS statique éco-conçu pour créer des sites :
   - À partir du breakpoint desktop (md+), le layout redevient la grille classique (colonnes configurées, overflow visible).
 - L’option est éditable dans le panneau droit, onglet “Apparence” du bloc concerné, section “Affichage sur mobile” avec une aide rappelant le comportement.
 
+### US4.8 – Hiérarchie des pages (parent/enfants) et slugs imbriqués
+
+> Objectif : permettre une architecture HTML-first cohérente (URLs et build statique en sous-dossiers).
+
+**Critères fonctionnels :**
+
+- Chaque page peut définir une page parente via un champ `parentId` (string ou `null`).
+- La page d’accueil (`slug = "/"`) ne peut pas avoir de parent.
+- Le slug d’une page peut contenir plusieurs segments (ex : `/services/seo`) et le build génère les fichiers statiques correspondants (ex : `services/seo.html`).
+- Dans l’admin (Design > Propriétés de la page) :
+  - un sélecteur “Page parent” permet de choisir un parent (ou “Aucune”),
+  - un champ “Segment” permet de définir le dernier segment du slug,
+  - l’URL finale (slug complet) est affichée et enregistrée lors de l’enregistrement.
+- Le CMS empêche les incohérences minimales :
+  - pas de parent = la page reste au niveau racine,
+  - pas de cycles (une page ne peut pas devenir l’enfant de l’un de ses descendants),
+  - pas de slug dupliqué.
+
+**Notes :**
+
+- V1 : pas de redirections automatiques si un slug change (le créateur gère l’impact SEO).
+
 ---
 
 ## EPIC 5 – Onglet Contenus (collections)

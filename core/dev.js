@@ -139,6 +139,7 @@ function normalizePageRecord(page = {}) {
   const seo = page.seo || {};
   const accessibility = page.accessibility || {};
   const title = (typeof page.title === 'string' && page.title.trim()) || 'Page';
+  const parentIdRaw = typeof page.parentId === 'string' ? page.parentId.trim() : '';
   let indexedFlag = null;
   if (seo.indexed === true) {
     indexedFlag = true;
@@ -150,6 +151,7 @@ function normalizePageRecord(page = {}) {
     name: (typeof page.name === 'string' && page.name.trim()) || title,
     title,
     slug: page.slug || '/',
+    parentId: parentIdRaw || null,
     description: page.description || '',
     badges: Array.isArray(page.badges) ? page.badges : [],
     blocks: Array.isArray(page.blocks) ? page.blocks : [],
@@ -174,8 +176,24 @@ function normalizePageSlugValue(value) {
   if (raw === '/') {
     return '/';
   }
-  const cleaned = slugify(raw);
-  return cleaned ? `/${cleaned}` : '';
+  if (/^[a-z]+:\/\//i.test(raw)) {
+    return '';
+  }
+  const normalizedSeparators = raw.replace(/\\/g, '/');
+  const trimmed = normalizedSeparators.replace(/^\/+|\/+$/g, '');
+  if (!trimmed) {
+    return '/';
+  }
+  const parts = trimmed
+    .split('/')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => slugify(part))
+    .filter(Boolean);
+  if (parts.length === 0) {
+    return '';
+  }
+  return `/${parts.join('/')}`;
 }
 
 const normalizeItemSlugValue = normalizePageSlugValue;
@@ -214,6 +232,37 @@ async function readPagesForSite(siteSlug) {
   }
   pages.sort((a, b) => (a.slug || '').localeCompare(b.slug || ''));
   return pages;
+}
+
+function validatePageParent({ pageId, parentId, pages }) {
+  if (!parentId) {
+    return null;
+  }
+  if (!pageId) {
+    return 'Page invalide.';
+  }
+  const parent = pages.find((page) => page.id === parentId);
+  if (!parent) {
+    return 'Page parente introuvable.';
+  }
+  if (parentId === pageId) {
+    return 'Une page ne peut pas être son propre parent.';
+  }
+  const parentsById = new Map(pages.map((page) => [page.id, page.parentId || null]));
+  parentsById.set(pageId, parentId);
+  let cursor = parentId;
+  let hops = 0;
+  while (cursor && hops < 50) {
+    if (cursor === pageId) {
+      return 'Cycle détecté dans la hiérarchie des pages.';
+    }
+    cursor = parentsById.get(cursor) || null;
+    hops += 1;
+  }
+  if (hops >= 50) {
+    return 'Hiérarchie trop profonde.';
+  }
+  return null;
 }
 
 async function writePageForSite(siteSlug, page) {
@@ -1587,10 +1636,11 @@ async function start() {
 
   app.post('/api/sites/:slug/pages', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
-    const { name, title, slug } = req.body || {};
+    const { name, title, slug, parentId } = req.body || {};
     const trimmedName = typeof name === 'string' ? name.trim() : '';
     const trimmedTitle = typeof title === 'string' && title.trim() ? title.trim() : trimmedName;
     const normalizedSlug = normalizePageSlugValue(slug || trimmedName);
+    const normalizedParentId = typeof parentId === 'string' ? parentId.trim() : '';
     if (!trimmedName || !normalizedSlug) {
       return res.status(400).json({ message: 'Nom et slug sont requis.' });
     }
@@ -1599,16 +1649,28 @@ async function start() {
       if (existingPages.some((page) => page.slug === normalizedSlug)) {
         return res.status(400).json({ message: 'Ce slug est déjà utilisé.' });
       }
+      if (normalizedSlug === '/' && normalizedParentId) {
+        return res.status(400).json({ message: 'La page d’accueil ne peut pas avoir de parent.' });
+      }
       const idSet = new Set(existingPages.map((page) => page.id));
       let newId = generatePageIdFromSlug(normalizedSlug, trimmedName);
       while (idSet.has(newId)) {
         newId = `${newId}-${Math.floor(Math.random() * 1000)}`;
+      }
+      const parentValidationError = validatePageParent({
+        pageId: newId,
+        parentId: normalizedParentId || null,
+        pages: existingPages,
+      });
+      if (parentValidationError) {
+        return res.status(400).json({ message: parentValidationError });
       }
       const newPage = {
         id: newId,
         name: trimmedName,
         title: trimmedTitle,
         slug: normalizedSlug,
+        parentId: normalizedParentId || null,
         description: '',
         badges: [],
         blocks: [],
@@ -1643,6 +1705,7 @@ async function start() {
     const payload = req.body || {};
     const title = typeof payload.title === 'string' && payload.title.trim() ? payload.title.trim() : `Page ${safePageId}`;
     const normalizedSlug = normalizePageSlugValue(payload.slug || title);
+    const normalizedParentId = typeof payload.parentId === 'string' ? payload.parentId.trim() : '';
     if (!normalizedSlug) {
       return res.status(400).json({ message: 'Slug invalide.' });
     }
@@ -1651,6 +1714,17 @@ async function start() {
       if (existingPages.some((page) => page.slug === normalizedSlug && page.id !== safePageId)) {
         return res.status(400).json({ message: 'Ce slug est déjà utilisé.' });
       }
+      if (normalizedSlug === '/' && normalizedParentId) {
+        return res.status(400).json({ message: 'La page d’accueil ne peut pas avoir de parent.' });
+      }
+      const parentValidationError = validatePageParent({
+        pageId: safePageId,
+        parentId: normalizedParentId || null,
+        pages: existingPages,
+      });
+      if (parentValidationError) {
+        return res.status(400).json({ message: parentValidationError });
+      }
       const seoPayload = payload.seo || {};
       const accessibilityPayload = payload.accessibility || {};
       const updatedPage = {
@@ -1658,6 +1732,7 @@ async function start() {
         name: typeof payload.name === 'string' ? payload.name.trim() : '',
         title,
         slug: normalizedSlug,
+        parentId: normalizedParentId || null,
         description: payload.description || '',
         badges: Array.isArray(payload.badges) ? payload.badges : [],
         blocks: Array.isArray(payload.blocks) ? payload.blocks : [],
@@ -1868,18 +1943,35 @@ async function start() {
           }
         }
         const seoData = pageData.seo || {};
+        const parentIdValue = typeof pageData.parentId === 'string' ? pageData.parentId.trim() : '';
         const importedPage = {
           id: pageId,
           title,
           slug,
+          parentId: parentIdValue || null,
           description: typeof pageData.description === 'string' ? pageData.description : '',
-          badges: Array.isArray(pageData.badges) ? pageData.badges : [],
-          blocks: Array.isArray(pageData.blocks) ? pageData.blocks : [],
-          seo: {
-            title: typeof seoData.title === 'string' ? seoData.title.trim() : '',
+        badges: Array.isArray(pageData.badges) ? pageData.badges : [],
+        blocks: Array.isArray(pageData.blocks) ? pageData.blocks : [],
+        seo: {
+          title: typeof seoData.title === 'string' ? seoData.title.trim() : '',
             description: typeof seoData.description === 'string' ? seoData.description.trim() : '',
           },
         };
+        if (slug === '/' && importedPage.parentId) {
+          results.errors.push({ title, error: 'La page d’accueil ne peut pas avoir de parent.' });
+          results.success = false;
+          continue;
+        }
+        const parentValidationError = validatePageParent({
+          pageId,
+          parentId: importedPage.parentId,
+          pages: existingPages,
+        });
+        if (parentValidationError) {
+          results.errors.push({ title, error: parentValidationError });
+          results.success = false;
+          continue;
+        }
         try {
           await writePageForSite(siteSlug, importedPage);
           const isUpdate = existingById.has(pageId) || existingBySlug.has(slug);
@@ -1887,6 +1979,7 @@ async function start() {
           // Update maps for subsequent pages
           existingById.set(pageId, importedPage);
           existingBySlug.set(slug, importedPage);
+          existingPages.push(importedPage);
         } catch (writeErr) {
           results.errors.push({ title, error: writeErr.message });
         }
