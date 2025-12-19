@@ -1438,11 +1438,23 @@ async function buildPreviewCss(html) {
   const inputCss = path.join(paths.styles, 'site.css');
   const tailwindExecutable = process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss';
   const tailwindBin = path.join(paths.root, 'node_modules', '.bin', tailwindExecutable);
+  if (!existsSync(tailwindBin)) {
+    throw new Error(`Tailwind CLI introuvable: ${tailwindBin}`);
+  }
   await new Promise((resolve, reject) => {
     const child = spawn(
       tailwindBin,
       ['-i', inputCss, '-o', outputPath, '--minify', '--content', contentPath],
-      { cwd: paths.root, stdio: ['ignore', 'inherit', 'inherit'] },
+      {
+        cwd: paths.root,
+        stdio: ['ignore', 'inherit', 'inherit'],
+        shell: process.platform === 'win32',
+        windowsHide: true,
+        env: {
+          ...process.env,
+          NODE_ENV: process.env.NODE_ENV ?? 'production',
+        },
+      },
     );
     child.on('error', reject);
     child.on('close', (code) => {
