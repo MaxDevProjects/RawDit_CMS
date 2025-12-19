@@ -90,6 +90,7 @@ const ALLOWED_COLOR_TOKENS = TAILWIND_HUES.flatMap((hue) =>
 const NEUTRAL_COLOR_TOKENS = ['white', 'black', 'transparent'];
 const ALLOWED_COLOR_VALUES = [...ALLOWED_COLOR_TOKENS, ...NEUTRAL_COLOR_TOKENS];
 const ENV_ALLOW_FTP = process.env.ALLOW_FTP === 'true';
+const ENV_OPEN_BROWSER = process.env.RAWDIT_OPEN === 'true' || process.env.RAWDIT_OPEN === '1';
 const DEFAULT_COLLECTIONS = [
   {
     id: 'projects',
@@ -117,6 +118,27 @@ const DEFAULT_COLLECTIONS = [
 const stripLeadingSlash = (value) => value?.replace(/^\//, '') || '';
 
 const sanitizeSiteSlug = (slug) => stripLeadingSlash(normalizeSlug(slug));
+
+async function openInDefaultBrowser(url) {
+  try {
+    let command = null;
+    let args = [];
+    if (process.platform === 'win32') {
+      command = 'cmd';
+      args = ['/c', 'start', '', url];
+    } else if (process.platform === 'darwin') {
+      command = 'open';
+      args = [url];
+    } else {
+      command = 'xdg-open';
+      args = [url];
+    }
+    const child = spawn(command, args, { stdio: 'ignore', detached: true });
+    child.unref();
+  } catch {
+    // best effort
+  }
+}
 
 const resolveAssetBase = (site, { isPreview = false } = {}) => {
   const slugCandidate = site?.slug ?? site?.slugValue ?? '';
@@ -3493,7 +3515,11 @@ async function start() {
   app.use('/', express.static(paths.public, { extensions: ['html'] }));
 
   const server = app.listen(port, () => {
-    console.log(`[dev] Serveur disponible sur http://localhost:${port}`);
+    const baseUrl = `http://localhost:${port}`;
+    console.log(`[dev] Serveur disponible sur ${baseUrl}`);
+    if (ENV_OPEN_BROWSER) {
+      openInDefaultBrowser(`${baseUrl}/admin`);
+    }
   });
 
   const watcher = chokidar.watch([paths.templates, paths.data], {

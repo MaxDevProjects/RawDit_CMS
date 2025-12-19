@@ -7,6 +7,7 @@
     "dev": "node ./core/dev.js",
     "build": "node ./core/build.js",
     "rebuild-css": "node ./core/rebuild-css.js",
+    "package:windows-portable": "node ./core/scripts/package-windows-portable.js",
     "user:add": "node ./core/scripts/create-user.js",
     "user:list": "node ./core/scripts/create-user.js -l"
   },

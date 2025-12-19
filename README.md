@@ -16,11 +16,17 @@ public/          Site statique généré
 
 ## Scripts NPM
 
-- `npm run dev` : lance le serveur Express (http://localhost:8080) qui sert `public/` sur `/` et `admin_public/` sur `/admin`. Le watcher `chokidar` reconstruit automatiquement HTML, JS et CSS dès qu'un fichier `data/**/*.json` ou `templates/**/*` change.
+- `npm run dev` : lance le serveur Express (port auto par défaut, ou `PORT=8080`), qui sert `public/` sur `/` et `admin_public/` sur `/admin`. L'URL est affichée dans la console. Le watcher `chokidar` reconstruit automatiquement HTML, JS et CSS dès qu'un fichier `data/**/*.json` ou `templates/**/*` change.
 - `npm run build` : reconstruit entièrement les sorties `public/` et `admin_public/` (nettoyage, rendu Nunjucks, bundle JS via esbuild et Tailwind CLI v4 en mode minifié).
 - `npm run rebuild-css` : exécute uniquement la phase Tailwind (utile lors de l'itération sur `core/styles/*.css` sans toucher aux templates).
+- `npm run package:windows-portable` : prépare un dossier `dist/rawdit-windows-portable/` (à exécuter sur Windows, ou via GitHub Actions).
 
 Les scripts Node correspondants se trouvent dans `core/` et assurent la lecture/écriture JSON, le rendu Nunjucks et la génération Tailwind comme indiqué dans la note technique.
+
+## Release Windows (portable)
+
+- GitHub Actions : workflow `Windows portable` (déclenchement manuel) produit `dist/rawdit-windows-portable.zip` en artifact.
+- Le ZIP contient `RAWDIT.bat` (double-clic) et embarque `node.exe` + les dépendances.
 
 ## Authentification
 
