@@ -12,51 +12,53 @@ import { GoogleGenAI } from '@google/genai';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const AI_CONFIG_PATH = path.join(__dirname, '../../config/ai.json');
 const SITES_DATA_PATH = path.join(__dirname, '../../data/sites');
 
 // Cache du client AI par site
 const chatSessions = new Map();
 
 /**
- * Charge la configuration AI globale (fallback)
- */
-function loadAIConfig() {
-  try {
-    const raw = fs.readFileSync(AI_CONFIG_PATH, 'utf-8');
-    return JSON.parse(raw);
-  } catch (err) {
-    console.error('[AI] Erreur chargement config globale:', err.message);
-    return { enabled: false };
-  }
-}
-
-/**
  * Charge la configuration AI spécifique à un site
- * Priorité : config site > config globale
  */
 function loadSiteAIConfig(siteSlug) {
   const siteConfigPath = path.join(SITES_DATA_PATH, siteSlug, 'config', 'ai.json');
-  const globalConfig = loadAIConfig();
-  
+  const legacySiteConfigPath = path.join(SITES_DATA_PATH, siteSlug, 'ai.json');
+  const defaults = {
+    enabled: true,
+    provider: 'gemini',
+    model: 'gemini-2.5-flash',
+    apiKey: '',
+    projectPrompt: '',
+    systemPromptTemplate: '',
+    rateLimit: {
+      requestsPerDay: 100,
+      requestsPerMinute: 10,
+    },
+  };
+
   try {
     if (fs.existsSync(siteConfigPath)) {
       const raw = fs.readFileSync(siteConfigPath, 'utf-8');
       const siteConfig = JSON.parse(raw);
-      // Fusionner : la config site a priorité
-      return {
-        ...globalConfig,
-        ...siteConfig,
-        // Utiliser apiKey du site si défini, sinon fallback global
-        apiKey: siteConfig.apiKey || globalConfig.apiKey,
-        enabled: siteConfig.enabled !== undefined ? siteConfig.enabled : globalConfig.enabled
-      };
+      return { ...defaults, ...siteConfig };
+    }
+    if (fs.existsSync(legacySiteConfigPath)) {
+      const raw = fs.readFileSync(legacySiteConfigPath, 'utf-8');
+      const siteConfig = JSON.parse(raw);
+      // Migration best-effort: move legacy config into config/ai.json (keeping legacy file as-is).
+      try {
+        fs.mkdirSync(path.dirname(siteConfigPath), { recursive: true });
+        fs.writeFileSync(siteConfigPath, JSON.stringify(siteConfig, null, 2), 'utf-8');
+      } catch {
+        // ignore
+      }
+      return { ...defaults, ...siteConfig };
     }
   } catch (err) {
     console.error('[AI] Erreur chargement config site:', err.message);
   }
-  
-  return globalConfig;
+
+  return defaults;
 }
 
 /**
@@ -458,7 +460,6 @@ const quickPrompts = {
 export {
   chat,
   clearHistory,
-  loadAIConfig,
   loadSiteAIConfig,
   loadConversationHistory,
   quickPrompts,

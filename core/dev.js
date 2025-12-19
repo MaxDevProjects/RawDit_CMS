@@ -2698,7 +2698,28 @@ async function start() {
   // ============================================================================
 
   const getAIConfigPath = (siteSlug) =>
-    path.join(SITES_DATA_ROOT, siteSlug, 'ai.json');
+    path.join(SITES_DATA_ROOT, siteSlug, 'config', 'ai.json');
+
+  const getLegacyAIConfigPath = (siteSlug) => path.join(SITES_DATA_ROOT, siteSlug, 'ai.json');
+
+  const readAIConfigFile = async (filePath) => {
+    const raw = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(raw);
+  };
+
+  const migrateLegacyAIConfigIfNeeded = async (siteSlug) => {
+    const newPath = getAIConfigPath(siteSlug);
+    const legacyPath = getLegacyAIConfigPath(siteSlug);
+    try {
+      const legacyRaw = await fs.readFile(legacyPath, 'utf8');
+      const legacyConfig = JSON.parse(legacyRaw);
+      await ensureDir(path.dirname(newPath));
+      await fs.writeFile(newPath, JSON.stringify(legacyConfig, null, 2), 'utf8');
+      return legacyConfig;
+    } catch {
+      return null;
+    }
+  };
 
   app.get('/api/sites/:slug/config/ai', requireAuthJson, async (req, res) => {
     const siteSlug = normalizeSlug(req.params.slug);
@@ -2709,10 +2730,13 @@ async function start() {
     try {
       let config = { enabled: false, model: 'gemini-2.5-flash', projectPrompt: '' };
       try {
-        const raw = await fs.readFile(filePath, 'utf8');
-        config = JSON.parse(raw);
+        config = await readAIConfigFile(filePath);
       } catch {
-        // File doesn't exist, return defaults
+        // File doesn't exist: try legacy path and migrate, otherwise defaults.
+        const migrated = await migrateLegacyAIConfigIfNeeded(siteSlug);
+        if (migrated) {
+          config = migrated;
+        }
       }
       // Never send the actual API key, just indicate if one exists
       res.json({
@@ -2738,10 +2762,14 @@ async function start() {
       // Load existing config to preserve API key if not provided
       let existingConfig = {};
       try {
-        const raw = await fs.readFile(filePath, 'utf8');
-        existingConfig = JSON.parse(raw);
+        existingConfig = await readAIConfigFile(filePath);
       } catch {
-        // File doesn't exist
+        // File doesn't exist: try legacy path (and migrate on write).
+        try {
+          existingConfig = await readAIConfigFile(getLegacyAIConfigPath(siteSlug));
+        } catch {
+          // ignore
+        }
       }
 
       const config = {
@@ -3366,130 +3394,6 @@ async function start() {
     res.json({ success: true, message: 'Proposition rejetée.' });
   });
 
-  /**
-   * Récupère la configuration AI (sans la clé API)
-   * GET /api/ai/config
-   */
-  app.get('/api/ai/config', requireAuthJson, async (req, res) => {
-    try {
-      const aiServicePath = path.join(paths.root, 'core/lib/ai-service.js');
-      const aiService = await import(aiServicePath);
-      const config = aiService.loadAIConfig();
-      // Ne jamais exposer la clé API au client
-      res.json({
-        enabled: config.enabled,
-        hasApiKey: !!config.apiKey,
-        model: config.model,
-        provider: config.provider
-      });
-    } catch (err) {
-      console.error('[AI] Config error:', err);
-      res.status(500).json({ message: 'Erreur lors du chargement de la configuration AI.' });
-    }
-  });
-
-  /**
-   * Récupère la configuration AI d'un site spécifique
-   * GET /api/sites/:slug/ai/config
-   */
-  app.get('/api/sites/:slug/ai/config', requireAuthJson, async (req, res) => {
-    const siteSlug = normalizeSlug(req.params.slug);
-    if (!siteSlug) {
-      return res.status(400).json({ message: 'Site invalide.' });
-    }
-
-    try {
-      const configPath = path.join(SITES_DATA_ROOT, siteSlug, 'config', 'ai.json');
-      let siteAIConfig = {
-        enabled: true,
-        apiKey: '',
-        model: 'gemini-2.5-flash',
-        projectDescription: ''
-      };
-
-      try {
-        const raw = await fs.readFile(configPath, 'utf8');
-        siteAIConfig = { ...siteAIConfig, ...JSON.parse(raw) };
-      } catch (e) {
-        // Fichier n'existe pas encore, utiliser les valeurs par défaut
-      }
-
-      // Ne jamais renvoyer la clé API au client
-      res.json({
-        success: true,
-        config: {
-          enabled: siteAIConfig.enabled,
-          hasApiKey: !!(siteAIConfig.apiKey && siteAIConfig.apiKey.length > 0),
-          model: siteAIConfig.model,
-          projectDescription: siteAIConfig.projectDescription || ''
-        }
-      });
-    } catch (err) {
-      console.error('[AI] Get site config error:', err);
-      res.status(500).json({ message: 'Erreur lors du chargement de la configuration AI du site.' });
-    }
-  });
-
-  /**
-   * Met à jour la configuration AI d'un site spécifique
-   * PUT /api/sites/:slug/ai/config
-   */
-  app.put('/api/sites/:slug/ai/config', requireAuthJson, async (req, res) => {
-    const siteSlug = normalizeSlug(req.params.slug);
-    if (!siteSlug) {
-      return res.status(400).json({ message: 'Site invalide.' });
-    }
-
-    const { enabled, apiKey, model, projectDescription } = req.body;
-
-    try {
-      const configDir = path.join(SITES_DATA_ROOT, siteSlug, 'config');
-      const configPath = path.join(configDir, 'ai.json');
-      
-      // S'assurer que le dossier config existe
-      await fs.mkdir(configDir, { recursive: true });
-
-      // Charger config existante
-      let existingConfig = {};
-      try {
-        const raw = await fs.readFile(configPath, 'utf8');
-        existingConfig = JSON.parse(raw);
-      } catch (e) {
-        // Fichier n'existe pas
-      }
-
-      // Mettre à jour la config
-      const updatedConfig = {
-        enabled: typeof enabled === 'boolean' ? enabled : existingConfig.enabled ?? true,
-        model: model || existingConfig.model || 'gemini-2.5-flash',
-        projectDescription: typeof projectDescription === 'string' ? projectDescription : existingConfig.projectDescription || ''
-      };
-
-      // Si une nouvelle clé API est fournie et non vide, la mettre à jour
-      if (apiKey && typeof apiKey === 'string' && apiKey.trim().length > 0) {
-        updatedConfig.apiKey = apiKey.trim();
-      } else if (existingConfig.apiKey) {
-        // Garder l'ancienne clé si elle existe
-        updatedConfig.apiKey = existingConfig.apiKey;
-      }
-
-      await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2), 'utf8');
-
-      res.json({
-        success: true,
-        message: 'Configuration AI mise à jour.',
-        config: {
-          enabled: updatedConfig.enabled,
-          hasApiKey: !!(updatedConfig.apiKey && updatedConfig.apiKey.length > 0),
-          model: updatedConfig.model,
-          projectDescription: updatedConfig.projectDescription
-        }
-      });
-    } catch (err) {
-      console.error('[AI] Update site config error:', err);
-      res.status(500).json({ message: 'Erreur lors de la mise à jour de la configuration AI.' });
-    }
-  });
 
   app.get('/admin/sites', adminGuardMiddleware, (req, res) => {
     res.sendFile(path.join(paths.adminPublic, 'sites.html'));
