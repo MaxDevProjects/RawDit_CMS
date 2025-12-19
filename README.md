@@ -1,4 +1,4 @@
-# Clower-edit
+# RawDit
 
 Base du projet avec une arborescence claire pour séparer moteur, données et sorties statiques.
 
