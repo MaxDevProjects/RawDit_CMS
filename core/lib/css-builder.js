@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { paths } from './paths.js';
 import { ensureDir, fileExists } from './fs-utils.js';
 
@@ -29,6 +30,9 @@ export async function buildCss({ silent = false } = {}) {
 
 function runTailwind(target, silent) {
   const tailwindBin = resolveTailwindBinary();
+  if (!existsSync(tailwindBin)) {
+    throw new Error(`Tailwind CLI introuvable: ${tailwindBin}`);
+  }
   const args = [
     '--input',
     target.input,
@@ -41,6 +45,8 @@ function runTailwind(target, silent) {
   return new Promise((resolve, reject) => {
     const child = spawn(tailwindBin, args, {
       stdio: silent ? 'ignore' : 'inherit',
+      shell: process.platform === 'win32',
+      windowsHide: true,
       env: {
         ...process.env,
         NODE_ENV: process.env.NODE_ENV ?? 'production',
@@ -61,4 +67,3 @@ function resolveTailwindBinary() {
   const binName = process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss';
   return path.join(paths.root, 'node_modules', '.bin', binName);
 }
-
