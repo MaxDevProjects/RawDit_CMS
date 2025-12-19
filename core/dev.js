@@ -5,6 +5,7 @@ import { createServer, createConnection } from 'node:net';
 import ipaddr from 'ipaddr.js';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
+import { pathToFileURL } from 'node:url';
 import chokidar from 'chokidar';
 import express from 'express';
 import nunjucks from 'nunjucks';
@@ -2883,7 +2884,7 @@ async function start() {
     try {
       // Importer le service AI dynamiquement (ESM compatibility)
       const aiServicePath = path.join(paths.root, 'core/lib/ai-service.js');
-      const aiService = await import(aiServicePath);
+      const aiService = await import(pathToFileURL(aiServicePath).href);
       
       // Charger le contexte du site
       const siteConfigPath = getSiteConfigPath(siteSlug);
@@ -3037,7 +3038,7 @@ async function start() {
 
     try {
       const aiServicePath = path.join(paths.root, 'core/lib/ai-service.js');
-      const aiService = await import(aiServicePath);
+      const aiService = await import(pathToFileURL(aiServicePath).href);
       const history = aiService.loadConversationHistory(siteSlug);
       res.json({ success: true, messages: history.messages, lastUpdated: history.lastUpdated });
     } catch (err) {
@@ -3058,7 +3059,7 @@ async function start() {
 
     try {
       const aiServicePath = path.join(paths.root, 'core/lib/ai-service.js');
-      const aiService = await import(aiServicePath);
+      const aiService = await import(pathToFileURL(aiServicePath).href);
       aiService.clearHistory(siteSlug);
       res.json({ success: true, message: 'Historique effacé.' });
     } catch (err) {
