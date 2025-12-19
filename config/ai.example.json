@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "rateLimit": {
+    "requestsPerDay": 100,
+    "requestsPerMinute": 10
+  },
+  "systemPromptTemplate": ""
+}
