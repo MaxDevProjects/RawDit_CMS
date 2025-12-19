@@ -825,10 +825,11 @@
           {% else %}
             {% set coll_container_classes = 'grid ' ~ coll_gap ~ ' ' ~ coll_mobile ~ ' ' ~ coll_desktop %}
           {% endif %}
-          {% set coll_item_classes = coll_card_rounded ~ ' border border-slate-100 theme-border-accent bg-slate-50 p-4 space-y-2' %}
+          {% set coll_item_base = 'p-4 space-y-2' %}
           {% if coll_is_horizontal %}
-            {% set coll_item_classes = coll_item_classes ~ ' snap-center snap-always flex-shrink-0 w-64 min-w-[16rem] md:w-auto md:min-w-0 md:snap-none' %}
+            {% set coll_item_base = coll_item_base ~ ' snap-center snap-always flex-shrink-0 w-64 min-w-[16rem] md:w-auto md:min-w-0 md:snap-none' %}
           {% endif %}
+          {% set itemOverrides = settings.itemOverrides if settings.itemOverrides and settings.itemOverrides is mapping else {} %}
           <section
             data-preview-block="{{ block.id }}"
             {{ animAttrs | safe }}
@@ -851,7 +852,21 @@
               <div class="{{ coll_container_classes }}" {% if coll_is_horizontal %}role="list" aria-label="{{ (block.label or 'Grille de contenus') }} – défilement horizontal"{% endif %}>
                 {% for item in allItems %}
                   {% if loop.index0 < limit %}
-                  <article class="{{ coll_item_classes }}">
+                  {% set ov = itemOverrides[item.id] if item.id and itemOverrides[item.id] else {} %}
+                  {% set card_bg = (ov.bg and themeBgMap[ov.bg]) or ov.bg or 'bg-slate-50' %}
+                  {% set card_radius = ov.borderRadius if ov.borderRadius and 'rounded' in ov.borderRadius else coll_card_rounded %}
+                  {% set card_shadow = ov.shadow if ov.shadow and 'shadow' in ov.shadow else '' %}
+                  {% set card_border = borderClass(ov, 'border border-slate-100 theme-border-accent') %}
+                  {% set card_anim = ov.animation or '' %}
+                  {% set card_delay = ov.animationDelay if ov.animationDelay is number else 0 %}
+                  {% set card_duration = ov.animationDuration if ov.animationDuration is number else 450 %}
+                  <article
+                    class="{{ card_radius }} {{ card_border }} {{ card_bg }} {{ card_shadow }} {{ coll_item_base }}"
+                    {% if card_anim %}
+                      data-anim="{{ card_anim }}"
+                      style="--anim-delay: {{ card_delay }}ms; --anim-duration: {{ card_duration }}ms;"
+                    {% endif %}
+                  >
                     {% if item.image %}
                     <img src="{{ item.image }}" alt="{{ item.title }}" class="w-full h-32 object-cover rounded-lg mb-2" />
                     {% endif %}
@@ -861,9 +876,31 @@
                     <h4 class="text-lg font-semibold text-slate-900">{{ item.title or 'Item' }}</h4>
                     <div class="text-sm text-slate-600 [&>p]:mb-1 [&>a]:theme-link-secondary [&>a]:underline [&>strong]:font-semibold">{{ (item.summary or item.excerpt or '') | safe }}</div>
                     {% if item.cta and item.cta.text %}
+                    {% set cta_style_raw = ov.ctaStyle or '' %}
+                    {% if cta_style_raw == 'secondary' %}
+                      {% set cta_class = 'theme-cta-secondary' %}
+                    {% elif cta_style_raw == 'link' %}
+                      {% set cta_class = 'theme-link-secondary underline' %}
+                    {% else %}
+                      {% set cta_class = 'theme-cta-primary' %}
+                    {% endif %}
+                    {% set cta_text_color = ov.ctaTextColor or '' %}
+                    {% set cta_text_css_var = null %}
+                    {% if cta_text_color == 'text-white' %}
+                      {% set cta_text_css_var = '#ffffff' %}
+                    {% elif cta_text_color == 'text-black' %}
+                      {% set cta_text_css_var = '#000000' %}
+                    {% elif cta_text_color == 'text-[var(--color-text)]' %}
+                      {% set cta_text_css_var = 'var(--color-text)' %}
+                    {% elif cta_text_color == 'text-[var(--color-background)]' %}
+                      {% set cta_text_css_var = 'var(--color-background)' %}
+                    {% endif %}
                     <a 
                       href="{{ linkHref(item.cta.url or '#') }}" 
-                      class="inline-flex items-center gap-1 mt-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors theme-cta-primary"
+                      {% if cta_text_css_var and ('theme-cta-' in cta_class) %}
+                      style="--cta-text-color: {{ cta_text_css_var }};"
+                      {% endif %}
+                      class="inline-flex items-center gap-1 mt-2 text-sm font-medium rounded-xl transition-colors {{ cta_class }} {% if cta_class != 'theme-link-secondary underline' %}px-4 py-2{% else %}px-0 py-0{% endif %} {% if cta_text_css_var and ('theme-cta-' not in cta_class) %}{{ cta_text_color }}{% endif %}"
                     >
                       {{ item.cta.text }}
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

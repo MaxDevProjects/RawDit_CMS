@@ -158,6 +158,23 @@ RAWDIT = CMS statique éco-conçu pour créer des sites :
   - animation optionnelle (mêmes champs que les autres blocs).
 - L’admin permet d’ajouter le bloc depuis la bibliothèque et d’éditer ses propriétés (texte + URL + styles).
 
+### US4.10 – CollectionGrid : apparence carte par carte (overrides)
+
+> Objectif : permettre de styliser chaque carte d’une grille de contenus indépendamment, sans modifier la donnée de collection elle‑même.
+
+**Critères fonctionnels :**
+
+- Dans Design > édition d’un bloc `CollectionGrid` :
+  - onglet “Apparence” : une section “Cartes (par item)” liste les items de la collection sélectionnée,
+  - l’éditeur choisit un item puis règle des overrides de style pour **cette carte uniquement**.
+- Les overrides sont stockés **dans la page** (dans `block.settings`), pas dans les fichiers de collection :
+  - `settings.itemOverrides[itemId] = { ... }`.
+- Overrides disponibles (V1 minimal) :
+  - `bg`, `borderRadius`, `shadow`, `border`,
+  - `ctaStyle` (`primary`/`secondary`/`link`), `ctaTextColor`,
+  - `animation`, `animationDelay`, `animationDuration`.
+- Le rendu Nunjucks applique ces overrides uniquement pour l’item ciblé, en gardant le reste de la grille inchangé.
+
 ---
 
 ## EPIC 5 – Onglet Contenus (collections)

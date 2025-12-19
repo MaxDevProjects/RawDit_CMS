@@ -1737,6 +1737,141 @@
     </div>
   </div>
 
+
+            
+            <div class="pt-3 mt-3 border-t border-slate-100">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-xs uppercase tracking-tight text-slate-500">Cartes (par item)</p>
+                <button
+                  type="button"
+                  data-collection-card-reset
+                  class="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  Réinitialiser
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">Ces réglages s’appliquent uniquement à cette grille (pas à la collection).</p>
+              <div class="space-y-3 mt-3">
+                <label class="space-y-1 block">
+                  <span class="text-xs font-medium text-slate-600">Item</span>
+                  <select
+                    data-collection-card-item-select
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+                  >
+                    <option value="">Sélectionnez une collection</option>
+                  </select>
+                </label>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">CTA</span>
+                    <select name="collection-item-cta-style" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                      <option value="">Hériter</option>
+                      <option value="primary">Primary</option>
+                      <option value="secondary">Secondary</option>
+                      <option value="link">Link</option>
+                    </select>
+                  </label>
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Couleur texte CTA</span>
+                    <select name="collection-item-cta-text-color" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                      <option value="">Hériter</option>
+                      <option value="text-[var(--color-background)]">Auto (fond)</option>
+                      <option value="text-[var(--color-text)]">Texte du thème</option>
+                      <option value="text-white">Blanc</option>
+                      <option value="text-black">Noir</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Fond</span>
+                    <div class="relative flex items-center gap-2">
+                      <span data-color-preview class="w-6 h-6 rounded border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+                      <select name="collection-item-bg" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]" data-color-select data-theme-color-select disabled>
+                        <option value="" disabled>Chargement...</option>
+                      </select>
+                      <span data-theme-color-chip class="w-5 h-5 rounded-full border border-slate-300 flex-shrink-0" aria-hidden="true"></span>
+                    </div>
+                  </label>
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Coins arrondis</span>
+                    <select name="collection-item-border-radius" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                      <option value="">Hériter</option>
+                      <option value="rounded-none">Aucun</option>
+                      <option value="rounded-lg">Léger (lg)</option>
+                      <option value="rounded-xl">Moyen (xl)</option>
+                      <option value="rounded-2xl">Fort (2xl)</option>
+                      <option value="rounded-3xl">Très fort (3xl)</option>
+                      <option value="rounded-full">Pilule</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Ombre</span>
+                    <select name="collection-item-shadow" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                      <option value="">Hériter</option>
+                      <option value="shadow-none">Aucune</option>
+                      <option value="shadow-sm">Légère (sm)</option>
+                      <option value="shadow-md">Moyenne (md)</option>
+                      <option value="shadow-lg">Forte (lg)</option>
+                      <option value="shadow-xl">Très forte (xl)</option>
+                      <option value="shadow-2xl">Maximale (2xl)</option>
+                    </select>
+                  </label>
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Bordure</span>
+                    <select name="collection-item-border" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                      <option value="">Hériter</option>
+                      <option value="border-none">Aucune</option>
+                      <option value="border border-slate-100 theme-border-accent">Fine (1px)</option>
+                      <option value="border-2 border border-slate-200 theme-border-accent">Moyenne (2px)</option>
+                      <option value="border-4 border border-slate-200 theme-border-accent">Épaisse (4px)</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Animation</span>
+                    <select name="collection-item-anim-type" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]">
+                      <option value="">Aucune</option>
+                      <option value="fade-in">Fade in</option>
+                      <option value="fade-up">Fade up</option>
+                      <option value="fade-down">Fade down</option>
+                      <option value="slide-left">Slide left</option>
+                      <option value="slide-right">Slide right</option>
+                      <option value="zoom-in">Zoom in</option>
+                      <option value="blur-in">Blur in</option>
+                    </select>
+                  </label>
+                  <label class="space-y-1 block">
+                    <span class="text-xs font-medium text-slate-600">Délai (ms)</span>
+                    <input
+                      type="number"
+                      name="collection-item-anim-delay"
+                      min="0"
+                      step="50"
+                      placeholder="0"
+                      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+                    />
+                  </label>
+                </div>
+                <label class="space-y-1 block">
+                  <span class="text-xs font-medium text-slate-600">Durée (ms)</span>
+                  <input
+                    type="number"
+                    name="collection-item-anim-duration"
+                    min="0"
+                    step="50"
+                    placeholder="450"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"
+                  />
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -1233,6 +1233,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const collectionSelectionInfo = blockForm?.querySelector(
       '[data-collection-selection-info]',
     );
+    const collectionCardItemSelect = blockForm?.querySelector(
+      '[data-collection-card-item-select]',
+    );
+    const collectionCardResetButton = blockForm?.querySelector('[data-collection-card-reset]');
+    const collectionCardOverrideFields = blockForm
+      ? {
+          ctaStyle: blockForm.querySelector('[name="collection-item-cta-style"]'),
+          ctaTextColor: blockForm.querySelector('[name="collection-item-cta-text-color"]'),
+          bg: blockForm.querySelector('[name="collection-item-bg"]'),
+          borderRadius: blockForm.querySelector('[name="collection-item-border-radius"]'),
+          shadow: blockForm.querySelector('[name="collection-item-shadow"]'),
+          border: blockForm.querySelector('[name="collection-item-border"]'),
+          animation: blockForm.querySelector('[name="collection-item-anim-type"]'),
+          animationDelay: blockForm.querySelector('[name="collection-item-anim-delay"]'),
+          animationDuration: blockForm.querySelector('[name="collection-item-anim-duration"]'),
+        }
+      : {};
     const blockFormCancel = document.querySelector('[data-block-form-cancel]');
     const groupPreviewMobile = blockForm?.querySelector('[data-group-preview-mobile]');
     const groupPreviewDesktop = blockForm?.querySelector('[data-group-preview-desktop]');
@@ -1614,6 +1631,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (config.section === 'collection') {
         const desiredValue = block.collectionId || block.settings?.collectionId || '';
         updateCollectionSelectOptions(desiredValue);
+        ensureCollectionCardEditorReady(block);
       }
       Object.entries(config.fields).forEach(([settingKey, fieldName]) => {
         const input = sectionRoot.querySelector(`[name="${fieldName}"]`);
@@ -3358,6 +3376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let previewReady = false;
     let previewRequestController = null;
     let designCollections = [];
+    const designCollectionItemsCache = new Map();
 
     const normalizeBlockData = (block) => {
       const normalized = {
@@ -3441,6 +3460,236 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       collectionSelectionInfo.textContent =
         details.join(' · ') || `Collection ${entry.name || entry.id}`;
+    };
+
+    const fetchCollectionItemsForDesign = async (collectionId) => {
+      if (!collectionsApiBase || !collectionId) {
+        return [];
+      }
+      const cacheKey = String(collectionId);
+      if (designCollectionItemsCache.has(cacheKey)) {
+        return designCollectionItemsCache.get(cacheKey) || [];
+      }
+      try {
+        const response = await fetch(
+          `${collectionsApiBase}/${encodeURIComponent(cacheKey)}/items`,
+          { headers: { Accept: 'application/json' } },
+        );
+        if (!response.ok) {
+          throw new Error('Impossible de charger les items.');
+        }
+        const payload = await response.json().catch(() => ({}));
+        const items = Array.isArray(payload?.items) ? payload.items : [];
+        designCollectionItemsCache.set(cacheKey, items);
+        return items;
+      } catch (err) {
+        console.warn('[design] collection items load failed', err?.message || err);
+        designCollectionItemsCache.set(cacheKey, []);
+        return [];
+      }
+    };
+
+    const getActiveCollectionGridBlock = () => {
+      const block = getActiveBlock();
+      if (!block) {
+        return null;
+      }
+      const typeKey = normalizeType(block.type);
+      const alias = blockTypeAliases[typeKey] || typeKey;
+      if (alias !== 'collectiongrid') {
+        return null;
+      }
+      return block;
+    };
+
+    const clearCollectionCardEditor = (message = 'Sélectionnez une collection') => {
+      if (!collectionCardItemSelect) {
+        return;
+      }
+      collectionCardItemSelect.innerHTML = '';
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = message;
+      collectionCardItemSelect.appendChild(option);
+      collectionCardItemSelect.value = '';
+      Object.values(collectionCardOverrideFields).forEach((field) => {
+        if (!field) return;
+        if (field.type === 'checkbox') {
+          field.checked = false;
+        } else {
+          field.value = '';
+        }
+      });
+    };
+
+    const getSelectedCollectionCardItemId = () =>
+      (collectionCardItemSelect?.value || '').trim();
+
+    const getCollectionGridItemOverrides = (block) => {
+      const raw = block?.settings?.itemOverrides;
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+        return {};
+      }
+      return raw;
+    };
+
+    const populateCollectionCardOverrideFields = (block, itemId) => {
+      if (!block || !itemId) {
+        return;
+      }
+      const overrides = getCollectionGridItemOverrides(block);
+      const entry = overrides[itemId] && typeof overrides[itemId] === 'object' ? overrides[itemId] : {};
+      const getValue = (key) => (entry?.[key] ?? '');
+      if (collectionCardOverrideFields.ctaStyle) {
+        collectionCardOverrideFields.ctaStyle.value = getValue('ctaStyle');
+      }
+      if (collectionCardOverrideFields.ctaTextColor) {
+        collectionCardOverrideFields.ctaTextColor.value = getValue('ctaTextColor');
+      }
+      if (collectionCardOverrideFields.bg) {
+        collectionCardOverrideFields.bg.value = getValue('bg');
+      }
+      if (collectionCardOverrideFields.borderRadius) {
+        collectionCardOverrideFields.borderRadius.value = getValue('borderRadius');
+      }
+      if (collectionCardOverrideFields.shadow) {
+        collectionCardOverrideFields.shadow.value = getValue('shadow');
+      }
+      if (collectionCardOverrideFields.border) {
+        collectionCardOverrideFields.border.value = getValue('border');
+      }
+      if (collectionCardOverrideFields.animation) {
+        collectionCardOverrideFields.animation.value = getValue('animation');
+      }
+      if (collectionCardOverrideFields.animationDelay) {
+        collectionCardOverrideFields.animationDelay.value =
+          entry?.animationDelay ?? '';
+      }
+      if (collectionCardOverrideFields.animationDuration) {
+        collectionCardOverrideFields.animationDuration.value =
+          entry?.animationDuration ?? '';
+      }
+      blockForm?.querySelectorAll('[data-color-select]').forEach(updateColorSelectPreview);
+    };
+
+    const buildCollectionCardOverridePatch = () => {
+      const itemId = getSelectedCollectionCardItemId();
+      if (!itemId) {
+        return null;
+      }
+      const patch = {
+        ctaStyle: (collectionCardOverrideFields.ctaStyle?.value || '').trim(),
+        ctaTextColor: (collectionCardOverrideFields.ctaTextColor?.value || '').trim(),
+        bg: (collectionCardOverrideFields.bg?.value || '').trim(),
+        borderRadius: (collectionCardOverrideFields.borderRadius?.value || '').trim(),
+        shadow: (collectionCardOverrideFields.shadow?.value || '').trim(),
+        border: (collectionCardOverrideFields.border?.value || '').trim(),
+        animation: (collectionCardOverrideFields.animation?.value || '').trim(),
+        animationDelay: Number(collectionCardOverrideFields.animationDelay?.value || ''),
+        animationDuration: Number(collectionCardOverrideFields.animationDuration?.value || ''),
+      };
+      if (!Number.isFinite(patch.animationDelay)) {
+        delete patch.animationDelay;
+      }
+      if (!Number.isFinite(patch.animationDuration)) {
+        delete patch.animationDuration;
+      }
+      Object.keys(patch).forEach((key) => {
+        if (patch[key] === '') {
+          delete patch[key];
+        }
+      });
+      return { itemId, patch };
+    };
+
+    const saveCollectionCardOverrides = async ({ reset = false } = {}) => {
+      const block = getActiveCollectionGridBlock();
+      if (!currentPage || !block) {
+        return;
+      }
+      const itemId = getSelectedCollectionCardItemId();
+      if (!itemId) {
+        return;
+      }
+      const update = (entry) => {
+        const nextSettings = { ...(entry.settings || {}) };
+        const overrides = { ...getCollectionGridItemOverrides({ settings: nextSettings }) };
+        if (reset) {
+          delete overrides[itemId];
+        } else {
+          const built = buildCollectionCardOverridePatch();
+          if (!built) {
+            return entry;
+          }
+          const nextPatch = built.patch || {};
+          if (!Object.keys(nextPatch).length) {
+            delete overrides[itemId];
+          } else {
+            overrides[itemId] = { ...(overrides[itemId] || {}), ...nextPatch };
+          }
+        }
+        nextSettings.itemOverrides = overrides;
+        return { ...entry, settings: nextSettings };
+      };
+
+      const { blocks: updatedBlocks, didUpdate } = updateBlocksDeep(
+        currentPage.blocks || [],
+        block.id,
+        update,
+        activeBlockParentId,
+      );
+      if (!didUpdate) {
+        return;
+      }
+      const nextPage = { ...currentPage, blocks: updatedBlocks };
+      currentPage = nextPage;
+      updatePreviewStatus('Modification…');
+      try {
+        const saved = await savePageToServer(nextPage);
+        if (saved?.id) {
+          const normalized = normalizePageData(saved);
+          currentPage = normalized;
+          pages = pages.map((p) => (p.id === normalized.id ? normalized : p));
+        }
+        updatePreviewStatus('Sauvegardé');
+        setTimeout(() => updatePreviewStatus('À jour'), 1500);
+      } catch (err) {
+        console.warn('[design] card override save failed', err?.message || err);
+        updatePreviewStatus('Erreur de sauvegarde');
+      }
+      debouncedRefreshPreview();
+    };
+
+    const ensureCollectionCardEditorReady = async (block) => {
+      if (!collectionCardItemSelect || !block) {
+        return;
+      }
+      const cid = block.collectionId || block.settings?.collectionId || '';
+      if (!cid) {
+        clearCollectionCardEditor('Sélectionnez une collection');
+        return;
+      }
+      const items = await fetchCollectionItemsForDesign(cid);
+      collectionCardItemSelect.innerHTML = '';
+      if (!items.length) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Aucun item';
+        collectionCardItemSelect.appendChild(option);
+        collectionCardItemSelect.value = '';
+        return;
+      }
+      items.forEach((item) => {
+        const option = document.createElement('option');
+        option.value = item.id || '';
+        const label = item.title || item.slug || item.id || 'Item';
+        option.textContent = label;
+        collectionCardItemSelect.appendChild(option);
+      });
+      const existing = getSelectedCollectionCardItemId();
+      const desired = existing && items.some((item) => item.id === existing) ? existing : (items[0]?.id || '');
+      collectionCardItemSelect.value = desired;
+      populateCollectionCardOverrideFields(block, desired);
     };
 
     const updateCollectionSelectOptions = (selectedValue = '') => {
@@ -4046,6 +4295,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!target || !target.name) {
         return;
       }
+      if (target.name.startsWith('collection-item-')) {
+        saveCollectionCardOverrides();
+        return;
+      }
       // Mini preview pour groupe
       if (target.name === 'group-columns-mobile' || target.name === 'group-columns-desktop') {
         const mobileValue =
@@ -4080,6 +4333,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!target || !target.name) {
         return;
       }
+      if (target.name.startsWith('collection-item-')) {
+        saveCollectionCardOverrides();
+        return;
+      }
       // Mise à jour du preview de couleur pour les color selects
       if (target.hasAttribute('data-color-select')) {
         const selectedOption = target.options[target.selectedIndex];
@@ -4106,6 +4363,24 @@ document.addEventListener('DOMContentLoaded', () => {
     collectionSelect?.addEventListener('change', (event) => {
       const target = event.target;
       syncCollectionSelectionInfo(target?.value || '');
+      const block = getActiveCollectionGridBlock();
+      if (block) {
+        block.collectionId = target?.value || '';
+        block.settings = { ...(block.settings || {}), collectionId: block.collectionId };
+        ensureCollectionCardEditorReady(block);
+      }
+    });
+    collectionCardItemSelect?.addEventListener('change', () => {
+      const block = getActiveCollectionGridBlock();
+      if (!block) {
+        return;
+      }
+      const itemId = getSelectedCollectionCardItemId();
+      populateCollectionCardOverrideFields(block, itemId);
+    });
+    collectionCardResetButton?.addEventListener('click', (event) => {
+      event.preventDefault();
+      saveCollectionCardOverrides({ reset: true });
     });
     blockForm?.addEventListener('submit', handleBlockFormSubmit);
     blockFormCancel?.addEventListener('click', (event) => {
