@@ -89,17 +89,22 @@
     </div>
     <div class="p-6 space-y-6">
       {# Logo #}
-      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
-        <legend class="px-2 text-sm font-semibold text-slate-700">Logo & Identité</legend>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Logo (URL image)</span>
-            <input type="text" name="header-logo" placeholder="/assets/logo.svg" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
-          </label>
-          <label class="space-y-1 block">
-            <span class="text-xs font-medium text-slate-600">Texte alternatif / Nom du site</span>
-            <input type="text" name="header-logo-alt" placeholder="Mon site" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
-          </label>
+	      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+	        <legend class="px-2 text-sm font-semibold text-slate-700">Logo & Identité</legend>
+	        <div class="grid gap-4 sm:grid-cols-2">
+	          <label class="space-y-1 block">
+	            <span class="text-xs font-medium text-slate-600">Logo (URL image)</span>
+	            <div class="flex items-center gap-2" data-media-picker>
+	              <input type="text" name="header-logo" placeholder="/assets/logo.svg" data-media-picker-input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+	              <button type="button" data-media-picker-open class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900">
+	                Médias
+	              </button>
+	            </div>
+	          </label>
+	          <label class="space-y-1 block">
+	            <span class="text-xs font-medium text-slate-600">Texte alternatif / Nom du site</span>
+	            <input type="text" name="header-logo-alt" placeholder="Mon site" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+	          </label>
         </div>
         <label class="space-y-1 block">
           <span class="text-xs font-medium text-slate-600">Lien du logo</span>
@@ -300,7 +305,15 @@
         </div>
         <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Résumé</span><textarea name="item-excerpt" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea></label>
         <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Contenu</span><textarea name="item-content" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"></textarea></label>
-        <label class="space-y-1 block"><span class="text-xs font-medium text-slate-600">Image (URL ou media ID)</span><input type="text" name="item-image" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>
+        <label class="space-y-1 block">
+          <span class="text-xs font-medium text-slate-600">Image (URL ou media ID)</span>
+          <div class="flex items-center gap-2" data-media-picker>
+            <input type="text" name="item-image" data-media-picker-input class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/>
+            <button type="button" data-media-picker-open class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900">
+              Médias
+            </button>
+          </div>
+        </label>
         <fieldset class="space-y-2 rounded-lg border border-slate-200 p-3">
           <legend class="text-xs font-medium text-slate-600 px-1">Call-to-Action (optionnel)</legend>
           <label class="space-y-1 block"><span class="text-xs font-medium text-slate-500">Texte du bouton</span><input type="text" name="item-cta-text" placeholder="En savoir plus" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#9C6BFF] focus:ring-[#9C6BFF]"/></label>

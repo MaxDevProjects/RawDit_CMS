@@ -9,6 +9,12 @@ import { pathToFileURL } from 'node:url';
 import chokidar from 'chokidar';
 import express from 'express';
 import nunjucks from 'nunjucks';
+import {
+  optimizeImageBufferToWebp,
+  optimizeMediaDirToWebp,
+  readImageOptimizationOptionsFromEnv,
+  rewriteMediaUrlToWebpIfAvailable,
+} from './lib/image-optimizer.js';
 import archiver from 'archiver';
 import { paths } from './lib/paths.js';
 import { buildAll } from './build.js';
@@ -691,7 +697,7 @@ function buildThemeCss(config = {}) {
   ].join('\n');
 }
 
-function normalizeMediaReferences(value, safeSlug) {
+function normalizeMediaReferences(value, safeSlug, { webpFiles } = {}) {
   if (!safeSlug) {
     return value;
   }
@@ -700,21 +706,19 @@ function normalizeMediaReferences(value, safeSlug) {
     if (typeof str !== 'string') {
       return str;
     }
-    if (str.includes(mediaPrefix)) {
-      return str.replace(mediaPrefix, '/media');
-    }
-    return str;
+    const normalized = str.includes(mediaPrefix) ? str.replace(mediaPrefix, '/media') : str;
+    return rewriteMediaUrlToWebpIfAvailable(normalized, webpFiles);
   };
   if (typeof value === 'string') {
     return rewriteString(value);
   }
   if (Array.isArray(value)) {
-    return value.map((entry) => normalizeMediaReferences(entry, safeSlug));
+    return value.map((entry) => normalizeMediaReferences(entry, safeSlug, { webpFiles }));
   }
   if (value && typeof value === 'object') {
     const result = {};
     for (const [key, entry] of Object.entries(value)) {
-      result[key] = normalizeMediaReferences(entry, safeSlug);
+      result[key] = normalizeMediaReferences(entry, safeSlug, { webpFiles });
     }
     return result;
   }
@@ -828,6 +832,10 @@ async function buildSitePages(siteSlug) {
   const safeSlug = sanitizeSiteSlug(siteSlug);
   const siteRoot = path.join(paths.public, 'sites', safeSlug);
   await ensureDir(siteRoot);
+  const mediaDir = getSitePublicMediaDir(siteSlug);
+  await ensureSiteMediaStructure(siteSlug);
+  const imageOptimizationOptions = readImageOptimizationOptionsFromEnv();
+  const webpFiles = await optimizeMediaDirToWebp(mediaDir, imageOptimizationOptions).catch(() => new Set());
   const pages = await readPagesForSite(siteSlug);
   const collectionsIndex = await readCollectionsIndex(siteSlug);
   const collectionMap = {};
@@ -876,13 +884,13 @@ async function buildSitePages(siteSlug) {
 
   const header = await readLayoutFile(siteSlug, 'header');
   const footer = await readLayoutFile(siteSlug, 'footer');
-  const headerForRender = normalizeMediaReferences(header, safeSlug);
-  const footerForRender = normalizeMediaReferences(footer, safeSlug);
+  const headerForRender = normalizeMediaReferences(header, safeSlug, { webpFiles });
+  const footerForRender = normalizeMediaReferences(footer, safeSlug, { webpFiles });
   const collectionsForRender = {};
   for (const [key, value] of Object.entries(collectionMap)) {
-    collectionsForRender[key] = normalizeMediaReferences(value, safeSlug);
+    collectionsForRender[key] = normalizeMediaReferences(value, safeSlug, { webpFiles });
   }
-  const pagesForRender = pages.map((page) => normalizeMediaReferences(page, safeSlug));
+  const pagesForRender = pages.map((page) => normalizeMediaReferences(page, safeSlug, { webpFiles }));
 
   const pageOutputs = [];
 
@@ -2295,7 +2303,7 @@ async function start() {
       return res.status(400).json({ message: 'Fichier manquant.' });
     }
     const cleanFilename = sanitizeFilenameBase(rawFilename || mimeType || 'media');
-    const extension = inferExtension(rawFilename || '', mimeType);
+    const rawExtension = inferExtension(rawFilename || '', mimeType);
     const safeSlug = stripLeadingSlash(siteSlug);
     const mediaDir = getSitePublicMediaDir(siteSlug);
     try {
@@ -2307,25 +2315,36 @@ async function start() {
       if (buffer.length > 4 * 1024 * 1024) {
         return res.status(400).json({ message: 'Fichier trop volumineux (4 Mo max).' });
       }
-      let finalFilename = `${cleanFilename}${extension}`;
+      const imageOptimizationOptions = readImageOptimizationOptionsFromEnv();
+      let finalMimeType = mimeType || 'file';
+      let finalExtension = rawExtension;
+      let finalBuffer = buffer;
+      const isRaster = ['.jpg', '.jpeg', '.png'].includes((rawExtension || '').toLowerCase());
+      if (finalMimeType.startsWith('image/') && isRaster) {
+        finalBuffer = await optimizeImageBufferToWebp(buffer, imageOptimizationOptions);
+        finalMimeType = 'image/webp';
+        finalExtension = '.webp';
+      }
+
+      let finalFilename = `${cleanFilename}${finalExtension}`;
       let counter = 1;
       while (true) {
         try {
           await fs.access(path.join(mediaDir, finalFilename));
-          finalFilename = `${cleanFilename}-${counter++}${extension}`;
+          finalFilename = `${cleanFilename}-${counter++}${finalExtension}`;
         } catch {
           break;
         }
       }
       const destPath = path.join(mediaDir, finalFilename);
-      await fs.writeFile(destPath, buffer);
+      await fs.writeFile(destPath, finalBuffer);
       const items = await readMediaLibrary(siteSlug);
       const newItem = normalizeMediaItem({
         id: `${cleanFilename}-${Date.now().toString(36)}`,
         filename: finalFilename,
         path: `/sites/${safeSlug}/media/${finalFilename}`,
-        type: mimeType || 'file',
-        size: buffer.length,
+        type: finalMimeType || 'file',
+        size: finalBuffer.length,
         alt,
         usedIn: [],
         uploadedAt: new Date().toISOString(),
