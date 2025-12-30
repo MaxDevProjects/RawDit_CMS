@@ -240,6 +240,25 @@ RAWDIT = CMS statique éco-conçu pour créer des sites :
   - ajoute une entrée dans `media.json`.
 - Le nouveau média apparaît dans la grille avec un highlight.
 
+### US6.3 – Optimiser une image à l’import
+
+- Lors du téléversement :
+  - pour les images JPG/JPEG/PNG : conversion en WebP et optimisation (poids réduit),
+  - les autres formats (SVG/GIF/WebP existant, etc.) sont stockés tels quels.
+- Le média enregistré et référencé dans `media.json` pointe vers le fichier optimisé (WebP quand applicable).
+
+### US6.4 – Optimiser les images au build
+
+- Lors d’un build du site (build local, export ZIP, déploiement) :
+  - générer des variantes WebP pour les JPG/JPEG/PNG présents dans le dossier `media`,
+  - utiliser le WebP dans le HTML rendu quand une variante existe (fallback conservé en source).
+
+### US6.5 – Sélecteur de médias dans les champs image
+
+- Partout où un champ attend une URL d’image (ex : “URL ou média”) :
+  - un bouton “Médias” ouvre une modale listant les médias du site,
+  - cliquer un média renseigne automatiquement le champ avec son chemin (ex : `/sites/{slug}/media/...`).
+
 ---
 
 ## EPIC 7 – Onglet Déploiement
