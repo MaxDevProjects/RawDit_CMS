@@ -26,6 +26,7 @@ import { existsSync } from 'node:fs';
 import { createReadStream } from 'node:fs';
 import bcrypt from 'bcryptjs';
 import tailwindColors from 'tailwindcss/colors.js';
+import { logger } from './lib/logger.js';
 
 const COOKIE_NAME = 'admin_session';
 const authService = new AuthService();
@@ -1606,7 +1607,7 @@ async function start() {
       await authService.saveUsers(users);
       res.json({ success: true, message: 'Mot de passe mis à jour avec succès.' });
     } catch (err) {
-      console.error('[admin] password change failed', err);
+      logger.error('Admin', 'password change failed', err);
       res.status(500).json({ message: 'Erreur lors de la mise à jour du mot de passe.' });
     }
   });
@@ -3452,7 +3453,8 @@ async function start() {
 
   const server = app.listen(port, () => {
     const baseUrl = `http://localhost:${port}`;
-    console.log(`[dev] Serveur disponible sur ${baseUrl}`);
+    logger.info('Server', `Serveur disponible sur ${baseUrl}`);
+    logger.info('Server', `Admin: ${baseUrl}/admin/login.html`);
     if (ENV_OPEN_BROWSER) {
       openInDefaultBrowser(`${baseUrl}/admin`);
     }
@@ -3618,6 +3620,6 @@ async function writeSites(sites) {
 }
 
 start().catch((err) => {
-  console.error('[dev] Impossible de démarrer:', err);
+  logger.error('Server', 'Impossible de démarrer', err);
   process.exit(1);
 });
